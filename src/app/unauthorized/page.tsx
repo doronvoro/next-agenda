@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function UnauthorizedPage() {
+export default function UnauthorizedPage() { // reomve seerch params
   const previousPath = "/";
 
   return (
