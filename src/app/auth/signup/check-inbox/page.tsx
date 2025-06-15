@@ -2,11 +2,20 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from 'react';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function CheckInboxPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckInboxContent />
+    </Suspense>
+  );
+}
+
+function CheckInboxContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
 
