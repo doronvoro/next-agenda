@@ -24,6 +24,15 @@ type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
   committee: Database["public"]["Tables"]["committees"]["Row"] | null;
 };
 
+type ProtocolMember = {
+  id: string;
+  name: string | null;
+  type: number;
+  status: number;
+  source_type: number | null;
+  created_at: string;
+};
+
 type AgendaItem = {
   id: string;
   protocol_id: string | null;
@@ -50,6 +59,7 @@ export default function ProtocolPage() {
   const params = useParams();
   const [protocol, setProtocol] = useState<Protocol | null>(null);
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
+  const [protocolMembers, setProtocolMembers] = useState<ProtocolMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,6 +100,21 @@ export default function ProtocolPage() {
         }
 
         setAgendaItems(agendaItemsData || []);
+
+        // Fetch protocol members
+        const { data: membersData, error: membersError } = await supabase
+          .from("protocol_members")
+          .select("*")
+          .eq("protocol_id", params.id)
+          .order("created_at", { ascending: true });
+
+        if (membersError) {
+          console.error("Error fetching protocol members:", membersError);
+          setError(membersError.message);
+          return;
+        }
+
+        setProtocolMembers(membersData || []);
       } catch (err) {
         console.error("Unexpected error:", err);
         setError(err instanceof Error ? err.message : "An unexpected error occurred");
@@ -238,9 +263,36 @@ export default function ProtocolPage() {
                 </div>
               </TabsContent>
               <TabsContent value="members" className="mt-6">
-                <div className="text-center text-muted-foreground py-8">
-                  Committee members will be displayed here
-                </div>
+                {protocolMembers.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    No members found for this protocol
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Source Type</TableHead>
+                          <TableHead>Created At</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {protocolMembers.map((member) => (
+                          <TableRow key={member.id}>
+                            <TableCell>{member.name || "Unnamed"}</TableCell>
+                            <TableCell>{member.type}</TableCell>
+                            <TableCell>{member.status}</TableCell>
+                            <TableCell>{member.source_type || "N/A"}</TableCell>
+                            <TableCell>{formatDate(member.created_at)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
