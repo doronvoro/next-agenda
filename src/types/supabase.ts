@@ -1,25 +1,116 @@
 // Replace with your own types
 
 export type Database = {
-  public: {
+  auth: {
     Tables: {
       users: {
         Row: {
           id: string;
+          email: string;
+          email_confirmed_at: string | null;
           created_at: string;
-          // Add other fields as needed
+          updated_at: string;
+          last_sign_in_at: string | null;
+          raw_app_meta_data: Record<string, any>;
+          raw_user_meta_data: Record<string, any>;
+          is_super_admin: boolean | null;
+          role: string | null;
+          confirmed_at: string | null;
+          invited_at: string | null;
+          confirmation_token: string | null;
+          confirmation_sent_at: string | null;
+          recovery_token: string | null;
+          recovery_sent_at: string | null;
+          email_change_token_new: string | null;
+          email_change: string | null;
+          email_change_sent_at: string | null;
+          last_sign_in_with_password: string | null;
+          last_sign_in_with_sso: string | null;
+          banned_until: string | null;
+          reauthentication_token: string | null;
+          reauthentication_sent_at: string | null;
+          phone: string | null;
+          phone_confirmed_at: string | null;
+          phone_change: string | null;
+          phone_change_token: string | null;
+          phone_change_sent_at: string | null;
+          email_change_confirm_status: number | null;
+          is_sso_user: boolean | null;
+          deleted_at: string | null;
         };
         Insert: {
-          id: string;
+          id?: string;
+          email?: string;
+          email_confirmed_at?: string | null;
           created_at?: string;
-          // Add other fields as needed
+          updated_at?: string;
+          last_sign_in_at?: string | null;
+          raw_app_meta_data?: Record<string, any>;
+          raw_user_meta_data?: Record<string, any>;
+          is_super_admin?: boolean | null;
+          role?: string | null;
+          confirmed_at?: string | null;
+          invited_at?: string | null;
+          confirmation_token?: string | null;
+          confirmation_sent_at?: string | null;
+          recovery_token?: string | null;
+          recovery_sent_at?: string | null;
+          email_change_token_new?: string | null;
+          email_change?: string | null;
+          email_change_sent_at?: string | null;
+          last_sign_in_with_password?: string | null;
+          last_sign_in_with_sso?: string | null;
+          banned_until?: string | null;
+          reauthentication_token?: string | null;
+          reauthentication_sent_at?: string | null;
+          phone?: string | null;
+          phone_confirmed_at?: string | null;
+          phone_change?: string | null;
+          phone_change_token?: string | null;
+          phone_change_sent_at?: string | null;
+          email_change_confirm_status?: number | null;
+          is_sso_user?: boolean | null;
+          deleted_at?: string | null;
         };
         Update: {
           id?: string;
+          email?: string;
+          email_confirmed_at?: string | null;
           created_at?: string;
-          // Add other fields as needed
+          updated_at?: string;
+          last_sign_in_at?: string | null;
+          raw_app_meta_data?: Record<string, any>;
+          raw_user_meta_data?: Record<string, any>;
+          is_super_admin?: boolean | null;
+          role?: string | null;
+          confirmed_at?: string | null;
+          invited_at?: string | null;
+          confirmation_token?: string | null;
+          confirmation_sent_at?: string | null;
+          recovery_token?: string | null;
+          recovery_sent_at?: string | null;
+          email_change_token_new?: string | null;
+          email_change?: string | null;
+          email_change_sent_at?: string | null;
+          last_sign_in_with_password?: string | null;
+          last_sign_in_with_sso?: string | null;
+          banned_until?: string | null;
+          reauthentication_token?: string | null;
+          reauthentication_sent_at?: string | null;
+          phone?: string | null;
+          phone_confirmed_at?: string | null;
+          phone_change?: string | null;
+          phone_change_token?: string | null;
+          phone_change_sent_at?: string | null;
+          email_change_confirm_status?: number | null;
+          is_sso_user?: boolean | null;
+          deleted_at?: string | null;
         };
       };
+    };
+  };
+  public: {
+    Tables: {
       committees: {
         Row: {
           id: string;
@@ -66,7 +157,52 @@ export type Database = {
           updated_at?: string;
         };
       };
-      // Add other tables as needed
+      roles: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string;
+        };
+      };
+      user_roles: {
+        Row: {
+          id: string;
+          user_id: string;
+          role_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          role_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          role_id?: string;
+          created_at?: string;
+        };
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
     };
   };
 };
