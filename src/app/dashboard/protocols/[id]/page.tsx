@@ -152,95 +152,88 @@ export default function ProtocolPage() {
               <TabsContent value="content" className="mt-6">
                 <div className="grid gap-6">
                   <div className="grid gap-4">
-                    <Field label="Protocol ID" value={protocol.id} />
-                    <Field label="Protocol Number" value={protocol.number} />
-                    <Field label="Due Date" value={formatDate(protocol.due_date)} />
-                    <Field 
-                      label="Committee" 
-                      value={
-                        <div className="flex items-center gap-2">
-                          <span>{protocol.committee?.name || "Not assigned"}</span>
-                          {protocol.committee && (
-                            <span className="text-sm text-muted-foreground">
-                              (ID: {protocol.committee.id})
-                            </span>
-                          )}
-                        </div>
-                      } 
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="grid gap-4">
-                    <h3 className="text-sm font-medium text-muted-foreground">Timestamps</h3>
-                    <div className="grid gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Protocol Number" value={protocol.number} />
+                      <Field label="Due Date" value={formatDate(protocol.due_date)} />
                       <Field label="Created At" value={formatDate(protocol.created_at)} />
                       <Field label="Last Updated" value={formatDate(protocol.updated_at)} />
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="grid gap-4">
-                    <h3 className="text-lg font-medium">Agenda</h3>
-                    {agendaItems.length === 0 ? (
-                      <div className="text-center text-muted-foreground py-4">
-                        No agenda items found
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {agendaItems.map((item) => (
-                          <div key={item.id} className="flex items-center gap-2">
-                            <span className="text-muted-foreground">
-                              {item.display_order ? `${item.display_order}.` : '•'}
-                            </span>
-                            <span>{item.title}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator />
-
-                  <div className="grid gap-6">
-                    <h3 className="text-lg font-medium">Agenda Items Details</h3>
-                    {agendaItems.length === 0 ? (
-                      <div className="text-center text-muted-foreground py-4">
-                        No agenda items found
-                      </div>
-                    ) : (
-                      <div className="space-y-8">
-                        {agendaItems.map((item) => (
-                          <div key={item.id} className="space-y-4">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg font-medium">
-                                {item.display_order ? `${item.display_order}.` : '•'} {item.title}
+                      <Field 
+                        label="Committee" 
+                        value={
+                          <div className="flex items-center gap-2">
+                            <span>{protocol.committee?.name || "Not assigned"}</span>
+                            {protocol.committee && (
+                              <span className="text-sm text-muted-foreground">
+                                (ID: {protocol.committee.id})
                               </span>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium text-muted-foreground">
-                                Topic Content
-                              </label>
-                              <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                {item.topic_content || "No topic content"}
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium text-muted-foreground">
-                                Decision Content
-                              </label>
-                              <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                {item.decision_content || "No decision content"}
-                              </div>
-                            </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        } 
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid gap-4">
+                      <h3 className="text-lg font-medium">Agenda</h3>
+                      {agendaItems.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-4">
+                          No agenda items found
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {agendaItems.map((item) => (
+                            <div key={item.id} className="flex items-center gap-2">
+                              <span className="text-muted-foreground">
+                                {item.display_order ? `${item.display_order}.` : '•'}
+                              </span>
+                              <span>{item.title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid gap-6">
+                      <h3 className="text-lg font-medium">Agenda Items Details</h3>
+                      {agendaItems.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-4">
+                          No agenda items found
+                        </div>
+                      ) : (
+                        <div className="space-y-8">
+                          {agendaItems.map((item) => (
+                            <div key={item.id} className="space-y-4">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg font-medium">
+                                  {item.display_order ? `${item.display_order}.` : '•'} {item.title}
+                                </span>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">
+                                  Topic Content
+                                </label>
+                                <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                  {item.topic_content || "No topic content"}
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">
+                                  Decision Content
+                                </label>
+                                <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                  {item.decision_content || "No decision content"}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </TabsContent>
