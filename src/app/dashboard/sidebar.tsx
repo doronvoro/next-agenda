@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Computer, LayoutDashboard } from "lucide-react";
+import { Computer, LayoutDashboard, FileText } from "lucide-react";
 
 import {
   Sidebar,
@@ -21,6 +21,11 @@ const items = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Protocols",
+    url: "/dashboard/protocols",
+    icon: FileText,
   },
 ];
 

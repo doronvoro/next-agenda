@@ -93,6 +93,7 @@ const sections = [
       { href: "/download", label: "Download" },
       { href: "#features", label: "Features", isScroll: true },
       { href: "/info/security", label: "Security" },
+      { href: "/protocols", label: "Protocols" },
     ],
   },
   {

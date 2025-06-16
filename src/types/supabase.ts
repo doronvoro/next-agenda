@@ -1,6 +1,6 @@
 // Replace with your own types
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       users: {
@@ -20,7 +20,53 @@ export interface Database {
           // Add other fields as needed
         };
       };
+      committees: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      protocols: {
+        Row: {
+          id: string;
+          number: number;
+          due_date: string;
+          committee_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          number: number;
+          due_date: string;
+          committee_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          number?: number;
+          due_date?: string;
+          committee_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       // Add other tables as needed
     };
   };
-}
+};
