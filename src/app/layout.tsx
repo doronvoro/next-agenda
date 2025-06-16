@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
+import { Figtree, Rubik } from "next/font/google";
 
 import NextTopLoader from "nextjs-toploader";
 
@@ -16,6 +16,11 @@ const figtree = Figtree({
   variable: "--font-figtree",
 });
 
+const rubik = Rubik({
+  subsets: ["hebrew", "latin"],
+  variable: "--font-rubik",
+});
+
 export const metadata: Metadata = {
   title: brand.name,
   description: brand.description,
@@ -27,9 +32,9 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="he" suppressHydrationWarning>
       <AuthProvider>
-        <body className={`${figtree.className} antialiased`}>
+        <body className={`${figtree.variable} ${rubik.variable} font-sans antialiased`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
