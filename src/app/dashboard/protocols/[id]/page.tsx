@@ -45,7 +45,7 @@ type AgendaItem = {
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return isValid(date) ? format(date, "PPP") : "Invalid date";
+  return isValid(date) ? format(date, "dd/MM/yyyy") : "Invalid date";
 };
 
 const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (

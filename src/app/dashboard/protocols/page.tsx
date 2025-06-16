@@ -21,7 +21,7 @@ type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return isValid(date) ? format(date, "PPP") : "Invalid date";
+  return isValid(date) ? format(date, "dd/MM/yyyy") : "Invalid date";
 };
 
 export default function ProtocolsPage() {
@@ -40,7 +40,7 @@ export default function ProtocolsPage() {
             *,
             committee:committees!committee_id(*)
           `)
-          .order("due_date", { ascending: true });
+          .order("due_date", { ascending: false });
 
         if (error) {
           console.error("Error fetching protocols:", error);
@@ -96,7 +96,7 @@ export default function ProtocolsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Due Date</TableHead>
+                <TableHead className="w-[200px]">Due Date</TableHead>
                 <TableHead>Committee Name</TableHead>
                 <TableHead>Protocol #</TableHead>
               </TableRow>
