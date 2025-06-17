@@ -45,6 +45,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
 
 type Committee = {
   id: string;
@@ -93,6 +111,47 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
   </div>
 );
 
+type SortableAgendaItemProps = {
+  item: AgendaItem;
+};
+
+function SortableAgendaItem({ item }: SortableAgendaItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2"
+    >
+      <button
+        className="cursor-grab touch-none p-1 hover:bg-accent rounded-md"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </button>
+      <span className="text-muted-foreground">
+        {item.display_order ? `${item.display_order}.` : '•'}
+      </span>
+      <span>{item.title}</span>
+    </div>
+  );
+}
+
 export default function ProtocolPage() {
   const params = useParams();
   const router = useRouter();
@@ -120,6 +179,13 @@ export default function ProtocolPage() {
     decision_content: "",
   });
   const [deletingAgendaItemId, setDeletingAgendaItemId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -384,6 +450,46 @@ export default function ProtocolPage() {
     }
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = agendaItems.findIndex((item) => item.id === active.id);
+      const newIndex = agendaItems.findIndex((item) => item.id === over.id);
+      
+      // Create new array with updated order
+      const newItems = arrayMove(agendaItems, oldIndex, newIndex);
+      
+      try {
+        const supabase = createClient();
+        
+        // Update display_order for each item individually
+        for (let i = 0; i < newItems.length; i++) {
+          const { error } = await supabase
+            .from("agenda_items")
+            .update({ display_order: i + 1 })
+            .eq("id", newItems[i].id);
+
+          if (error) {
+            console.error("Supabase error:", error);
+            throw new Error(error.message);
+          }
+        }
+
+        // Update the UI with the new order
+        setAgendaItems(newItems.map((item, index) => ({
+          ...item,
+          display_order: index + 1
+        })));
+      } catch (err) {
+        console.error("Error updating agenda item order:", err);
+        setError(err instanceof Error ? err.message : "Failed to update agenda item order");
+        // Refresh data to ensure consistency
+        await fetchData();
+      }
+    }
+  };
+
   if (!mounted) {
     return null;
   }
@@ -562,218 +668,155 @@ export default function ProtocolPage() {
                             No agenda items found
                           </div>
                         ) : (
-                          <div className="space-y-2">
-                            {agendaItems.map((item) => (
-                              <div key={item.id} className="flex items-center gap-2">
-                                <span className="text-muted-foreground">
-                                  {item.display_order ? `${item.display_order}.` : '•'}
-                                </span>
-                                <span>{item.title}</span>
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <SortableContext
+                              items={agendaItems.map((item) => item.id)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div className="space-y-2">
+                                {agendaItems.map((item) => (
+                                  <SortableAgendaItem
+                                    key={item.id}
+                                    item={item}
+                                  />
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </SortableContext>
+                          </DndContext>
                         )}
                       </div>
 
                       <Separator />
 
-                      <div className="flex justify-between items-center">
+                      <div className="grid gap-6">
                         <h3 className="text-lg font-medium">Agenda Items Details</h3>
-                        {!isAddingAgendaItem && (
-                          <Button onClick={handleAddAgendaItem} className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            New Agenda Item
-                          </Button>
+                        {agendaItems.length === 0 ? (
+                          <div className="text-center text-muted-foreground py-4">
+                            No agenda items found
+                          </div>
+                        ) : (
+                          <div className="space-y-8">
+                            {agendaItems
+                              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                              .map((item) => (
+                                <div key={item.id} className="space-y-4">
+                                  {editingAgendaItem?.id === item.id ? (
+                                    <form onSubmit={handleUpdateAgendaItem} className="space-y-4">
+                                      <div className="space-y-2">
+                                        <Label htmlFor={`title-${item.id}`}>Title</Label>
+                                        <Input
+                                          id={`title-${item.id}`}
+                                          value={editingAgendaItem.title}
+                                          onChange={(e) =>
+                                            setEditingAgendaItem({
+                                              ...editingAgendaItem,
+                                              title: e.target.value,
+                                            })
+                                          }
+                                          placeholder="Enter agenda item title"
+                                          required
+                                        />
+                                      </div>
+
+                                      <div className="space-y-2">
+                                        <Label htmlFor={`topic-${item.id}`}>Topic Content</Label>
+                                        <textarea
+                                          id={`topic-${item.id}`}
+                                          value={editingAgendaItem.topic_content}
+                                          onChange={(e) =>
+                                            setEditingAgendaItem({
+                                              ...editingAgendaItem,
+                                              topic_content: e.target.value,
+                                            })
+                                          }
+                                          className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                          placeholder="Enter topic content"
+                                        />
+                                      </div>
+
+                                      <div className="space-y-2">
+                                        <Label htmlFor={`decision-${item.id}`}>Decision Content</Label>
+                                        <textarea
+                                          id={`decision-${item.id}`}
+                                          value={editingAgendaItem.decision_content}
+                                          onChange={(e) =>
+                                            setEditingAgendaItem({
+                                              ...editingAgendaItem,
+                                              decision_content: e.target.value,
+                                            })
+                                          }
+                                          className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                          placeholder="Enter decision content"
+                                        />
+                                      </div>
+
+                                      <div className="flex justify-end gap-4">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          onClick={handleCancelEditAgendaItem}
+                                          disabled={loading}
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button type="submit" disabled={loading}>
+                                          {loading ? "Saving..." : "Save Changes"}
+                                        </Button>
+                                      </div>
+                                    </form>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-lg font-medium">
+                                          {item.display_order ? `${item.display_order}.` : '•'} {item.title}
+                                        </span>
+                                        <div className="flex gap-2">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleEditAgendaItem(item)}
+                                          >
+                                            <Pencil className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setDeletingAgendaItemId(item.id)}
+                                            className="text-destructive hover:text-destructive"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">
+                                          Topic Content
+                                        </label>
+                                        <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                          {item.topic_content || "No topic content"}
+                                        </div>
+                                      </div>
+
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">
+                                          Decision Content
+                                        </label>
+                                        <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                          {item.decision_content || "No decision content"}
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
                         )}
                       </div>
-                      {agendaItems.length === 0 && !isAddingAgendaItem ? (
-                        <div className="text-center text-muted-foreground py-4">
-                          No agenda items found
-                        </div>
-                      ) : (
-                        <div className="space-y-8">
-                          {isAddingAgendaItem && (
-                            <div className="space-y-4">
-                              <form onSubmit={handleCreateAgendaItem} className="space-y-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="new-title">Title</Label>
-                                  <Input
-                                    id="new-title"
-                                    value={newAgendaItem.title}
-                                    onChange={(e) =>
-                                      setNewAgendaItem({
-                                        ...newAgendaItem,
-                                        title: e.target.value,
-                                      })
-                                    }
-                                    placeholder="Enter agenda item title"
-                                    required
-                                  />
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label htmlFor="new-topic">Topic Content</Label>
-                                  <textarea
-                                    id="new-topic"
-                                    value={newAgendaItem.topic_content}
-                                    onChange={(e) =>
-                                      setNewAgendaItem({
-                                        ...newAgendaItem,
-                                        topic_content: e.target.value,
-                                      })
-                                    }
-                                    className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="Enter topic content"
-                                  />
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label htmlFor="new-decision">Decision Content</Label>
-                                  <textarea
-                                    id="new-decision"
-                                    value={newAgendaItem.decision_content}
-                                    onChange={(e) =>
-                                      setNewAgendaItem({
-                                        ...newAgendaItem,
-                                        decision_content: e.target.value,
-                                      })
-                                    }
-                                    className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="Enter decision content"
-                                  />
-                                </div>
-
-                                <div className="flex justify-end gap-4">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={handleCancelAddAgendaItem}
-                                    disabled={loading}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button type="submit" disabled={loading}>
-                                    {loading ? "Creating..." : "Create Agenda Item"}
-                                  </Button>
-                                </div>
-                              </form>
-                            </div>
-                          )}
-
-                          {agendaItems.map((item) => (
-                            <div key={item.id} className="space-y-4">
-                              {editingAgendaItem?.id === item.id ? (
-                                <form onSubmit={handleUpdateAgendaItem} className="space-y-4">
-                                  <div className="space-y-2">
-                                    <Label htmlFor={`title-${item.id}`}>Title</Label>
-                                    <Input
-                                      id={`title-${item.id}`}
-                                      value={editingAgendaItem.title}
-                                      onChange={(e) =>
-                                        setEditingAgendaItem({
-                                          ...editingAgendaItem,
-                                          title: e.target.value,
-                                        })
-                                      }
-                                      placeholder="Enter agenda item title"
-                                      required
-                                    />
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <Label htmlFor={`topic-${item.id}`}>Topic Content</Label>
-                                    <textarea
-                                      id={`topic-${item.id}`}
-                                      value={editingAgendaItem.topic_content}
-                                      onChange={(e) =>
-                                        setEditingAgendaItem({
-                                          ...editingAgendaItem,
-                                          topic_content: e.target.value,
-                                        })
-                                      }
-                                      className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                      placeholder="Enter topic content"
-                                    />
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <Label htmlFor={`decision-${item.id}`}>Decision Content</Label>
-                                    <textarea
-                                      id={`decision-${item.id}`}
-                                      value={editingAgendaItem.decision_content}
-                                      onChange={(e) =>
-                                        setEditingAgendaItem({
-                                          ...editingAgendaItem,
-                                          decision_content: e.target.value,
-                                        })
-                                      }
-                                      className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                      placeholder="Enter decision content"
-                                    />
-                                  </div>
-
-                                  <div className="flex justify-end gap-4">
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      onClick={handleCancelEditAgendaItem}
-                                      disabled={loading}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button type="submit" disabled={loading}>
-                                      {loading ? "Saving..." : "Save Changes"}
-                                    </Button>
-                                  </div>
-                                </form>
-                              ) : (
-                                <>
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-lg font-medium">
-                                      {item.display_order ? `${item.display_order}.` : '•'} {item.title}
-                                    </span>
-                                    <div className="flex gap-2">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleEditAgendaItem(item)}
-                                      >
-                                        <Pencil className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setDeletingAgendaItemId(item.id)}
-                                        className="text-destructive hover:text-destructive"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="space-y-2">
-                                    <label className="text-sm font-medium text-muted-foreground">
-                                      Topic Content
-                                    </label>
-                                    <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                      {item.topic_content || "No topic content"}
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <label className="text-sm font-medium text-muted-foreground">
-                                      Decision Content
-                                    </label>
-                                    <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                      {item.decision_content || "No decision content"}
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </TabsContent>
