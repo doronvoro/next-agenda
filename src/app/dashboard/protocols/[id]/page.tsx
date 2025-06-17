@@ -79,6 +79,14 @@ type ProtocolMember = {
   created_at: string;
 };
 
+type ProtocolMessage = {
+  id: string;
+  protocol_id: string;
+  message: string;
+  user_id: string | null;
+  created_at: string;
+};
+
 type AgendaItem = {
   id: string;
   protocol_id: string | null;
@@ -165,6 +173,8 @@ export default function ProtocolPage() {
   const [protocol, setProtocol] = useState<Protocol | null>(null);
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
   const [protocolMembers, setProtocolMembers] = useState<ProtocolMember[]>([]);
+  const [protocolMessages, setProtocolMessages] = useState<ProtocolMessage[]>([]);
+  const [newMessage, setNewMessage] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -266,6 +276,21 @@ export default function ProtocolPage() {
       }
 
       setProtocolMembers(membersData || []);
+
+      // Fetch protocol messages
+      const { data: messagesData, error: messagesError } = await supabase
+        .from("protocol_messages")
+        .select("*")
+        .eq("protocol_id", params.id)
+        .order("created_at", { ascending: true });
+
+      if (messagesError) {
+        console.error("Error fetching protocol messages:", messagesError);
+        setError(messagesError.message);
+        return;
+      }
+
+      setProtocolMessages(messagesData || []);
     } catch (err) {
       console.error("Unexpected error:", err);
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
@@ -559,6 +584,49 @@ export default function ProtocolPage() {
     }
   };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    try {
+      const supabase = createClient();
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      const { data, error } = await supabase
+        .from("protocol_messages")
+        .insert({
+          id: crypto.randomUUID(),
+          protocol_id: params.id,
+          message: newMessage.trim(),
+          user_id: user?.id || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProtocolMessages(prev => [...prev, data]);
+      setNewMessage("");
+      
+      toast({
+        title: "Success",
+        description: "Message sent successfully",
+      });
+    } catch (err) {
+      console.error("Error sending message:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send message",
+      });
+    }
+  };
+
   if (!mounted) {
     return null;
   }
@@ -714,9 +782,10 @@ export default function ProtocolPage() {
             )}
 
             <Tabs defaultValue="content" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="members">Members</TabsTrigger>
+                <TabsTrigger value="messages">Messages</TabsTrigger>
               </TabsList>
               <TabsContent value="content" className="mt-6">
                 <div className="grid gap-6">
@@ -963,6 +1032,75 @@ export default function ProtocolPage() {
                     </Table>
                   </div>
                 )}
+              </TabsContent>
+              <TabsContent value="messages" className="mt-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Messages</h3>
+                    <Button
+                      onClick={() => {
+                        const textarea = document.getElementById('new-message-textarea');
+                        if (textarea) {
+                          textarea.focus();
+                        }
+                      }}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Message
+                    </Button>
+                  </div>
+
+                  <div className="h-[500px] flex flex-col">
+                    <div className="flex-1 overflow-y-auto space-y-4 p-4">
+                      {protocolMessages.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-8">
+                          No messages found for this protocol
+                        </div>
+                      ) : (
+                        protocolMessages.map((message) => (
+                          <div
+                            key={message.id}
+                            className="flex flex-col space-y-2"
+                          >
+                            <div className="flex items-start space-x-2">
+                              <div className="flex-1 bg-muted rounded-lg p-3">
+                                <p className="text-sm whitespace-pre-wrap">{message.message}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {formatDate(message.created_at)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="border-t p-4">
+                      <form onSubmit={handleSendMessage} className="flex flex-col space-y-2">
+                        <textarea
+                          id="new-message-textarea"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          placeholder="Type your message..."
+                          className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setNewMessage("")}
+                            disabled={!newMessage.trim()}
+                          >
+                            Clear
+                          </Button>
+                          <Button type="submit" disabled={!newMessage.trim()}>
+                            Send Message
+                          </Button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>
