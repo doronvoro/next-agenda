@@ -1,8 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Computer, LayoutDashboard, FileText, Users, Home, Building2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Computer, LayoutDashboard, FileText, Users, Home, Building2, LogOutIcon } from "lucide-react";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { createClient } from "@/lib/supabase/client";
 
 import {
   Sidebar,
@@ -41,18 +51,38 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { authUser } = useAuth();
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/auth/login');
+  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href={"/dashboard"} passHref legacyBehavior>
-              <SidebarMenuButton className="bg-secondary text-foreground py-6 px-4 text-lg transition-all duration-150 cursor-pointer">
-                <Computer className="h-5 w-5" />
-                <span className="text-base font-semibold">Next Supa Shad</span>
-              </SidebarMenuButton>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton className="py-6 px-4 text-lg cursor-pointer hover:bg-sidebar-accent">
+                  <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+                    <AvatarImage src={authUser?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="text-sm font-medium">
+                      {authUser?.email?.split('@')[0].slice(0, 2).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                  <LogOutIcon className="size-4 text-destructive mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
