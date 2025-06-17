@@ -117,18 +117,47 @@ export type Database = {
           name: string;
           created_at: string;
           updated_at: string;
+          company_id: string | null;
         };
         Insert: {
           id?: string;
           name: string;
           created_at?: string;
           updated_at?: string;
+          company_id?: string | null;
         };
         Update: {
           id?: string;
           name?: string;
           created_at?: string;
           updated_at?: string;
+          company_id?: string | null;
+        };
+      };
+      companies: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string;
+          address: string | null;
+          number: string | null;
+          organization_id: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string;
+          address?: string | null;
+          number?: string | null;
+          organization_id?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string;
+          address?: string | null;
+          number?: string | null;
+          organization_id?: string;
         };
       };
       protocols: {
