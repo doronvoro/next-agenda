@@ -14,6 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
   committee: Database["public"]["Tables"]["committees"]["Row"] | null;
@@ -82,8 +84,16 @@ export default function ProtocolsPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Protocols</h1>
-        <div className="text-sm text-muted-foreground">
-          Total: {protocols.length} protocols
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            Total: {protocols.length} protocols
+          </div>
+          <Link href="/dashboard/protocols/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create Protocol
+            </Button>
+          </Link>
         </div>
       </div>
 

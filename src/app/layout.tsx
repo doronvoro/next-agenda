@@ -33,8 +33,8 @@ export default function Layout({
 }>) {
   return (
     <html lang="he" suppressHydrationWarning>
-      <AuthProvider>
-        <body className={`${figtree.variable} ${rubik.variable} font-sans antialiased`}>
+      <body className={`${figtree.variable} ${rubik.variable} font-sans antialiased`} suppressHydrationWarning>
+        <AuthProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -46,8 +46,8 @@ export default function Layout({
             {children}
             <Toaster position="bottom-right" />
           </ThemeProvider>
-        </body>
-      </AuthProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
