@@ -63,6 +63,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 type Committee = {
   id: string;
@@ -160,10 +161,11 @@ function SortableAgendaItem({ item }: SortableAgendaItemProps) {
 export default function ProtocolPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const [protocol, setProtocol] = useState<Protocol | null>(null);
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
   const [protocolMembers, setProtocolMembers] = useState<ProtocolMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<{
@@ -268,7 +270,7 @@ export default function ProtocolPage() {
       console.error("Unexpected error:", err);
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -290,7 +292,6 @@ export default function ProtocolPage() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
     try {
@@ -318,8 +319,6 @@ export default function ProtocolPage() {
     } catch (err) {
       console.error("Error updating protocol:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -340,7 +339,6 @@ export default function ProtocolPage() {
     e.preventDefault();
     if (!editingAgendaItem) return;
 
-    setLoading(true);
     setError(null);
 
     try {
@@ -357,14 +355,30 @@ export default function ProtocolPage() {
 
       if (error) throw error;
 
-      // Refresh the data
-      await fetchData();
+      // Update the UI
+      setAgendaItems(prev => 
+        prev.map(item => 
+          item.id === editingAgendaItem.id 
+            ? { ...item, ...editingAgendaItem }
+            : item
+        )
+      );
+      
       setEditingAgendaItem(null);
+
+      toast({
+        title: "Success",
+        description: "Agenda item updated successfully",
+      });
     } catch (err) {
       console.error("Error updating agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update agenda item",
+      });
     }
   };
 
@@ -387,13 +401,12 @@ export default function ProtocolPage() {
   const handleCreateAgendaItem = async (title: string) => {
     if (!title.trim()) return;
     
-    setLoading(true);
     setError(null);
 
     try {
       const supabase = createClient();
 
-      // Get the highest display order
+      // Get the highest display_order
       const maxOrder = Math.max(...agendaItems.map(item => item.display_order || 0), 0);
 
       const { data, error } = await supabase
@@ -420,11 +433,25 @@ export default function ProtocolPage() {
         title: "",
         isEditing: false,
       });
+
+      toast({
+        title: "Success",
+        description: "Agenda item added successfully",
+      });
     } catch (err) {
       console.error("Error creating agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
+      // Reset the new item input on error
+      setNewAgendaItem({
+        title: "",
+        isEditing: false,
+      });
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add agenda item",
+      });
     }
   };
 
@@ -449,7 +476,6 @@ export default function ProtocolPage() {
   const handleDeleteAgendaItem = async () => {
     if (!deletingAgendaItemId) return;
 
-    setLoading(true);
     setError(null);
 
     try {
@@ -462,14 +488,23 @@ export default function ProtocolPage() {
 
       if (error) throw error;
 
-      // Refresh the data
-      await fetchData();
+      // Update the UI
+      setAgendaItems(prev => prev.filter(item => item.id !== deletingAgendaItemId));
       setDeletingAgendaItemId(null);
+
+      toast({
+        title: "Success",
+        description: "Agenda item deleted successfully",
+      });
     } catch (err) {
       console.error("Error deleting agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete agenda item",
+      });
     }
   };
 
@@ -504,11 +539,22 @@ export default function ProtocolPage() {
           ...item,
           display_order: index + 1
         })));
+
+        toast({
+          title: "Success",
+          description: "Agenda items reordered successfully",
+        });
       } catch (err) {
         console.error("Error updating agenda item order:", err);
         setError(err instanceof Error ? err.message : "Failed to update agenda item order");
         // Refresh data to ensure consistency
         await fetchData();
+
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to reorder agenda items",
+        });
       }
     }
   };
@@ -517,7 +563,7 @@ export default function ProtocolPage() {
     return null;
   }
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">Loading protocol...</div>
@@ -644,12 +690,12 @@ export default function ProtocolPage() {
                     type="button"
                     variant="outline"
                     onClick={handleCancelEdit}
-                    disabled={loading}
+                    disabled={initialLoading}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Saving..." : "Save Changes"}
+                  <Button type="submit" disabled={initialLoading}>
+                    Save Changes
                   </Button>
                 </div>
               </form>
@@ -804,12 +850,12 @@ export default function ProtocolPage() {
                                           type="button"
                                           variant="outline"
                                           onClick={handleCancelEditAgendaItem}
-                                          disabled={loading}
+                                          disabled={initialLoading}
                                         >
                                           Cancel
                                         </Button>
-                                        <Button type="submit" disabled={loading}>
-                                          {loading ? "Saving..." : "Save Changes"}
+                                        <Button type="submit" disabled={initialLoading}>
+                                          Save Changes
                                         </Button>
                                       </div>
                                     </form>

@@ -1,52 +1,39 @@
 import type { Metadata } from "next";
-import { Figtree, Rubik } from "next/font/google";
-
-import NextTopLoader from "nextjs-toploader";
-
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/lib/providers/theme-provider";
 import { AuthProvider } from "@/lib/providers/auth-provider";
+import NextTopLoader from "nextjs-toploader";
 import { brand } from "@/lib/constants/brand";
 
-import { Toaster } from "@/components/ui/sonner";
-
-import "./globals.css";
-
-const figtree = Figtree({
-  subsets: ["latin"],
-  variable: "--font-figtree",
-});
-
-const rubik = Rubik({
-  subsets: ["hebrew", "latin"],
-  variable: "--font-rubik",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: brand.name,
   description: brand.description,
 };
 
-export default function Layout({
+export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="he" suppressHydrationWarning>
-      <body className={`${figtree.variable} ${rubik.variable} font-sans antialiased`} suppressHydrationWarning>
-        <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            storageKey="theme-preference"
-          >
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
             <NextTopLoader showSpinner={false} />
             {children}
-            <Toaster position="bottom-right" />
-          </ThemeProvider>
-        </AuthProvider>
+            <Toaster />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
