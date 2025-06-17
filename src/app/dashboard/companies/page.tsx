@@ -43,9 +43,11 @@ export default function CompaniesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [defaultAddress, setDefaultAddress] = useState<string | null>(null);
   const [newCompany, setNewCompany] = useState({
     name: "",
-    address: "",
+    address: defaultAddress || "",
     number: "",
   });
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
@@ -53,7 +55,17 @@ export default function CompaniesPage() {
 
   useEffect(() => {
     fetchCompanies();
+    fetchOrganization();
   }, []);
+
+  useEffect(() => {
+    if (defaultAddress) {
+      setNewCompany(prev => ({
+        ...prev,
+        address: defaultAddress
+      }));
+    }
+  }, [defaultAddress]);
 
   const fetchCompanies = async () => {
     try {
@@ -73,8 +85,26 @@ export default function CompaniesPage() {
     }
   };
 
+  const fetchOrganization = async () => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("id, default_address")
+        .limit(1)
+        .single();
+
+      if (error) throw error;
+      setOrganizationId(data?.id || null);
+      setDefaultAddress(data?.default_address || null);
+    } catch (err) {
+      console.error("Error fetching organization:", err);
+      setError(err instanceof Error ? err.message : "Failed to load organization");
+    }
+  };
+
   const handleAddCompany = async () => {
-    if (!newCompany.name.trim()) return;
+    if (!newCompany.name.trim() || !organizationId) return;
 
     try {
       const supabase = createClient();
@@ -84,6 +114,7 @@ export default function CompaniesPage() {
           name: newCompany.name.trim(),
           address: newCompany.address.trim() || null,
           number: newCompany.number.trim() || null,
+          organization_id: organizationId,
         }])
         .select()
         .single();
@@ -93,7 +124,7 @@ export default function CompaniesPage() {
       setCompanies(prev => [...prev, data]);
       setNewCompany({
         name: "",
-        address: "",
+        address: defaultAddress || "",
         number: "",
       });
       setIsAdding(false);
