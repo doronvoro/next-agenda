@@ -6,7 +6,7 @@ import { Database } from "@/types/supabase";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CalendarIcon, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Pencil, Plus, Trash2, X, Check } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -598,24 +598,28 @@ export default function ProtocolPage() {
             Back to Protocols
           </Button>
         </Link>
-        {!isEditing && (
-          <Button onClick={handleEdit} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Edit Protocol
-          </Button>
-        )}
       </div>
 
       <div className="grid gap-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-2xl">
               {isEditing ? "Edit Protocol" : `Protocol #${protocol?.number}`}
             </CardTitle>
+            {!isEditing && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleEdit}
+                className="h-8 w-8"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
-            {isEditing ? (
-              <form onSubmit={handleUpdate} className="space-y-6">
+            {isEditing && (
+              <form onSubmit={handleUpdate} className="space-y-6 mb-8">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="number">Protocol Number *</Label>
@@ -688,263 +692,279 @@ export default function ProtocolPage() {
                 <div className="flex justify-end gap-4">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
+                    size="icon"
                     onClick={handleCancelEdit}
                     disabled={initialLoading}
+                    className="h-8 w-8"
                   >
-                    Cancel
+                    <X className="h-4 w-4" />
                   </Button>
-                  <Button type="submit" disabled={initialLoading}>
-                    Save Changes
+                  <Button 
+                    type="submit" 
+                    variant="ghost"
+                    size="icon"
+                    disabled={initialLoading}
+                    className="h-8 w-8"
+                  >
+                    <Check className="h-4 w-4" />
                   </Button>
                 </div>
               </form>
-            ) : (
-              <Tabs defaultValue="content" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="content">Content</TabsTrigger>
-                  <TabsTrigger value="members">Members</TabsTrigger>
-                </TabsList>
-                <TabsContent value="content" className="mt-6">
-                  <div className="grid gap-6">
+            )}
+
+            <Tabs defaultValue="content" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="content">Content</TabsTrigger>
+                <TabsTrigger value="members">Members</TabsTrigger>
+              </TabsList>
+              <TabsContent value="content" className="mt-6">
+                <div className="grid gap-6">
+                  <div className="grid gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Protocol Number" value={protocol.number} />
+                      <Field label="Due Date" value={formatDate(protocol.due_date)} />
+                      <Field label="Created At" value={formatDate(protocol.created_at)} />
+                      <Field label="Last Updated" value={formatDate(protocol.updated_at)} />
+                      <Field 
+                        label="Committee" 
+                        value={
+                          <div className="flex items-center gap-2">
+                            <span>{protocol.committee?.name || "Not assigned"}</span>
+                            {protocol.committee && (
+                              <span className="text-sm text-muted-foreground">
+                                (ID: {protocol.committee.id})
+                              </span>
+                            )}
+                          </div>
+                        } 
+                      />
+                    </div>
+
+                    <Separator />
+
                     <div className="grid gap-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <Field label="Protocol Number" value={protocol.number} />
-                        <Field label="Due Date" value={formatDate(protocol.due_date)} />
-                        <Field label="Created At" value={formatDate(protocol.created_at)} />
-                        <Field label="Last Updated" value={formatDate(protocol.updated_at)} />
-                        <Field 
-                          label="Committee" 
-                          value={
-                            <div className="flex items-center gap-2">
-                              <span>{protocol.committee?.name || "Not assigned"}</span>
-                              {protocol.committee && (
-                                <span className="text-sm text-muted-foreground">
-                                  (ID: {protocol.committee.id})
-                                </span>
-                              )}
-                            </div>
-                          } 
-                        />
-                      </div>
-
-                      <Separator />
-
-                      <div className="grid gap-4">
-                        <h3 className="text-lg font-medium">Agenda</h3>
-                        <DndContext
-                          sensors={sensors}
-                          collisionDetection={closestCenter}
-                          onDragEnd={handleDragEnd}
+                      <h3 className="text-lg font-medium">Agenda</h3>
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={agendaItems.map((item) => item.id)}
+                          strategy={verticalListSortingStrategy}
                         >
-                          <SortableContext
-                            items={agendaItems.map((item) => item.id)}
-                            strategy={verticalListSortingStrategy}
-                          >
-                            <div className="space-y-2">
-                              {agendaItems.length === 0 ? (
-                                <div className="text-center text-muted-foreground py-4">
-                                  No agenda items found
-                                </div>
-                              ) : (
-                                agendaItems.map((item) => (
-                                  <SortableAgendaItem
-                                    key={item.id}
-                                    item={item}
-                                  />
-                                ))
-                              )}
-                              {newAgendaItem.isEditing ? (
-                                <div className="flex items-center gap-2">
-                                  <Input
-                                    value={newAgendaItem.title}
-                                    onChange={(e) => setNewAgendaItem(prev => ({ ...prev, title: e.target.value }))}
-                                    onKeyDown={handleKeyDown}
-                                    onBlur={handleBlur}
-                                    placeholder="Enter new agenda item title"
-                                    autoFocus
-                                    className="flex-1"
-                                  />
-                                </div>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  className="w-full"
-                                  onClick={() => setNewAgendaItem({ title: "", isEditing: true })}
-                                >
-                                  <Plus className="h-4 w-4 mr-2" />
-                                  Add New Agenda Item
-                                </Button>
-                              )}
-                            </div>
-                          </SortableContext>
-                        </DndContext>
-                      </div>
-
-                      <Separator />
-
-                      <div className="grid gap-6">
-                        <h3 className="text-lg font-medium">Agenda Items Details</h3>
-                        {agendaItems.length === 0 ? (
-                          <div className="text-center text-muted-foreground py-4">
-                            No agenda items found
+                          <div className="space-y-2">
+                            {agendaItems.length === 0 ? (
+                              <div className="text-center text-muted-foreground py-4">
+                                No agenda items found
+                              </div>
+                            ) : (
+                              agendaItems.map((item) => (
+                                <SortableAgendaItem
+                                  key={item.id}
+                                  item={item}
+                                />
+                              ))
+                            )}
+                            {newAgendaItem.isEditing ? (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  value={newAgendaItem.title}
+                                  onChange={(e) => setNewAgendaItem(prev => ({ ...prev, title: e.target.value }))}
+                                  onKeyDown={handleKeyDown}
+                                  onBlur={handleBlur}
+                                  placeholder="Enter new agenda item title"
+                                  autoFocus
+                                  className="flex-1"
+                                />
+                              </div>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setNewAgendaItem({ title: "", isEditing: true })}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add New Agenda Item
+                              </Button>
+                            )}
                           </div>
-                        ) : (
-                          <div className="space-y-8">
-                            {agendaItems
-                              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-                              .map((item) => (
-                                <div key={item.id} className="space-y-4">
-                                  {editingAgendaItem?.id === item.id ? (
-                                    <form onSubmit={handleUpdateAgendaItem} className="space-y-4">
-                                      <div className="space-y-2">
-                                        <Label htmlFor={`title-${item.id}`}>Title</Label>
-                                        <Input
-                                          id={`title-${item.id}`}
-                                          value={editingAgendaItem.title}
-                                          onChange={(e) =>
-                                            setEditingAgendaItem({
-                                              ...editingAgendaItem,
-                                              title: e.target.value,
-                                            })
-                                          }
-                                          placeholder="Enter agenda item title"
-                                          required
-                                        />
-                                      </div>
+                        </SortableContext>
+                      </DndContext>
+                    </div>
 
-                                      <div className="space-y-2">
-                                        <Label htmlFor={`topic-${item.id}`}>Topic Content</Label>
-                                        <textarea
-                                          id={`topic-${item.id}`}
-                                          value={editingAgendaItem.topic_content}
-                                          onChange={(e) =>
-                                            setEditingAgendaItem({
-                                              ...editingAgendaItem,
-                                              topic_content: e.target.value,
-                                            })
-                                          }
-                                          className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                          placeholder="Enter topic content"
-                                        />
-                                      </div>
+                    <Separator />
 
-                                      <div className="space-y-2">
-                                        <Label htmlFor={`decision-${item.id}`}>Decision Content</Label>
-                                        <textarea
-                                          id={`decision-${item.id}`}
-                                          value={editingAgendaItem.decision_content}
-                                          onChange={(e) =>
-                                            setEditingAgendaItem({
-                                              ...editingAgendaItem,
-                                              decision_content: e.target.value,
-                                            })
-                                          }
-                                          className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                          placeholder="Enter decision content"
-                                        />
-                                      </div>
+                    <div className="grid gap-6">
+                      <h3 className="text-lg font-medium">Agenda Items Details</h3>
+                      {agendaItems.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-4">
+                          No agenda items found
+                        </div>
+                      ) : (
+                        <div className="space-y-8">
+                          {agendaItems
+                            .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                            .map((item) => (
+                              <div key={item.id} className="space-y-4">
+                                {editingAgendaItem?.id === item.id ? (
+                                  <form onSubmit={handleUpdateAgendaItem} className="space-y-4">
+                                    <div className="space-y-2">
+                                      <Label htmlFor={`title-${item.id}`}>Title</Label>
+                                      <Input
+                                        id={`title-${item.id}`}
+                                        value={editingAgendaItem.title}
+                                        onChange={(e) =>
+                                          setEditingAgendaItem({
+                                            ...editingAgendaItem,
+                                            title: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Enter agenda item title"
+                                        required
+                                      />
+                                    </div>
 
-                                      <div className="flex justify-end gap-4">
+                                    <div className="space-y-2">
+                                      <Label htmlFor={`topic-${item.id}`}>Topic Content</Label>
+                                      <textarea
+                                        id={`topic-${item.id}`}
+                                        value={editingAgendaItem.topic_content}
+                                        onChange={(e) =>
+                                          setEditingAgendaItem({
+                                            ...editingAgendaItem,
+                                            topic_content: e.target.value,
+                                          })
+                                        }
+                                        className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        placeholder="Enter topic content"
+                                      />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                      <Label htmlFor={`decision-${item.id}`}>Decision Content</Label>
+                                      <textarea
+                                        id={`decision-${item.id}`}
+                                        value={editingAgendaItem.decision_content}
+                                        onChange={(e) =>
+                                          setEditingAgendaItem({
+                                            ...editingAgendaItem,
+                                            decision_content: e.target.value,
+                                          })
+                                        }
+                                        className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        placeholder="Enter decision content"
+                                      />
+                                    </div>
+
+                                    <div className="flex justify-end gap-4">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={handleCancelEditAgendaItem}
+                                        disabled={initialLoading}
+                                        className="h-8 w-8"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                      <Button 
+                                        type="submit" 
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={initialLoading}
+                                        className="h-8 w-8"
+                                      >
+                                        <Check className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </form>
+                                ) : (
+                                  <>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-lg font-medium">
+                                        {item.display_order ? `${item.display_order}.` : '•'} {item.title}
+                                      </span>
+                                      <div className="flex gap-2">
                                         <Button
-                                          type="button"
-                                          variant="outline"
-                                          onClick={handleCancelEditAgendaItem}
-                                          disabled={initialLoading}
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleEditAgendaItem(item)}
                                         >
-                                          Cancel
+                                          <Pencil className="h-4 w-4" />
                                         </Button>
-                                        <Button type="submit" disabled={initialLoading}>
-                                          Save Changes
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => setDeletingAgendaItemId(item.id)}
+                                          className="text-destructive hover:text-destructive"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
                                         </Button>
                                       </div>
-                                    </form>
-                                  ) : (
-                                    <>
-                                      <div className="flex items-center justify-between">
-                                        <span className="text-lg font-medium">
-                                          {item.display_order ? `${item.display_order}.` : '•'} {item.title}
-                                        </span>
-                                        <div className="flex gap-2">
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleEditAgendaItem(item)}
-                                          >
-                                            <Pencil className="h-4 w-4" />
-                                          </Button>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => setDeletingAgendaItemId(item.id)}
-                                            className="text-destructive hover:text-destructive"
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-muted-foreground">
+                                        Topic Content
+                                      </label>
+                                      <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                        {item.topic_content || "No topic content"}
                                       </div>
-                                      
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-muted-foreground">
-                                          Topic Content
-                                        </label>
-                                        <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                          {item.topic_content || "No topic content"}
-                                        </div>
-                                      </div>
+                                    </div>
 
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-muted-foreground">
-                                          Decision Content
-                                        </label>
-                                        <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                          {item.decision_content || "No decision content"}
-                                        </div>
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-muted-foreground">
+                                        Decision Content
+                                      </label>
+                                      <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                        {item.decision_content || "No decision content"}
                                       </div>
-                                    </>
-                                  )}
-                                </div>
-                              ))}
-                          </div>
-                        )}
-                      </div>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-                </TabsContent>
-                <TabsContent value="members" className="mt-6">
-                  {protocolMembers.length === 0 ? (
-                    <div className="text-center text-muted-foreground py-8">
-                      No members found for this protocol
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Source Type</TableHead>
-                            <TableHead>Created At</TableHead>
+                </div>
+              </TabsContent>
+              <TabsContent value="members" className="mt-6">
+                {protocolMembers.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    No members found for this protocol
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Source Type</TableHead>
+                          <TableHead>Created At</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {protocolMembers.map((member) => (
+                          <TableRow key={member.id}>
+                            <TableCell>{member.name || "Unnamed"}</TableCell>
+                            <TableCell>{member.type}</TableCell>
+                            <TableCell>{member.status}</TableCell>
+                            <TableCell>{member.source_type || "N/A"}</TableCell>
+                            <TableCell>{formatDate(member.created_at)}</TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {protocolMembers.map((member) => (
-                            <TableRow key={member.id}>
-                              <TableCell>{member.name || "Unnamed"}</TableCell>
-                              <TableCell>{member.type}</TableCell>
-                              <TableCell>{member.status}</TableCell>
-                              <TableCell>{member.source_type || "N/A"}</TableCell>
-                              <TableCell>{formatDate(member.created_at)}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            )}
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
