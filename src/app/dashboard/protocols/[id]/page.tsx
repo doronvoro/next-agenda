@@ -95,6 +95,11 @@ type EditingAgendaItem = {
   decision_content: string;
 };
 
+type NewAgendaItem = {
+  title: string;
+  isEditing: boolean;
+};
+
 type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
   committee: Database["public"]["Tables"]["committees"]["Row"] | null;
 };
@@ -173,10 +178,9 @@ export default function ProtocolPage() {
   const [mounted, setMounted] = useState(false);
   const [editingAgendaItem, setEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
   const [isAddingAgendaItem, setIsAddingAgendaItem] = useState(false);
-  const [newAgendaItem, setNewAgendaItem] = useState({
+  const [newAgendaItem, setNewAgendaItem] = useState<NewAgendaItem>({
     title: "",
-    topic_content: "",
-    decision_content: "",
+    isEditing: false,
   });
   const [deletingAgendaItemId, setDeletingAgendaItemId] = useState<string | null>(null);
 
@@ -368,8 +372,7 @@ export default function ProtocolPage() {
     setIsAddingAgendaItem(true);
     setNewAgendaItem({
       title: "",
-      topic_content: "",
-      decision_content: "",
+      isEditing: false,
     });
   };
 
@@ -377,13 +380,13 @@ export default function ProtocolPage() {
     setIsAddingAgendaItem(false);
     setNewAgendaItem({
       title: "",
-      topic_content: "",
-      decision_content: "",
+      isEditing: false,
     });
   };
 
-  const handleCreateAgendaItem = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateAgendaItem = async (title: string) => {
+    if (!title.trim()) return;
+    
     setLoading(true);
     setError(null);
 
@@ -393,33 +396,53 @@ export default function ProtocolPage() {
       // Get the highest display order
       const maxOrder = Math.max(...agendaItems.map(item => item.display_order || 0), 0);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("agenda_items")
         .insert([
           {
             protocol_id: params.id,
-            title: newAgendaItem.title,
-            topic_content: newAgendaItem.topic_content,
-            decision_content: newAgendaItem.decision_content,
+            title: title.trim(),
+            topic_content: "",
+            decision_content: "",
             display_order: maxOrder + 1,
           },
-        ]);
+        ])
+        .select()
+        .single();
 
       if (error) throw error;
 
-      // Refresh the data
-      await fetchData();
-      setIsAddingAgendaItem(false);
+      // Add the new item to the UI
+      setAgendaItems(prev => [...prev, data]);
+      
+      // Reset the new item input
       setNewAgendaItem({
         title: "",
-        topic_content: "",
-        decision_content: "",
+        isEditing: false,
       });
     } catch (err) {
       console.error("Error creating agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCreateAgendaItem(newAgendaItem.title);
+    }
+  };
+
+  const handleBlur = () => {
+    if (newAgendaItem.title.trim()) {
+      handleCreateAgendaItem(newAgendaItem.title);
+    } else {
+      setNewAgendaItem({
+        title: "",
+        isEditing: false,
+      });
     }
   };
 
@@ -663,31 +686,53 @@ export default function ProtocolPage() {
 
                       <div className="grid gap-4">
                         <h3 className="text-lg font-medium">Agenda</h3>
-                        {agendaItems.length === 0 ? (
-                          <div className="text-center text-muted-foreground py-4">
-                            No agenda items found
-                          </div>
-                        ) : (
-                          <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            onDragEnd={handleDragEnd}
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <SortableContext
+                            items={agendaItems.map((item) => item.id)}
+                            strategy={verticalListSortingStrategy}
                           >
-                            <SortableContext
-                              items={agendaItems.map((item) => item.id)}
-                              strategy={verticalListSortingStrategy}
-                            >
-                              <div className="space-y-2">
-                                {agendaItems.map((item) => (
+                            <div className="space-y-2">
+                              {agendaItems.length === 0 ? (
+                                <div className="text-center text-muted-foreground py-4">
+                                  No agenda items found
+                                </div>
+                              ) : (
+                                agendaItems.map((item) => (
                                   <SortableAgendaItem
                                     key={item.id}
                                     item={item}
                                   />
-                                ))}
-                              </div>
-                            </SortableContext>
-                          </DndContext>
-                        )}
+                                ))
+                              )}
+                              {newAgendaItem.isEditing ? (
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    value={newAgendaItem.title}
+                                    onChange={(e) => setNewAgendaItem(prev => ({ ...prev, title: e.target.value }))}
+                                    onKeyDown={handleKeyDown}
+                                    onBlur={handleBlur}
+                                    placeholder="Enter new agenda item title"
+                                    autoFocus
+                                    className="flex-1"
+                                  />
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() => setNewAgendaItem({ title: "", isEditing: true })}
+                                >
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Add New Agenda Item
+                                </Button>
+                              )}
+                            </div>
+                          </SortableContext>
+                        </DndContext>
                       </div>
 
                       <Separator />
