@@ -195,6 +195,7 @@ export default function ProtocolPage() {
     isEditing: false,
   });
   const [deletingAgendaItemId, setDeletingAgendaItemId] = useState<string | null>(null);
+  const [currentTab, setCurrentTab] = useState("content");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -674,16 +675,6 @@ export default function ProtocolPage() {
             <CardTitle className="text-2xl">
               {isEditing ? "Edit Protocol" : `Protocol #${protocol?.number}`}
             </CardTitle>
-            {!isEditing && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleEdit}
-                className="h-8 w-8"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
           </CardHeader>
           <CardContent>
             {isEditing && (
@@ -781,7 +772,7 @@ export default function ProtocolPage() {
               </form>
             )}
 
-            <Tabs defaultValue="content" className="w-full">
+            <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="members">Members</TabsTrigger>
@@ -789,6 +780,18 @@ export default function ProtocolPage() {
               </TabsList>
               <TabsContent value="content" className="mt-6">
                 <div className="grid gap-6">
+                  {!isEditing && (
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleEdit}
+                        className="h-8 w-8"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                   <div className="grid gap-4">
                     <div className="grid grid-cols-2 gap-4">
                       <Field label="Protocol Number" value={protocol.number} />
