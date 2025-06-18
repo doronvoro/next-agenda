@@ -74,6 +74,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import AgendaList from "./components/AgendaList";
 
 type Committee = {
   id: string;
@@ -1415,54 +1416,16 @@ export default function ProtocolPage() {
 
                     <div className="grid gap-4">
                       <h3 className="text-lg font-medium">Agenda</h3>
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <SortableContext
-                          items={agendaItems.map((item) => item.id)}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          <div className="space-y-2">
-                            {agendaItems.length === 0 ? (
-                              <div className="text-center text-muted-foreground py-4">
-                                No agenda items found
-                              </div>
-                            ) : (
-                              agendaItems.map((item) => (
-                                <SortableAgendaItem
-                                  key={item.id}
-                                  item={item}
-                                  onViewClick={handleOpenAgendaItemDialog}
-                                />
-                              ))
-                            )}
-                            {newAgendaItem.isEditing ? (
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  value={newAgendaItem.title}
-                                  onChange={(e) => setNewAgendaItem(prev => ({ ...prev, title: e.target.value }))}
-                                  onKeyDown={handleKeyDown}
-                                  onBlur={handleBlur}
-                                  placeholder="Enter new agenda item title"
-                                  autoFocus
-                                  className="flex-1"
-                                />
-                              </div>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => setNewAgendaItem({ title: "", isEditing: true })}
-                              >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add New Agenda Item
-                              </Button>
-                            )}
-                          </div>
-                        </SortableContext>
-                      </DndContext>
+                      <AgendaList
+                        agendaItems={agendaItems}
+                        newAgendaItem={newAgendaItem}
+                        setNewAgendaItem={setNewAgendaItem}
+                        handleKeyDown={handleKeyDown}
+                        handleBlur={handleBlur}
+                        handleCreateAgendaItem={handleCreateAgendaItem}
+                        handleDragEnd={handleDragEnd}
+                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                      />
                     </div>
 
                     <Separator />
