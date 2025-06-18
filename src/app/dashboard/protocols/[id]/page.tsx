@@ -259,6 +259,7 @@ export default function ProtocolPage() {
   const [isPopupEditing, setIsPopupEditing] = useState(false);
   const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -1124,6 +1125,27 @@ export default function ProtocolPage() {
     setSelectedRecipients([]);
   };
 
+  const handleTemplateChange = (template: string) => {
+    setSelectedTemplate(template);
+    // You can add template-specific message content here if needed
+    switch (template) {
+      case "select-template":
+        setNewMessage("");
+        break;
+      case "pre-meeting materials":
+        setNewMessage("Pre-meeting materials are now available for review.");
+        break;
+      case "protocol approval":
+        setNewMessage("Protocol approval is required. Please review and approve.");
+        break;
+      case "general message":
+        setNewMessage("");
+        break;
+      default:
+        setNewMessage("");
+    }
+  };
+
   if (!mounted) {
     return null;
   }
@@ -1882,18 +1904,6 @@ export default function ProtocolPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium">Messages</h3>
-                    <Button
-                      onClick={() => {
-                        const textarea = document.getElementById('new-message-textarea');
-                        if (textarea) {
-                          textarea.focus();
-                        }
-                      }}
-                      className="gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Message
-                    </Button>
                   </div>
 
                   <div className="h-[500px] flex flex-col">
@@ -1930,13 +1940,31 @@ export default function ProtocolPage() {
                           className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         />
                         <div className="flex items-center justify-between">
-                          <button
-                            type="button"
-                            onClick={handleOpenRecipientsDialog}
-                            className="text-sm text-primary hover:underline"
-                          >
-                            Select Recipients ({selectedRecipients.length} selected)
-                          </button>
+                          <div className="flex items-center space-x-4">
+                            <button
+                              type="button"
+                              onClick={handleOpenRecipientsDialog}
+                              className="text-sm text-primary hover:underline"
+                            >
+                              Select Recipients ({selectedRecipients.length} selected)
+                            </button>
+                            <div className="flex items-center space-x-2">
+                              <Select
+                                value={selectedTemplate}
+                                onValueChange={handleTemplateChange}
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Choose template" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="select-template">Select template</SelectItem>
+                                  <SelectItem value="pre-meeting materials">Pre-meeting materials</SelectItem>
+                                  <SelectItem value="protocol approval">Protocol approval</SelectItem>
+                                  <SelectItem value="general message">General message</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
                           <div className="flex space-x-2">
                             <Button
                               type="button"
