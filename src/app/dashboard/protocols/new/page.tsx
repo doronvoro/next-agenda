@@ -77,7 +77,8 @@ export default function NewProtocolPage() {
         throw new Error("Please fill in all required fields");
       }
 
-      const { data, error } = await supabase
+      // Create the protocol
+      const { data: protocolData, error: protocolError } = await supabase
         .from("protocols")
         .insert([
           {
@@ -89,9 +90,46 @@ export default function NewProtocolPage() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (protocolError) throw protocolError;
 
-      router.push(`/dashboard/protocols/${data.id}`);
+      // If a committee is selected, fetch its members and add them to protocol_members
+      if (formData.committee_id && protocolData) {
+        try {
+          // Fetch committee members
+          const { data: committeeMembers, error: membersError } = await supabase
+            .from("committees_members")
+            .select("name")
+            .eq("committee_id", formData.committee_id);
+
+          if (membersError) {
+            console.error("Error fetching committee members:", membersError);
+            // Don't throw error here, just log it and continue
+          } else if (committeeMembers && committeeMembers.length > 0) {
+            // Create protocol members from committee members
+            const protocolMembersData = committeeMembers.map(member => ({
+              protocol_id: protocolData.id,
+              name: member.name,
+              type: 1, // Default type
+              status: 1, // Default status
+              source_type: 1, // Committee member source type
+            }));
+
+            const { error: insertMembersError } = await supabase
+              .from("protocol_members")
+              .insert(protocolMembersData);
+
+            if (insertMembersError) {
+              console.error("Error inserting protocol members:", insertMembersError);
+              // Don't throw error here, just log it and continue
+            }
+          }
+        } catch (err) {
+          console.error("Error processing committee members:", err);
+          // Don't throw error here, just log it and continue
+        }
+      }
+
+      router.push(`/dashboard/protocols/${protocolData.id}`);
     } catch (err) {
       console.error("Error creating protocol:", err);
       setError(err instanceof Error ? err.message : "An error occurred");

@@ -209,6 +209,38 @@ export type Database = {
           updated_at?: string;
         };
       };
+      protocol_members: {
+        Row: {
+          id: string;
+          protocol_id: string;
+          name: string | null;
+          type: number;
+          status: number;
+          source_type: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          protocol_id: string;
+          name?: string | null;
+          type?: number;
+          status?: number;
+          source_type?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          protocol_id?: string;
+          name?: string | null;
+          type?: number;
+          status?: number;
+          source_type?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       roles: {
         Row: {
           id: string;
