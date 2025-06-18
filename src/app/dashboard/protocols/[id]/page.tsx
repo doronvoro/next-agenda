@@ -266,6 +266,12 @@ export default function ProtocolPage() {
   const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [isImprovingTopic, setIsImprovingTopic] = useState(false);
+  const [isImprovingDecision, setIsImprovingDecision] = useState(false);
+  const [topicOriginal, setTopicOriginal] = useState<string | null>(null);
+  const [topicImproved, setTopicImproved] = useState<string | null>(null);
+  const [decisionOriginal, setDecisionOriginal] = useState<string | null>(null);
+  const [decisionImproved, setDecisionImproved] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -1160,6 +1166,67 @@ export default function ProtocolPage() {
         break;
       default:
         setNewMessage("");
+    }
+  };
+
+  // Handler for AI improvement
+  const handleImprovePopupText = async (
+    field: 'topic_content' | 'decision_content',
+    text: string
+  ) => {
+    if (!popupEditingAgendaItem || !text.trim()) return;
+    if (field === 'topic_content') setIsImprovingTopic(true);
+    if (field === 'decision_content') setIsImprovingDecision(true);
+    try {
+      const response = await fetch('/api/improve-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      const data = await response.json();
+      if (data.improvedText) {
+        if (field === 'topic_content') {
+          setTopicOriginal(text);
+          setTopicImproved(data.improvedText);
+        } else {
+          setDecisionOriginal(text);
+          setDecisionImproved(data.improvedText);
+        }
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to improve text",
+      });
+    } finally {
+      if (field === 'topic_content') setIsImprovingTopic(false);
+      if (field === 'decision_content') setIsImprovingDecision(false);
+    }
+  };
+
+  const handleAcceptImproved = (field: 'topic_content' | 'decision_content') => {
+    if (!popupEditingAgendaItem) return;
+    if (field === 'topic_content' && topicImproved) {
+      setPopupEditingAgendaItem(prev => prev ? { ...prev, topic_content: topicImproved } : null);
+      setTopicOriginal(null);
+      setTopicImproved(null);
+    }
+    if (field === 'decision_content' && decisionImproved) {
+      setPopupEditingAgendaItem(prev => prev ? { ...prev, decision_content: decisionImproved } : null);
+      setDecisionOriginal(null);
+      setDecisionImproved(null);
+    }
+  };
+
+  const handleRevertImproved = (field: 'topic_content' | 'decision_content') => {
+    if (field === 'topic_content') {
+      setTopicOriginal(null);
+      setTopicImproved(null);
+    }
+    if (field === 'decision_content') {
+      setDecisionOriginal(null);
+      setDecisionImproved(null);
     }
   };
 
@@ -2094,37 +2161,94 @@ export default function ProtocolPage() {
                       required
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="popup-topic">Topic Content</Label>
-                    <textarea
-                      id="popup-topic"
-                      value={popupEditingAgendaItem?.topic_content || ""}
-                      onChange={(e) =>
-                        setPopupEditingAgendaItem(prev =>
-                          prev ? { ...prev, topic_content: e.target.value } : null
-                        )
-                      }
-                      className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right"
-                      placeholder="Enter topic content"
-                    />
+                    <div className="flex gap-2">
+                      <textarea
+                        id="popup-topic"
+                        value={popupEditingAgendaItem?.topic_content || ""}
+                        onChange={(e) =>
+                          setPopupEditingAgendaItem(prev =>
+                            prev ? { ...prev, topic_content: e.target.value } : null
+                          )
+                        }
+                        className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right"
+                        placeholder="Enter topic content"
+                        disabled={!!topicImproved}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => handleImprovePopupText('topic_content', popupEditingAgendaItem?.topic_content || "")}
+                        disabled={isImprovingTopic || !!topicImproved}
+                        variant="outline"
+                      >
+                        {isImprovingTopic ? "Improving..." : "Improve it"}
+                      </Button>
+                    </div>
+                    {topicImproved && (
+                      <div className="mt-2 p-2 border rounded bg-muted">
+                        <div className="font-bold mb-1">השוואה:</div>
+                        <div className="flex flex-col md:flex-row gap-2">
+                          <div className="flex-1">
+                            <div className="text-xs text-muted-foreground mb-1">המקור</div>
+                            <div className="p-2 border rounded bg-background whitespace-pre-wrap">{topicOriginal}</div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-xs text-muted-foreground mb-1">הצעה משופרת</div>
+                            <div className="p-2 border rounded bg-background whitespace-pre-wrap">{topicImproved}</div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <Button size="sm" onClick={() => handleAcceptImproved('topic_content')}>אשר</Button>
+                          <Button size="sm" variant="outline" onClick={() => handleRevertImproved('topic_content')}>בטל</Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="popup-decision">Decision Content</Label>
-                    <textarea
-                      id="popup-decision"
-                      value={popupEditingAgendaItem?.decision_content || ""}
-                      onChange={(e) =>
-                        setPopupEditingAgendaItem(prev =>
-                          prev ? { ...prev, decision_content: e.target.value } : null
-                        )
-                      }
-                      className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right"
-                      placeholder="Enter decision content"
-                    />
+                    <div className="flex gap-2">
+                      <textarea
+                        id="popup-decision"
+                        value={popupEditingAgendaItem?.decision_content || ""}
+                        onChange={(e) =>
+                          setPopupEditingAgendaItem(prev =>
+                            prev ? { ...prev, decision_content: e.target.value } : null
+                          )
+                        }
+                        className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right"
+                        placeholder="Enter decision content"
+                        disabled={!!decisionImproved}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => handleImprovePopupText('decision_content', popupEditingAgendaItem?.decision_content || "")}
+                        disabled={isImprovingDecision || !!decisionImproved}
+                        variant="outline"
+                      >
+                        {isImprovingDecision ? "Improving..." : "Improve it"}
+                      </Button>
+                    </div>
+                    {decisionImproved && (
+                      <div className="mt-2 p-2 border rounded bg-muted">
+                        <div className="font-bold mb-1">השוואה:</div>
+                        <div className="flex flex-col md:flex-row gap-2">
+                          <div className="flex-1">
+                            <div className="text-xs text-muted-foreground mb-1">המקור</div>
+                            <div className="p-2 border rounded bg-background whitespace-pre-wrap">{decisionOriginal}</div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-xs text-muted-foreground mb-1">הצעה משופרת</div>
+                            <div className="p-2 border rounded bg-background whitespace-pre-wrap">{decisionImproved}</div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <Button size="sm" onClick={() => handleAcceptImproved('decision_content')}>אשר</Button>
+                          <Button size="sm" variant="outline" onClick={() => handleRevertImproved('decision_content')}>בטל</Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-
                   <DialogFooter>
                     <Button
                       type="button"
