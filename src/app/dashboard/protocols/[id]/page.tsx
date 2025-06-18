@@ -109,6 +109,20 @@ type NewAgendaItem = {
   isEditing: boolean;
 };
 
+type EditingMember = {
+  id: string;
+  name: string;
+  type: number;
+  status: number;
+};
+
+type NewMember = {
+  name: string;
+  type: number;
+  status: number;
+  isEditing: boolean;
+};
+
 type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
   committee: Database["public"]["Tables"]["committees"]["Row"] | null;
 };
@@ -196,6 +210,14 @@ export default function ProtocolPage() {
   });
   const [deletingAgendaItemId, setDeletingAgendaItemId] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState("content");
+  const [editingMember, setEditingMember] = useState<EditingMember | null>(null);
+  const [newMember, setNewMember] = useState<NewMember>({
+    name: "",
+    type: 1,
+    status: 1,
+    isEditing: false,
+  });
+  const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -530,6 +552,172 @@ export default function ProtocolPage() {
         variant: "destructive",
         title: "Error",
         description: "Failed to delete agenda item",
+      });
+    }
+  };
+
+  // Member management functions
+  const handleEditMember = (member: ProtocolMember) => {
+    setEditingMember({
+      id: member.id,
+      name: member.name || "",
+      type: member.type,
+      status: member.status,
+    });
+  };
+
+  const handleCancelEditMember = () => {
+    setEditingMember(null);
+  };
+
+  const handleUpdateMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+
+    setError(null);
+
+    try {
+      const supabase = createClient();
+
+      const { error } = await supabase
+        .from("protocol_members")
+        .update({
+          name: editingMember.name,
+          type: editingMember.type,
+          status: editingMember.status,
+        })
+        .eq("id", editingMember.id);
+
+      if (error) throw error;
+
+      // Update the UI
+      setProtocolMembers(prev => 
+        prev.map(member => 
+          member.id === editingMember.id 
+            ? { ...member, ...editingMember }
+            : member
+        )
+      );
+      
+      setEditingMember(null);
+
+      toast({
+        title: "Success",
+        description: "Member updated successfully",
+      });
+    } catch (err) {
+      console.error("Error updating member:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update member",
+      });
+    }
+  };
+
+  const handleAddMember = () => {
+    setNewMember({
+      name: "",
+      type: 1,
+      status: 1,
+      isEditing: true,
+    });
+  };
+
+  const handleCancelAddMember = () => {
+    setNewMember({
+      name: "",
+      type: 1,
+      status: 1,
+      isEditing: false,
+    });
+  };
+
+  const handleCreateMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMember.name.trim()) return;
+    
+    setError(null);
+
+    try {
+      const supabase = createClient();
+
+      const { data, error } = await supabase
+        .from("protocol_members")
+        .insert([
+          {
+            protocol_id: params.id,
+            name: newMember.name.trim(),
+            type: newMember.type,
+            status: newMember.status,
+            source_type: null,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add the new member to the UI
+      setProtocolMembers(prev => [...prev, data]);
+      
+      // Reset the new member input
+      setNewMember({
+        name: "",
+        type: 1,
+        status: 1,
+        isEditing: false,
+      });
+
+      toast({
+        title: "Success",
+        description: "Member added successfully",
+      });
+    } catch (err) {
+      console.error("Error creating member:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add member",
+      });
+    }
+  };
+
+  const handleDeleteMember = async () => {
+    if (!deletingMemberId) return;
+
+    setError(null);
+
+    try {
+      const supabase = createClient();
+
+      const { error } = await supabase
+        .from("protocol_members")
+        .delete()
+        .eq("id", deletingMemberId);
+
+      if (error) throw error;
+
+      // Update the UI
+      setProtocolMembers(prev => prev.filter(member => member.id !== deletingMemberId));
+      setDeletingMemberId(null);
+
+      toast({
+        title: "Success",
+        description: "Member deleted successfully",
+      });
+    } catch (err) {
+      console.error("Error deleting member:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete member",
       });
     }
   };
@@ -1005,36 +1193,207 @@ export default function ProtocolPage() {
                 </div>
               </TabsContent>
               <TabsContent value="members" className="mt-6">
-                {protocolMembers.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-8">
-                    No members found for this protocol
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Protocol Members</h3>
+                    <Button
+                      onClick={handleAddMember}
+                      className="gap-2"
+                      disabled={newMember.isEditing}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Member
+                    </Button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Source Type</TableHead>
-                          <TableHead>Created At</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {protocolMembers.map((member) => (
-                          <TableRow key={member.id}>
-                            <TableCell>{member.name || "Unnamed"}</TableCell>
-                            <TableCell>{member.type}</TableCell>
-                            <TableCell>{member.status}</TableCell>
-                            <TableCell>{member.source_type || "N/A"}</TableCell>
-                            <TableCell>{formatDate(member.created_at)}</TableCell>
+
+                  {newMember.isEditing && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Add New Member</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <form onSubmit={handleCreateMember} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="member-name">Name *</Label>
+                            <Input
+                              id="member-name"
+                              value={newMember.name}
+                              onChange={(e) => setNewMember(prev => ({ ...prev, name: e.target.value }))}
+                              placeholder="Enter member name"
+                              required
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="member-type">Type</Label>
+                              <Select
+                                value={newMember.type.toString()}
+                                onValueChange={(value) => setNewMember(prev => ({ ...prev, type: parseInt(value) }))}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1">Committee Member</SelectItem>
+                                  <SelectItem value="2">External</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="member-status">Status</Label>
+                              <Select
+                                value={newMember.status.toString()}
+                                onValueChange={(value) => setNewMember(prev => ({ ...prev, status: parseInt(value) }))}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1">Absent</SelectItem>
+                                  <SelectItem value="2">Present</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end gap-4">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={handleCancelAddMember}
+                            >
+                              Cancel
+                            </Button>
+                            <Button type="submit" disabled={!newMember.name.trim()}>
+                              Add Member
+                            </Button>
+                          </div>
+                        </form>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {protocolMembers.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">
+                      No members found for this protocol
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="w-[100px]">Actions</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
+                        </TableHeader>
+                        <TableBody>
+                          {protocolMembers.map((member) => (
+                            <TableRow key={member.id}>
+                              {editingMember?.id === member.id ? (
+                                <>
+                                  <TableCell>
+                                    <Input
+                                      value={editingMember.name}
+                                      onChange={(e) => setEditingMember(prev => prev ? { ...prev, name: e.target.value } : null)}
+                                      placeholder="Enter member name"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Select
+                                      value={editingMember.type.toString()}
+                                      onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, type: parseInt(value) } : null)}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="1">Committee Member</SelectItem>
+                                        <SelectItem value="2">External</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Select
+                                      value={editingMember.status.toString()}
+                                      onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, status: parseInt(value) } : null)}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="1">Absent</SelectItem>
+                                        <SelectItem value="2">Present</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleUpdateMember}
+                                        disabled={!editingMember.name.trim()}
+                                      >
+                                        <Check className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleCancelEditMember}
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </>
+                              ) : (
+                                <>
+                                  <TableCell>{member.name || "Unnamed"}</TableCell>
+                                  <TableCell>
+                                    {member.type === 1 ? "Committee Member" : "External"}
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className={cn(
+                                      "px-2 py-1 rounded-full text-xs font-medium",
+                                      member.status === 2 
+                                        ? "bg-green-100 text-green-800" 
+                                        : "bg-red-100 text-red-800"
+                                    )}>
+                                      {member.status === 2 ? "Present" : "Absent"}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEditMember(member)}
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setDeletingMemberId(member.id)}
+                                        className="text-destructive hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </>
+                              )}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </div>
               </TabsContent>
               <TabsContent value="messages" className="mt-6">
                 <div className="space-y-4">
@@ -1122,6 +1481,26 @@ export default function ProtocolPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAgendaItem}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deletingMemberId} onOpenChange={() => setDeletingMemberId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the member from this protocol.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMember}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
