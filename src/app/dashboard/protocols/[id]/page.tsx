@@ -76,6 +76,7 @@ type ProtocolMember = {
   type: number;
   status: number;
   source_type: number | null;
+  vote_status: number | null;
   created_at: string;
 };
 
@@ -114,12 +115,14 @@ type EditingMember = {
   name: string;
   type: number;
   status: number;
+  vote_status: number | null;
 };
 
 type NewMember = {
   name: string;
   type: number;
   status: number;
+  vote_status: number | null;
   isEditing: boolean;
 };
 
@@ -215,6 +218,7 @@ export default function ProtocolPage() {
     name: "",
     type: 1,
     status: 1,
+    vote_status: null,
     isEditing: false,
   });
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
@@ -563,6 +567,7 @@ export default function ProtocolPage() {
       name: member.name || "",
       type: member.type,
       status: member.status,
+      vote_status: member.vote_status,
     });
   };
 
@@ -585,6 +590,7 @@ export default function ProtocolPage() {
           name: editingMember.name,
           type: editingMember.type,
           status: editingMember.status,
+          vote_status: editingMember.vote_status,
         })
         .eq("id", editingMember.id);
 
@@ -622,6 +628,7 @@ export default function ProtocolPage() {
       name: "",
       type: 1,
       status: 1,
+      vote_status: null,
       isEditing: true,
     });
   };
@@ -631,6 +638,7 @@ export default function ProtocolPage() {
       name: "",
       type: 1,
       status: 1,
+      vote_status: null,
       isEditing: false,
     });
   };
@@ -653,6 +661,7 @@ export default function ProtocolPage() {
             type: newMember.type,
             status: newMember.status,
             source_type: null,
+            vote_status: newMember.vote_status,
           },
         ])
         .select()
@@ -668,6 +677,7 @@ export default function ProtocolPage() {
         name: "",
         type: 1,
         status: 1,
+        vote_status: null,
         isEditing: false,
       });
 
@@ -1258,6 +1268,38 @@ export default function ProtocolPage() {
                             </div>
                           </div>
 
+                          <div className="space-y-2">
+                            <Label htmlFor="member-vote-status">Vote Status</Label>
+                            <div className="flex gap-2">
+                              <Select
+                                value={newMember.vote_status?.toString() || ""}
+                                onValueChange={(value) => setNewMember(prev => ({ 
+                                  ...prev, 
+                                  vote_status: parseInt(value) 
+                                }))}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="No vote" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1">For</SelectItem>
+                                  <SelectItem value="2">Against</SelectItem>
+                                  <SelectItem value="3">Abstain</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {newMember.vote_status && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setNewMember(prev => ({ ...prev, vote_status: null }))}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  Clear
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+
                           <div className="flex justify-end gap-4">
                             <Button
                               type="button"
@@ -1287,6 +1329,7 @@ export default function ProtocolPage() {
                             <TableHead>Name</TableHead>
                             <TableHead>Type</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Vote Status</TableHead>
                             <TableHead className="w-[100px]">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -1332,6 +1375,33 @@ export default function ProtocolPage() {
                                   </TableCell>
                                   <TableCell>
                                     <div className="flex gap-2">
+                                      <Select
+                                        value={editingMember.vote_status?.toString() || ""}
+                                        onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, vote_status: parseInt(value) } : null)}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="No vote" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="1">For</SelectItem>
+                                          <SelectItem value="2">Against</SelectItem>
+                                          <SelectItem value="3">Abstain</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      {editingMember.vote_status && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => setEditingMember(prev => prev ? { ...prev, vote_status: null } : null)}
+                                          className="text-destructive hover:text-destructive"
+                                        >
+                                          Clear
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex gap-2">
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -1364,6 +1434,20 @@ export default function ProtocolPage() {
                                         : "bg-red-100 text-red-800"
                                     )}>
                                       {member.status === 2 ? "Present" : "Absent"}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className={cn(
+                                      "px-2 py-1 rounded-full text-xs font-medium",
+                                      member.vote_status === 1 
+                                        ? "bg-green-100 text-green-800"
+                                        : member.vote_status === 2
+                                        ? "bg-red-100 text-red-800"
+                                        : member.vote_status === 3
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : "bg-gray-100 text-gray-800"
+                                    )}>
+                                      {member.vote_status === 1 ? "For" : member.vote_status === 2 ? "Against" : member.vote_status === 3 ? "Abstain" : "No vote"}
                                     </span>
                                   </TableCell>
                                   <TableCell>

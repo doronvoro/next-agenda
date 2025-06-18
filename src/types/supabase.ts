@@ -217,6 +217,7 @@ export type Database = {
           type: number;
           status: number;
           source_type: number | null;
+          vote_status: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -227,6 +228,7 @@ export type Database = {
           type?: number;
           status?: number;
           source_type?: number | null;
+          vote_status?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -237,6 +239,7 @@ export type Database = {
           type?: number;
           status?: number;
           source_type?: number | null;
+          vote_status?: number | null;
           created_at?: string;
           updated_at?: string;
         };
