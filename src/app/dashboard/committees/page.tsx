@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/types/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, X, Check, Users, UserPlus } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check, Users, UserPlus, ChevronDown, ChevronUp, ArrowUpDown, Filter, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
@@ -43,6 +43,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type Committee = Database["public"]["Tables"]["committees"]["Row"];
 type CommitteeMember = Database["public"]["Tables"]["committees_members"]["Row"];
@@ -50,6 +51,10 @@ type Company = {
   id: string;
   name: string;
 };
+
+// Add sort and filter types
+type SortField = "name" | "company" | "created_at" | "updated_at";
+type SortOrder = "asc" | "desc";
 
 const formatDate = (dateString: string | null) => {
   if (!dateString) return "N/A";
@@ -77,6 +82,14 @@ export default function CommitteesPage() {
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<CommitteeMember | null>(null);
   const [editingMemberName, setEditingMemberName] = useState("");
+
+  // Filtering, sorting, and pagination states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState<string>("all");
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     fetchCommittees();
@@ -389,6 +402,97 @@ export default function CommitteesPage() {
     }
   };
 
+  // Filtering, searching, and sorting logic
+  const filteredAndSortedCommittees = useMemo(() => {
+    let filtered = committees.filter((committee) => {
+      // Search filter
+      const searchLower = searchTerm.toLowerCase();
+      const companyName = companies.find(c => c.id === committee.company_id)?.name?.toLowerCase() || "";
+      const matchesSearch =
+        committee.name.toLowerCase().includes(searchLower) ||
+        companyName.includes(searchLower);
+      if (!matchesSearch) return false;
+      // Company filter
+      if (selectedCompany !== "all" && committee.company_id !== selectedCompany) {
+        return false;
+      }
+      return true;
+    });
+    // Sort
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any;
+      switch (sortField) {
+        case "name":
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case "company":
+          aValue = companies.find(c => c.id === a.company_id)?.name?.toLowerCase() || "";
+          bValue = companies.find(c => c.id === b.company_id)?.name?.toLowerCase() || "";
+          break;
+        case "created_at":
+          aValue = new Date(a.created_at);
+          bValue = new Date(b.created_at);
+          break;
+        case "updated_at":
+          aValue = new Date(a.updated_at);
+          bValue = new Date(b.updated_at);
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+      }
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+    return filtered;
+  }, [committees, companies, searchTerm, selectedCompany, sortField, sortOrder]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSortedCommittees.length / itemsPerPage);
+  const paginatedCommittees = filteredAndSortedCommittees.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedCompany("all");
+    setCurrentPage(1);
+  };
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <Button
+      variant="ghost"
+      onClick={() => handleSort(field)}
+      className="h-auto p-0 font-medium hover:bg-transparent"
+    >
+      {children}
+      {sortField === field ? (
+        sortOrder === "asc" ? (
+          <ChevronUp className="ml-1 h-4 w-4" />
+        ) : (
+          <ChevronDown className="ml-1 h-4 w-4" />
+        )
+      ) : (
+        <ArrowUpDown className="ml-1 h-4 w-4" />
+      )}
+    </Button>
+  );
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -423,6 +527,74 @@ export default function CommitteesPage() {
           )}
         </div>
       </div>
+
+      {/* Filters and Search */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filters & Search
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search */}
+            <div className="space-y-2">
+              <Label htmlFor="search">Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search committees..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            {/* Company Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="company">Company</Label>
+              <Select
+                value={selectedCompany}
+                onValueChange={(value) => {
+                  setSelectedCompany(value);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All companies" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All companies</SelectItem>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {/* Clear Filters */}
+          <div className="flex justify-between items-center mt-4 pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredAndSortedCommittees.length} of {committees.length} committees
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              disabled={!searchTerm && selectedCompany === "all"}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="pt-6">
@@ -479,25 +651,43 @@ export default function CommitteesPage() {
             </div>
           )}
 
-          {committees.length === 0 ? (
+          {filteredAndSortedCommittees.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              No committees found
+              {committees.length === 0 ? (
+                <>
+                  <p className="text-lg font-medium mb-2">No committees found</p>
+                  <p>Get started by creating your first committee.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-medium mb-2">No committees match your filters</p>
+                  <p>Try adjusting your search criteria or clear the filters.</p>
+                </>
+              )}
             </div>
           ) : (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Company</TableHead>
+                    <TableHead>
+                      <SortableHeader field="name">Name</SortableHeader>
+                    </TableHead>
+                    <TableHead>
+                      <SortableHeader field="company">Company</SortableHeader>
+                    </TableHead>
                     <TableHead>Members</TableHead>
-                    <TableHead>Created At</TableHead>
-                    <TableHead>Last Updated</TableHead>
+                    <TableHead>
+                      <SortableHeader field="created_at">Created At</SortableHeader>
+                    </TableHead>
+                    <TableHead>
+                      <SortableHeader field="updated_at">Last Updated</SortableHeader>
+                    </TableHead>
                     <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {committees.map((committee) => (
+                  {paginatedCommittees.map((committee) => (
                     <TableRow key={committee.id}>
                       <TableCell>
                         {editingCommittee?.id === committee.id ? (
@@ -731,6 +921,48 @@ export default function CommitteesPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && filteredAndSortedCommittees.length > 0 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, filteredAndSortedCommittees.length)} of{" "}
+                {filteredAndSortedCommittees.length} results
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
