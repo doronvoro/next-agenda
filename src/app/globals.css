@@ -118,9 +118,10 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-rubik), system-ui, sans-serif;
+    font-family: var(--font-rubik), "Segoe UI", "Noto Sans Hebrew", "Arial Hebrew", system-ui, sans-serif;
   }
   :lang(he) {
-    font-family: var(--font-rubik), system-ui, sans-serif;
+    font-family: var(--font-rubik), "Noto Sans Hebrew", "Arial Hebrew", "Segoe UI", system-ui, sans-serif;
+    font-feature-settings: "liga" 1, "kern" 1;
   }
 }

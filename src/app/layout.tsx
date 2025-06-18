@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/lib/providers/theme-provider";
@@ -7,7 +7,11 @@ import { AuthProvider } from "@/lib/providers/auth-provider";
 import NextTopLoader from "nextjs-toploader";
 import { brand } from "@/lib/constants/brand";
 
-const inter = Inter({ subsets: ["latin"] });
+const rubik = Rubik({ 
+  subsets: ["latin", "hebrew"],
+  variable: "--font-rubik",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: brand.name,
@@ -21,7 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${rubik.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
