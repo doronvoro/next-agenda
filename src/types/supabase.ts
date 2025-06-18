@@ -134,6 +134,29 @@ export type Database = {
           company_id?: string | null;
         };
       };
+      committees_members: {
+        Row: {
+          id: string;
+          committee_id: string;
+          name: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          committee_id: string;
+          name: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          committee_id?: string;
+          name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       companies: {
         Row: {
           id: string;

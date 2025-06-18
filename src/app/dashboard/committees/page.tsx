@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check, Users, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
@@ -35,8 +35,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 type Committee = Database["public"]["Tables"]["committees"]["Row"];
+type CommitteeMember = Database["public"]["Tables"]["committees_members"]["Row"];
 type Company = {
   id: string;
   name: string;
@@ -52,6 +61,7 @@ export default function CommitteesPage() {
   const { toast } = useToast();
   const [committees, setCommittees] = useState<Committee[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [committeeMembers, setCommitteeMembers] = useState<Record<string, CommitteeMember[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -59,11 +69,70 @@ export default function CommitteesPage() {
   const [newCompanyId, setNewCompanyId] = useState<string>("");
   const [editingCommittee, setEditingCommittee] = useState<Committee | null>(null);
   const [deletingCommitteeId, setDeletingCommitteeId] = useState<string | null>(null);
+  
+  // Member management state
+  const [selectedCommittee, setSelectedCommittee] = useState<Committee | null>(null);
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
+  const [editingMember, setEditingMember] = useState<CommitteeMember | null>(null);
+  const [editingMemberName, setEditingMemberName] = useState("");
 
   useEffect(() => {
     fetchCommittees();
     fetchCompanies();
   }, []);
+
+  useEffect(() => {
+    if (committees.length > 0) {
+      fetchAllCommitteeMembers();
+    }
+  }, [committees]);
+
+  const fetchAllCommitteeMembers = async () => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("committees_members")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+
+      // Group members by committee_id
+      const membersByCommittee: Record<string, CommitteeMember[]> = {};
+      data?.forEach(member => {
+        if (!membersByCommittee[member.committee_id]) {
+          membersByCommittee[member.committee_id] = [];
+        }
+        membersByCommittee[member.committee_id].push(member);
+      });
+
+      setCommitteeMembers(membersByCommittee);
+    } catch (err) {
+      console.error("Error fetching committee members:", err);
+    }
+  };
+
+  const fetchCommitteeMembers = async (committeeId: string) => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("committees_members")
+        .select("*")
+        .eq("committee_id", committeeId)
+        .order("name");
+
+      if (error) throw error;
+
+      setCommitteeMembers(prev => ({
+        ...prev,
+        [committeeId]: data || []
+      }));
+    } catch (err) {
+      console.error("Error fetching committee members:", err);
+    }
+  };
 
   const fetchCompanies = async () => {
     try {
@@ -205,6 +274,121 @@ export default function CommitteesPage() {
     }
   };
 
+  const handleAddMember = async (committeeId: string) => {
+    if (!newMemberName.trim()) return;
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("committees_members")
+        .insert([{ 
+          committee_id: committeeId,
+          name: newMemberName.trim()
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCommitteeMembers(prev => ({
+        ...prev,
+        [committeeId]: [...(prev[committeeId] || []), data]
+      }));
+      setNewMemberName("");
+      setIsAddingMember(false);
+
+      toast({
+        title: "Success",
+        description: "Member added successfully",
+      });
+    } catch (err) {
+      console.error("Error adding member:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add member",
+      });
+    }
+  };
+
+  const handleDeleteMember = async () => {
+    if (!deletingMemberId) return;
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("committees_members")
+        .delete()
+        .eq("id", deletingMemberId);
+
+      if (error) throw error;
+
+      // Update the local state
+      setCommitteeMembers(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(committeeId => {
+          updated[committeeId] = updated[committeeId].filter(member => member.id !== deletingMemberId);
+        });
+        return updated;
+      });
+      setDeletingMemberId(null);
+
+      toast({
+        title: "Success",
+        description: "Member removed successfully",
+      });
+    } catch (err) {
+      console.error("Error deleting member:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to remove member",
+      });
+    }
+  };
+
+  const handleUpdateMember = async () => {
+    if (!editingMember || !editingMemberName.trim()) return;
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("committees_members")
+        .update({ name: editingMemberName.trim() })
+        .eq("id", editingMember.id);
+
+      if (error) throw error;
+
+      // Update the local state
+      setCommitteeMembers(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(committeeId => {
+          updated[committeeId] = updated[committeeId].map(member =>
+            member.id === editingMember.id 
+              ? { ...member, name: editingMemberName.trim() }
+              : member
+          );
+        });
+        return updated;
+      });
+
+      setEditingMember(null);
+      setEditingMemberName("");
+
+      toast({
+        title: "Success",
+        description: "Member name updated successfully",
+      });
+    } catch (err) {
+      console.error("Error updating member:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update member name",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -306,6 +490,7 @@ export default function CommitteesPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Company</TableHead>
+                    <TableHead>Members</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead>Last Updated</TableHead>
                     <TableHead className="w-[100px]">Actions</TableHead>
@@ -355,6 +540,147 @@ export default function CommitteesPage() {
                         ) : (
                           companies.find(c => c.id === committee.company_id)?.name || "N/A"
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">
+                            {committeeMembers[committee.id]?.length || 0} members
+                          </Badge>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedCommittee(committee)}
+                                className="h-6 px-2"
+                              >
+                                <Users className="h-3 w-3" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>Manage Members - {committee.name}</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">Members</span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsAddingMember(true)}
+                                    className="h-8"
+                                  >
+                                    <UserPlus className="h-3 w-3 mr-1" />
+                                    Add Member
+                                  </Button>
+                                </div>
+                                
+                                {isAddingMember && (
+                                  <div className="p-3 border rounded-lg">
+                                    <div className="space-y-2">
+                                      <Label htmlFor="new-member">Member Name</Label>
+                                      <div className="flex gap-2">
+                                        <Input
+                                          id="new-member"
+                                          value={newMemberName}
+                                          onChange={(e) => setNewMemberName(e.target.value)}
+                                          placeholder="Enter member name"
+                                          className="flex-1"
+                                        />
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => setIsAddingMember(false)}
+                                          className="h-8 w-8"
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => handleAddMember(committee.id)}
+                                          className="h-8 w-8"
+                                        >
+                                          <Check className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="space-y-2">
+                                  {committeeMembers[committee.id]?.length === 0 ? (
+                                    <div className="text-center text-muted-foreground py-4">
+                                      No members yet
+                                    </div>
+                                  ) : (
+                                    committeeMembers[committee.id]?.map((member) => (
+                                      <div
+                                        key={member.id}
+                                        className="flex items-center justify-between p-2 border rounded"
+                                      >
+                                        {editingMember?.id === member.id ? (
+                                          <div className="flex items-center gap-2 flex-1">
+                                            <Input
+                                              value={editingMemberName}
+                                              onChange={(e) => setEditingMemberName(e.target.value)}
+                                              className="flex-1 h-8"
+                                              placeholder="Enter member name"
+                                            />
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => {
+                                                setEditingMember(null);
+                                                setEditingMemberName("");
+                                              }}
+                                              className="h-6 w-6 p-0"
+                                            >
+                                              <X className="h-3 w-3" />
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={handleUpdateMember}
+                                              className="h-6 w-6 p-0"
+                                            >
+                                              <Check className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        ) : (
+                                          <>
+                                            <span className="text-sm">{member.name}</span>
+                                            <div className="flex gap-1">
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                  setEditingMember(member);
+                                                  setEditingMemberName(member.name);
+                                                }}
+                                                className="h-6 w-6 p-0"
+                                              >
+                                                <Pencil className="h-3 w-3" />
+                                              </Button>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setDeletingMemberId(member.id)}
+                                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                              >
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                       </TableCell>
                       <TableCell>{formatDate(committee.created_at)}</TableCell>
                       <TableCell>{formatDate(committee.updated_at)}</TableCell>
@@ -425,6 +751,26 @@ export default function CommitteesPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deletingMemberId} onOpenChange={() => setDeletingMemberId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Member</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this member from the committee? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMember}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
