@@ -212,6 +212,12 @@ function SortableAgendaItem({ item, onViewClick }: SortableAgendaItemProps) {
   );
 }
 
+declare global {
+  interface Window {
+    __protocolNumber?: number;
+  }
+}
+
 export default function ProtocolPage() {
   const params = useParams();
   const router = useRouter();
@@ -273,6 +279,14 @@ export default function ProtocolPage() {
     fetchData();
     fetchCommittees();
   }, [params.id]);
+
+  useEffect(() => {
+    if (protocol && protocol.number) {
+      if (typeof window !== 'undefined') {
+        (window as any).__protocolNumber = protocol.number;
+      }
+    }
+  }, [protocol]);
 
   const fetchCommittees = async () => {
     try {
@@ -1325,11 +1339,6 @@ export default function ProtocolPage() {
                         value={
                           <div className="flex items-center gap-2">
                             <span>{protocol.committee?.name || "Not assigned"}</span>
-                            {protocol.committee && (
-                              <span className="text-sm text-muted-foreground">
-                                (ID: {protocol.committee.id})
-                              </span>
-                            )}
                           </div>
                         } 
                       />
