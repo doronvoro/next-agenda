@@ -244,6 +244,44 @@ export type Database = {
           updated_at?: string;
         };
       };
+      protocol_attachments: {
+        Row: {
+          id: string;
+          protocol_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          mime_type: string;
+          uploaded_by: string | null;
+          storage_object_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          protocol_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          mime_type: string;
+          uploaded_by?: string | null;
+          storage_object_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          protocol_id?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: number;
+          mime_type?: string;
+          uploaded_by?: string | null;
+          storage_object_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       roles: {
         Row: {
           id: string;

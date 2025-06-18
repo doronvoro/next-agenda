@@ -6,7 +6,7 @@ import { Database } from "@/types/supabase";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CalendarIcon, Pencil, Plus, Trash2, X, Check } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Pencil, Plus, Trash2, X, Check, Paperclip } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -86,6 +86,19 @@ type ProtocolMessage = {
   message: string;
   user_id: string | null;
   created_at: string;
+};
+
+type ProtocolAttachment = {
+  id: string;
+  protocol_id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  uploaded_by: string | null;
+  storage_object_id: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 type AgendaItem = {
@@ -191,6 +204,7 @@ export default function ProtocolPage() {
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
   const [protocolMembers, setProtocolMembers] = useState<ProtocolMember[]>([]);
   const [protocolMessages, setProtocolMessages] = useState<ProtocolMessage[]>([]);
+  const [protocolAttachments, setProtocolAttachments] = useState<ProtocolAttachment[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -222,6 +236,7 @@ export default function ProtocolPage() {
     isEditing: false,
   });
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
+  const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -318,6 +333,21 @@ export default function ProtocolPage() {
       }
 
       setProtocolMessages(messagesData || []);
+
+      // Fetch protocol attachments
+      const { data: attachmentsData, error: attachmentsError } = await supabase
+        .from("protocol_attachments")
+        .select("*")
+        .eq("protocol_id", params.id)
+        .order("created_at", { ascending: true });
+
+      if (attachmentsError) {
+        console.error("Error fetching protocol attachments:", attachmentsError);
+        setError(attachmentsError.message);
+        return;
+      }
+
+      setProtocolAttachments(attachmentsData || []);
     } catch (err) {
       console.error("Unexpected error:", err);
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
@@ -826,6 +856,134 @@ export default function ProtocolPage() {
     }
   };
 
+  // Attachment management functions
+  const handleUploadAttachment = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setError(null);
+
+    try {
+      const supabase = createClient();
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Generate unique file path
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `protocols/${params.id}/${fileName}`;
+
+        // Upload file to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('attachments')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Error uploading file:', uploadError);
+          throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('attachments')
+          .getPublicUrl(filePath);
+
+        // Insert attachment record into database
+        const { data: attachmentData, error: insertError } = await supabase
+          .from("protocol_attachments")
+          .insert({
+            protocol_id: params.id,
+            file_name: file.name,
+            file_path: filePath,
+            file_size: file.size,
+            mime_type: file.type,
+            uploaded_by: user?.id || null,
+            storage_object_id: uploadData?.id || null,
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Error inserting attachment record:', insertError);
+          throw new Error(`Failed to save attachment record for ${file.name}: ${insertError.message}`);
+        }
+
+        // Add to UI
+        setProtocolAttachments(prev => [...prev, attachmentData]);
+      }
+
+      toast({
+        title: "Success",
+        description: `Successfully uploaded ${files.length} file(s)`,
+      });
+    } catch (err) {
+      console.error("Error uploading attachments:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to upload attachments",
+      });
+    }
+  };
+
+  const handleDeleteAttachment = async () => {
+    if (!deletingAttachmentId) return;
+
+    setError(null);
+
+    try {
+      const supabase = createClient();
+
+      // Get attachment details
+      const attachment = protocolAttachments.find(a => a.id === deletingAttachmentId);
+      if (!attachment) {
+        throw new Error("Attachment not found");
+      }
+
+      // Delete file from storage
+      const { error: storageError } = await supabase.storage
+        .from('attachments')
+        .remove([attachment.file_path]);
+
+      if (storageError) {
+        console.error('Error deleting file from storage:', storageError);
+        // Continue with database deletion even if storage deletion fails
+      }
+
+      // Delete record from database
+      const { error } = await supabase
+        .from("protocol_attachments")
+        .delete()
+        .eq("id", deletingAttachmentId);
+
+      if (error) throw error;
+
+      // Update the UI
+      setProtocolAttachments(prev => prev.filter(attachment => attachment.id !== deletingAttachmentId));
+      setDeletingAttachmentId(null);
+
+      toast({
+        title: "Success",
+        description: "Attachment deleted successfully",
+      });
+    } catch (err) {
+      console.error("Error deleting attachment:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete attachment",
+      });
+    }
+  };
+
   if (!mounted) {
     return null;
   }
@@ -971,9 +1129,10 @@ export default function ProtocolPage() {
             )}
 
             <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="members">Members</TabsTrigger>
+                <TabsTrigger value="attachments">Attachments</TabsTrigger>
                 <TabsTrigger value="messages">Messages</TabsTrigger>
               </TabsList>
               <TabsContent value="content" className="mt-6">
@@ -1479,6 +1638,98 @@ export default function ProtocolPage() {
                   )}
                 </div>
               </TabsContent>
+              <TabsContent value="attachments" className="mt-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Protocol Attachments</h3>
+                    <Button
+                      onClick={() => {
+                        const fileInput = document.getElementById('file-upload');
+                        if (fileInput) {
+                          fileInput.click();
+                        }
+                      }}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Upload Attachment
+                    </Button>
+                  </div>
+
+                  <input
+                    id="file-upload"
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleUploadAttachment(e.target.files)}
+                  />
+
+                  {protocolAttachments.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">
+                      <Paperclip className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                      <p>No attachments found for this protocol</p>
+                      <p className="text-sm">Upload files to share with protocol members</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>File Name</TableHead>
+                            <TableHead>Size</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Uploaded</TableHead>
+                            <TableHead className="w-[100px]">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {protocolAttachments.map((attachment) => (
+                            <TableRow key={attachment.id}>
+                              <TableCell className="font-medium">
+                                {attachment.file_name}
+                              </TableCell>
+                              <TableCell>
+                                {(attachment.file_size / 1024 / 1024).toFixed(2)} MB
+                              </TableCell>
+                              <TableCell>
+                                {attachment.mime_type}
+                              </TableCell>
+                              <TableCell>
+                                {formatDate(attachment.created_at)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      const supabase = createClient();
+                                      const { data } = supabase.storage
+                                        .from('attachments')
+                                        .getPublicUrl(attachment.file_path);
+                                      window.open(data.publicUrl, '_blank');
+                                    }}
+                                  >
+                                    Download
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setDeletingAttachmentId(attachment.id)}
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
               <TabsContent value="messages" className="mt-6">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
@@ -1585,6 +1836,26 @@ export default function ProtocolPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteMember}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deletingAttachmentId} onOpenChange={() => setDeletingAttachmentId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the attachment from this protocol.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAttachment}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
