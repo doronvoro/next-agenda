@@ -6,7 +6,7 @@ import { Database } from "@/types/supabase";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CalendarIcon, Pencil, Plus, Trash2, X, Check, Paperclip } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Pencil, Plus, Trash2, X, Check, Paperclip, Eye } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -45,6 +45,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DndContext,
   closestCenter,
@@ -157,9 +166,10 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
 
 type SortableAgendaItemProps = {
   item: AgendaItem;
+  onViewClick?: (item: AgendaItem) => void;
 };
 
-function SortableAgendaItem({ item }: SortableAgendaItemProps) {
+function SortableAgendaItem({ item, onViewClick }: SortableAgendaItemProps) {
   const {
     attributes,
     listeners,
@@ -191,7 +201,12 @@ function SortableAgendaItem({ item }: SortableAgendaItemProps) {
       <span className="text-muted-foreground">
         {item.display_order ? `${item.display_order}.` : '•'}
       </span>
-      <span>{item.title}</span>
+      <span 
+        className={onViewClick ? "cursor-pointer hover:text-primary hover:underline" : ""}
+        onClick={onViewClick ? () => onViewClick(item) : undefined}
+      >
+        {item.title}
+      </span>
     </div>
   );
 }
@@ -237,6 +252,10 @@ export default function ProtocolPage() {
   });
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
+  const [isAgendaItemDialogOpen, setIsAgendaItemDialogOpen] = useState(false);
+  const [selectedAgendaItem, setSelectedAgendaItem] = useState<AgendaItem | null>(null);
+  const [popupEditingAgendaItem, setPopupEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
+  const [isPopupEditing, setIsPopupEditing] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -586,6 +605,95 @@ export default function ProtocolPage() {
         variant: "destructive",
         title: "Error",
         description: "Failed to delete agenda item",
+      });
+    }
+  };
+
+  const handleOpenAgendaItemDialog = (item: AgendaItem) => {
+    setSelectedAgendaItem(item);
+    setPopupEditingAgendaItem({
+      id: item.id,
+      title: item.title,
+      topic_content: item.topic_content || "",
+      decision_content: item.decision_content || "",
+    });
+    setIsPopupEditing(false);
+    setIsAgendaItemDialogOpen(true);
+  };
+
+  const handleCloseAgendaItemDialog = () => {
+    setIsAgendaItemDialogOpen(false);
+    setSelectedAgendaItem(null);
+    setPopupEditingAgendaItem(null);
+    setIsPopupEditing(false);
+  };
+
+  const handleStartPopupEdit = () => {
+    setIsPopupEditing(true);
+  };
+
+  const handleCancelPopupEdit = () => {
+    if (selectedAgendaItem) {
+      setPopupEditingAgendaItem({
+        id: selectedAgendaItem.id,
+        title: selectedAgendaItem.title,
+        topic_content: selectedAgendaItem.topic_content || "",
+        decision_content: selectedAgendaItem.decision_content || "",
+      });
+    }
+    setIsPopupEditing(false);
+  };
+
+  const handleUpdatePopupAgendaItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!popupEditingAgendaItem) return;
+
+    setError(null);
+
+    try {
+      const supabase = createClient();
+
+      const { error } = await supabase
+        .from("agenda_items")
+        .update({
+          title: popupEditingAgendaItem.title,
+          topic_content: popupEditingAgendaItem.topic_content,
+          decision_content: popupEditingAgendaItem.decision_content,
+        })
+        .eq("id", popupEditingAgendaItem.id);
+
+      if (error) throw error;
+
+      // Update the UI
+      setAgendaItems(prev => 
+        prev.map(item => 
+          item.id === popupEditingAgendaItem.id 
+            ? { ...item, ...popupEditingAgendaItem }
+            : item
+        )
+      );
+      
+      // Update selected item for display
+      setSelectedAgendaItem(prev => 
+        prev && prev.id === popupEditingAgendaItem.id 
+          ? { ...prev, ...popupEditingAgendaItem }
+          : prev
+      );
+      
+      setIsPopupEditing(false);
+
+      toast({
+        title: "Success",
+        description: "Agenda item updated successfully",
+      });
+    } catch (err) {
+      console.error("Error updating agenda item:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update agenda item",
       });
     }
   };
@@ -1193,6 +1301,7 @@ export default function ProtocolPage() {
                                 <SortableAgendaItem
                                   key={item.id}
                                   item={item}
+                                  onViewClick={handleOpenAgendaItemDialog}
                                 />
                               ))
                             )}
@@ -1316,6 +1425,13 @@ export default function ProtocolPage() {
                                         {item.display_order ? `${item.display_order}.` : '•'} {item.title}
                                       </span>
                                       <div className="flex gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleOpenAgendaItemDialog(item)}
+                                        >
+                                          <Eye className="h-4 w-4" />
+                                        </Button>
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -1863,6 +1979,125 @@ export default function ProtocolPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isAgendaItemDialogOpen} onOpenChange={setIsAgendaItemDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedAgendaItem && (
+                <span>
+                  {selectedAgendaItem.display_order ? `${selectedAgendaItem.display_order}.` : '•'} {selectedAgendaItem.title}
+                </span>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              View and edit agenda item details
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedAgendaItem && (
+            <div className="space-y-6">
+              {isPopupEditing ? (
+                <form onSubmit={handleUpdatePopupAgendaItem} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="popup-title">Title</Label>
+                    <Input
+                      id="popup-title"
+                      value={popupEditingAgendaItem?.title || ""}
+                      onChange={(e) =>
+                        setPopupEditingAgendaItem(prev =>
+                          prev ? { ...prev, title: e.target.value } : null
+                        )
+                      }
+                      placeholder="Enter agenda item title"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="popup-topic">Topic Content</Label>
+                    <textarea
+                      id="popup-topic"
+                      value={popupEditingAgendaItem?.topic_content || ""}
+                      onChange={(e) =>
+                        setPopupEditingAgendaItem(prev =>
+                          prev ? { ...prev, topic_content: e.target.value } : null
+                        )
+                      }
+                      className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="Enter topic content"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="popup-decision">Decision Content</Label>
+                    <textarea
+                      id="popup-decision"
+                      value={popupEditingAgendaItem?.decision_content || ""}
+                      onChange={(e) =>
+                        setPopupEditingAgendaItem(prev =>
+                          prev ? { ...prev, decision_content: e.target.value } : null
+                        )
+                      }
+                      className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="Enter decision content"
+                    />
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCancelPopupEdit}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      Save Changes
+                    </Button>
+                  </DialogFooter>
+                </form>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Topic Content
+                    </label>
+                    <div className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                      {selectedAgendaItem.topic_content || "No topic content"}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Decision Content
+                    </label>
+                    <div className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                      {selectedAgendaItem.decision_content || "No decision content"}
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCloseAgendaItemDialog}
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleStartPopupEdit}
+                    >
+                      Edit
+                    </Button>
+                  </DialogFooter>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
