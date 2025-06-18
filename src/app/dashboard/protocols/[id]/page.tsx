@@ -342,6 +342,9 @@ export default function ProtocolPage() {
 
       setProtocolMembers(membersData || []);
 
+      // Set all members as selected by default
+      setSelectedRecipients(membersData?.map(member => member.id) || []);
+
       // Fetch protocol messages
       const { data: messagesData, error: messagesError } = await supabase
         .from("protocol_messages")
