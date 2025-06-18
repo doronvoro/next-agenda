@@ -75,6 +75,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import AgendaList from "./components/AgendaList";
+import AgendaDetails from "./components/AgendaDetails";
+import ProtocolMembers from "./components/ProtocolMembers";
 
 type Committee = {
   id: string;
@@ -1432,423 +1434,36 @@ export default function ProtocolPage() {
 
                     <div className="grid gap-6">
                       <h3 className="text-lg font-medium">Agenda Items Details</h3>
-                      {agendaItems.length === 0 ? (
-                        <div className="text-center text-muted-foreground py-4">
-                          No agenda items found
-                        </div>
-                      ) : (
-                        <div className="space-y-8">
-                          {agendaItems
-                            .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-                            .map((item) => (
-                              <div key={item.id} className="space-y-4">
-                                {editingAgendaItem?.id === item.id ? (
-                                  <form onSubmit={handleUpdateAgendaItem} className="space-y-4">
-                                    <div className="space-y-2">
-                                      <Label htmlFor={`title-${item.id}`}>Title</Label>
-                                      <Input
-                                        id={`title-${item.id}`}
-                                        value={editingAgendaItem.title}
-                                        onChange={(e) =>
-                                          setEditingAgendaItem({
-                                            ...editingAgendaItem,
-                                            title: e.target.value,
-                                          })
-                                        }
-                                        placeholder="Enter agenda item title"
-                                        required
-                                      />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                      <Label htmlFor={`topic-${item.id}`}>Topic Content</Label>
-                                      <textarea
-                                        id={`topic-${item.id}`}
-                                        value={editingAgendaItem.topic_content}
-                                        onChange={(e) =>
-                                          setEditingAgendaItem({
-                                            ...editingAgendaItem,
-                                            topic_content: e.target.value,
-                                          })
-                                        }
-                                        className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right"
-                                        placeholder="Enter topic content"
-                                      />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                      <Label htmlFor={`decision-${item.id}`}>Decision Content</Label>
-                                      <textarea
-                                        id={`decision-${item.id}`}
-                                        value={editingAgendaItem.decision_content}
-                                        onChange={(e) =>
-                                          setEditingAgendaItem({
-                                            ...editingAgendaItem,
-                                            decision_content: e.target.value,
-                                          })
-                                        }
-                                        className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right"
-                                        placeholder="Enter decision content"
-                                      />
-                                    </div>
-
-                                    <div className="flex justify-end gap-4">
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={handleCancelEditAgendaItem}
-                                        disabled={initialLoading}
-                                        className="h-8 w-8"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                      <Button 
-                                        type="submit" 
-                                        variant="ghost"
-                                        size="icon"
-                                        disabled={initialLoading}
-                                        className="h-8 w-8"
-                                      >
-                                        <Check className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </form>
-                                ) : (
-                                  <>
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-lg font-medium">
-                                        {item.display_order ? `${item.display_order}.` : '•'} {item.title}
-                                      </span>
-                                      <div className="flex gap-2">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleOpenAgendaItemDialog(item)}
-                                        >
-                                          <Eye className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleEditAgendaItem(item)}
-                                        >
-                                          <Pencil className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => setDeletingAgendaItemId(item.id)}
-                                          className="text-destructive hover:text-destructive"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="space-y-2">
-                                      <label className="text-sm font-medium text-muted-foreground">
-                                        Topic Content
-                                      </label>
-                                      <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right">
-                                        {item.topic_content || "No topic content"}
-                                      </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                      <label className="text-sm font-medium text-muted-foreground">
-                                        Decision Content
-                                      </label>
-                                      <div className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right">
-                                        {item.decision_content || "No decision content"}
-                                      </div>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            ))}
-                        </div>
-                      )}
+                      <AgendaDetails
+                        agendaItems={agendaItems}
+                        editingAgendaItem={editingAgendaItem}
+                        handleEditAgendaItem={handleEditAgendaItem}
+                        handleCancelEditAgendaItem={handleCancelEditAgendaItem}
+                        handleUpdateAgendaItem={handleUpdateAgendaItem}
+                        setEditingAgendaItem={setEditingAgendaItem}
+                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                        setDeletingAgendaItemId={setDeletingAgendaItemId}
+                        initialLoading={initialLoading}
+                      />
                     </div>
                   </div>
                 </div>
               </TabsContent>
               <TabsContent value="members" className="mt-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">Protocol Members</h3>
-                    <Button
-                      onClick={handleAddMember}
-                      className="gap-2"
-                      disabled={newMember.isEditing}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Member
-                    </Button>
-                  </div>
-
-                  {newMember.isEditing && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Add New Member</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <form onSubmit={handleCreateMember} className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="member-name">Name *</Label>
-                            <Input
-                              id="member-name"
-                              value={newMember.name}
-                              onChange={(e) => setNewMember(prev => ({ ...prev, name: e.target.value }))}
-                              placeholder="Enter member name"
-                              required
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="member-type">Type</Label>
-                              <Select
-                                value={newMember.type.toString()}
-                                onValueChange={(value) => setNewMember(prev => ({ ...prev, type: parseInt(value) }))}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1">Committee Member</SelectItem>
-                                  <SelectItem value="2">External</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="member-status">Status</Label>
-                              <Select
-                                value={newMember.status.toString()}
-                                onValueChange={(value) => setNewMember(prev => ({ ...prev, status: parseInt(value) }))}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1">Absent</SelectItem>
-                                  <SelectItem value="2">Present</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="member-vote-status">Vote Status</Label>
-                            <div className="flex gap-2">
-                              <Select
-                                value={newMember.vote_status?.toString() || ""}
-                                onValueChange={(value) => setNewMember(prev => ({ 
-                                  ...prev, 
-                                  vote_status: parseInt(value) 
-                                }))}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="No vote" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1">For</SelectItem>
-                                  <SelectItem value="2">Against</SelectItem>
-                                  <SelectItem value="3">Abstain</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              {newMember.vote_status && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setNewMember(prev => ({ ...prev, vote_status: null }))}
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  Clear
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end gap-4">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={handleCancelAddMember}
-                            >
-                              Cancel
-                            </Button>
-                            <Button type="submit" disabled={!newMember.name.trim()}>
-                              Add Member
-                            </Button>
-                          </div>
-                        </form>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {protocolMembers.length === 0 ? (
-                    <div className="text-center text-muted-foreground py-8">
-                      No members found for this protocol
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Vote Status</TableHead>
-                            <TableHead className="w-[100px]">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {protocolMembers.map((member) => (
-                            <TableRow key={member.id}>
-                              {editingMember?.id === member.id ? (
-                                <>
-                                  <TableCell>
-                                    <Input
-                                      value={editingMember.name}
-                                      onChange={(e) => setEditingMember(prev => prev ? { ...prev, name: e.target.value } : null)}
-                                      placeholder="Enter member name"
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Select
-                                      value={editingMember.type.toString()}
-                                      onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, type: parseInt(value) } : null)}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="1">Committee Member</SelectItem>
-                                        <SelectItem value="2">External</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </TableCell>
-                                  <TableCell>
-                                    <Select
-                                      value={editingMember.status.toString()}
-                                      onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, status: parseInt(value) } : null)}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="1">Absent</SelectItem>
-                                        <SelectItem value="2">Present</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex gap-2">
-                                      <Select
-                                        value={editingMember.vote_status?.toString() || ""}
-                                        onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, vote_status: parseInt(value) } : null)}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="No vote" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="1">For</SelectItem>
-                                          <SelectItem value="2">Against</SelectItem>
-                                          <SelectItem value="3">Abstain</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      {editingMember.vote_status && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => setEditingMember(prev => prev ? { ...prev, vote_status: null } : null)}
-                                          className="text-destructive hover:text-destructive"
-                                        >
-                                          Clear
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex gap-2">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={handleUpdateMember}
-                                        disabled={!editingMember.name.trim()}
-                                      >
-                                        <Check className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={handleCancelEditMember}
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </>
-                              ) : (
-                                <>
-                                  <TableCell>{member.name || "Unnamed"}</TableCell>
-                                  <TableCell>
-                                    {member.type === 1 ? "Committee Member" : "External"}
-                                  </TableCell>
-                                  <TableCell>
-                                    <span className={cn(
-                                      "px-2 py-1 rounded-full text-xs font-medium",
-                                      member.status === 2 
-                                        ? "bg-green-100 text-green-800" 
-                                        : "bg-red-100 text-red-800"
-                                    )}>
-                                      {member.status === 2 ? "Present" : "Absent"}
-                                    </span>
-                                  </TableCell>
-                                  <TableCell>
-                                    <span className={cn(
-                                      "px-2 py-1 rounded-full text-xs font-medium",
-                                      member.vote_status === 1 
-                                        ? "bg-green-100 text-green-800"
-                                        : member.vote_status === 2
-                                        ? "bg-red-100 text-red-800"
-                                        : member.vote_status === 3
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-gray-100 text-gray-800"
-                                    )}>
-                                      {member.vote_status === 1 ? "For" : member.vote_status === 2 ? "Against" : member.vote_status === 3 ? "Abstain" : "No vote"}
-                                    </span>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex gap-2">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleEditMember(member)}
-                                      >
-                                        <Pencil className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setDeletingMemberId(member.id)}
-                                        className="text-destructive hover:text-destructive"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </>
-                              )}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </div>
+                <ProtocolMembers
+                  protocolMembers={protocolMembers}
+                  editingMember={editingMember}
+                  newMember={newMember}
+                  handleAddMember={handleAddMember}
+                  handleCancelAddMember={handleCancelAddMember}
+                  handleCreateMember={handleCreateMember}
+                  setNewMember={setNewMember}
+                  handleEditMember={handleEditMember}
+                  handleCancelEditMember={handleCancelEditMember}
+                  handleUpdateMember={handleUpdateMember}
+                  setEditingMember={setEditingMember}
+                  setDeletingMemberId={setDeletingMemberId}
+                />
               </TabsContent>
               <TabsContent value="attachments" className="mt-6">
                 <div className="space-y-4">
