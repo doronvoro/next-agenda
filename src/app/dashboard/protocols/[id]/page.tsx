@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   AlertDialog,
@@ -256,6 +257,8 @@ export default function ProtocolPage() {
   const [selectedAgendaItem, setSelectedAgendaItem] = useState<AgendaItem | null>(null);
   const [popupEditingAgendaItem, setPopupEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
   const [isPopupEditing, setIsPopupEditing] = useState(false);
+  const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -1092,6 +1095,35 @@ export default function ProtocolPage() {
     }
   };
 
+  const handleOpenRecipientsDialog = () => {
+    setIsRecipientsDialogOpen(true);
+  };
+
+  const handleCloseRecipientsDialog = () => {
+    setIsRecipientsDialogOpen(false);
+  };
+
+  const handleCancelRecipientsDialog = () => {
+    setIsRecipientsDialogOpen(false);
+    setSelectedRecipients([]);
+  };
+
+  const handleRecipientToggle = (memberId: string) => {
+    setSelectedRecipients(prev => 
+      prev.includes(memberId) 
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
+
+  const handleSelectAllRecipients = () => {
+    setSelectedRecipients(protocolMembers.map(member => member.id));
+  };
+
+  const handleClearAllRecipients = () => {
+    setSelectedRecipients([]);
+  };
+
   if (!mounted) {
     return null;
   }
@@ -1897,18 +1929,27 @@ export default function ProtocolPage() {
                           placeholder="Type your message..."
                           className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         />
-                        <div className="flex justify-end space-x-2">
-                          <Button
+                        <div className="flex items-center justify-between">
+                          <button
                             type="button"
-                            variant="ghost"
-                            onClick={() => setNewMessage("")}
-                            disabled={!newMessage.trim()}
+                            onClick={handleOpenRecipientsDialog}
+                            className="text-sm text-primary hover:underline"
                           >
-                            Clear
-                          </Button>
-                          <Button type="submit" disabled={!newMessage.trim()}>
-                            Send Message
-                          </Button>
+                            Select Recipients ({selectedRecipients.length} selected)
+                          </button>
+                          <div className="flex space-x-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => setNewMessage("")}
+                              disabled={!newMessage.trim()}
+                            >
+                              Clear
+                            </Button>
+                            <Button type="submit" disabled={!newMessage.trim()}>
+                              Send Message
+                            </Button>
+                          </div>
                         </div>
                       </form>
                     </div>
@@ -2096,6 +2137,83 @@ export default function ProtocolPage() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRecipientsDialogOpen} onOpenChange={setIsRecipientsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Message Recipients</DialogTitle>
+            <DialogDescription>
+              Choose which protocol members should receive this message
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">
+                {selectedRecipients.length} of {protocolMembers.length} selected
+              </span>
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAllRecipients}
+                >
+                  Select All
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearAllRecipients}
+                >
+                  Clear All
+                </Button>
+              </div>
+            </div>
+
+            <div className="max-h-[300px] overflow-y-auto space-y-2">
+              {protocolMembers.length === 0 ? (
+                <div className="text-center text-muted-foreground py-4">
+                  No protocol members found
+                </div>
+              ) : (
+                protocolMembers.map((member) => (
+                  <div key={member.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`recipient-${member.id}`}
+                      checked={selectedRecipients.includes(member.id)}
+                      onCheckedChange={() => handleRecipientToggle(member.id)}
+                    />
+                    <Label
+                      htmlFor={`recipient-${member.id}`}
+                      className="text-sm cursor-pointer flex-1"
+                    >
+                      {member.name || `Member ${member.id}`}
+                    </Label>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancelRecipientsDialog}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleCloseRecipientsDialog}
+            >
+              Confirm Selection
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
