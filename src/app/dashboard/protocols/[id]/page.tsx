@@ -47,6 +47,7 @@ import {
 } from "./supabaseApi";
 import { createClient } from "@/lib/supabase/client";
 import { useAgendaItems } from "./hooks/useAgendaItems";
+import { useTextImprovement } from "./hooks/useTextImprovement";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -138,6 +139,15 @@ export default function ProtocolPage() {
     toast,
     setError
   );
+
+  const {
+    isImproving,
+    original,
+    improved,
+    handleImprove,
+    handleAccept,
+    handleRevert,
+  } = useTextImprovement(toast);
 
   useEffect(() => {
     setMounted(true);
@@ -304,67 +314,6 @@ export default function ProtocolPage() {
       console.error("Error deleting attachment:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
       toast({ variant: "destructive", title: "Error", description: "Failed to delete attachment" });
-    }
-  };
-
-  // Handler for AI improvement
-  const handleImprovePopupText = async (
-    field: 'topic_content' | 'decision_content',
-    text: string
-  ) => {
-    if (!popupEditingAgendaItem || !text.trim()) return;
-    if (field === 'topic_content') setIsImprovingTopic(true);
-    if (field === 'decision_content') setIsImprovingDecision(true);
-    try {
-      const response = await fetch('/api/improve-text', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      const data = await response.json();
-      if (data.improvedText) {
-        if (field === 'topic_content') {
-          setTopicOriginal(text);
-          setTopicImproved(data.improvedText);
-        } else {
-          setDecisionOriginal(text);
-          setDecisionImproved(data.improvedText);
-        }
-      }
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to improve text",
-      });
-    } finally {
-      if (field === 'topic_content') setIsImprovingTopic(false);
-      if (field === 'decision_content') setIsImprovingDecision(false);
-    }
-  };
-
-  const handleAcceptImproved = (field: 'topic_content' | 'decision_content') => {
-    if (!popupEditingAgendaItem) return;
-    if (field === 'topic_content' && topicImproved) {
-      setPopupEditingAgendaItem(prev => prev ? { ...prev, topic_content: topicImproved } : null);
-      setTopicOriginal(null);
-      setTopicImproved(null);
-    }
-    if (field === 'decision_content' && decisionImproved) {
-      setPopupEditingAgendaItem(prev => prev ? { ...prev, decision_content: decisionImproved } : null);
-      setDecisionOriginal(null);
-      setDecisionImproved(null);
-    }
-  };
-
-  const handleRevertImproved = (field: 'topic_content' | 'decision_content') => {
-    if (field === 'topic_content') {
-      setTopicOriginal(null);
-      setTopicImproved(null);
-    }
-    if (field === 'decision_content') {
-      setDecisionOriginal(null);
-      setDecisionImproved(null);
     }
   };
 
@@ -557,15 +506,15 @@ export default function ProtocolPage() {
         onCancelEdit={handleCancelPopupEdit}
         onClose={handleCloseAgendaItemDialog}
         onSubmit={handleUpdatePopupAgendaItem}
-        onImproveText={handleImprovePopupText}
-        onAcceptImproved={handleAcceptImproved}
-        onRevertImproved={handleRevertImproved}
-        isImprovingTopic={isImprovingTopic}
-        isImprovingDecision={isImprovingDecision}
-        topicImproved={topicImproved}
-        topicOriginal={topicOriginal}
-        decisionImproved={decisionImproved}
-        decisionOriginal={decisionOriginal}
+        onImproveText={handleImprove}
+        onAcceptImproved={(field) => handleAccept(field, setPopupEditingAgendaItem)}
+        onRevertImproved={handleRevert}
+        isImprovingTopic={isImproving.topic_content}
+        isImprovingDecision={isImproving.decision_content}
+        topicImproved={improved.topic_content}
+        topicOriginal={original.topic_content}
+        decisionImproved={improved.decision_content}
+        decisionOriginal={original.decision_content}
       />
     </div>
   );
