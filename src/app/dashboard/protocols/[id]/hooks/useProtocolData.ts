@@ -8,6 +8,9 @@ import type {
   ProtocolAttachment,
   Committee
 } from "../types";
+import type { Database } from "@/types/supabase";
+
+type Company = Database["public"]["Tables"]["companies"]["Row"];
 
 export function useProtocolData(protocolId: string) {
   const [protocol, setProtocol] = useState<Protocol | null>(null);
@@ -18,6 +21,7 @@ export function useProtocolData(protocolId: string) {
   const [committees, setCommittees] = useState<Committee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
 
   const fetchCommittees = useCallback(async () => {
     try {
@@ -46,6 +50,18 @@ export function useProtocolData(protocolId: string) {
         .single();
       if (protocolError) throw protocolError;
       setProtocol(protocolData);
+      // Fetch company if committee exists
+      if (protocolData?.committee?.company_id) {
+        const { data: companyData, error: companyError } = await supabase
+          .from("companies")
+          .select("*")
+          .eq("id", protocolData.committee.company_id)
+          .single();
+        if (companyError) throw companyError;
+        setCompany(companyData);
+      } else {
+        setCompany(null);
+      }
       // Fetch agenda items
       const { data: agendaItemsData, error: agendaItemsError } = await supabase
         .from("agenda_items")
@@ -106,5 +122,6 @@ export function useProtocolData(protocolId: string) {
     setProtocolAttachments,
     setProtocol,
     setError,
+    company,
   };
 } 

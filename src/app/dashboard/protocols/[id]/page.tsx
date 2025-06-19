@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, FileText } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -47,6 +47,9 @@ import { createClient } from "@/lib/supabase/client";
 import { useAgendaItems } from "./hooks/useAgendaItems";
 import { useTextImprovement } from "./hooks/useTextImprovement";
 import { useAttachments } from "./hooks/useAttachments";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ProtocolPdfView from "./components/ProtocolPdfView";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -79,6 +82,7 @@ export default function ProtocolPage() {
     setProtocolAttachments,
     setProtocol,
     setError,
+    company,
   } = useProtocolData(protocolId);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<{
@@ -97,6 +101,7 @@ export default function ProtocolPage() {
   const [popupEditingAgendaItem, setPopupEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
   const [isPopupEditing, setIsPopupEditing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   const agendaApi = {
     updateAgendaItem: async (item: EditingAgendaItem) => {
@@ -301,9 +306,23 @@ export default function ProtocolPage() {
       <div className="grid gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl">
-              {isEditing ? "Edit Protocol" : `Protocol #${protocol?.number}`}
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-2xl">
+                {isEditing ? "Edit Protocol" : `Protocol #${protocol?.number}`}
+              </CardTitle>
+              {!isEditing && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={() => setIsPdfModalOpen(true)} className="h-8 w-8">
+                        <FileText className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>View as PDF</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
@@ -341,7 +360,7 @@ export default function ProtocolPage() {
                         </Button>
                       </div>
                       <div className="grid gap-4">
-                        <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} />
+                        <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} company={company ?? undefined} />
                       </div>
                     </>
                   )}
@@ -453,6 +472,24 @@ export default function ProtocolPage() {
         decisionImproved={improved.decision_content}
         decisionOriginal={original.decision_content}
       />
+
+      <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
+        <DialogContent className="max-w-5xl w-full h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Protocol PDF View</DialogTitle>
+            <Button variant="outline" onClick={() => window.print()} className="ml-4">Print</Button>
+          </DialogHeader>
+          <ProtocolPdfView
+            protocol={protocol}
+            agendaItems={agendaItems}
+            protocolMembers={protocolMembers}
+            protocolAttachments={protocolAttachments}
+            protocolMessages={protocolMessages}
+            formatDate={formatDate}
+            company={company ?? undefined}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
