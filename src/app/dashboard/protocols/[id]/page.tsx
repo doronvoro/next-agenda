@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CalendarIcon, Pencil, X, Check } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -20,8 +20,6 @@ import type {
   AgendaItem,
   EditingAgendaItem,
   NewAgendaItem,
-  EditingMember,
-  NewMember,
   Protocol
 } from "./types";
 import { useProtocolData } from "./hooks/useProtocolData";
@@ -41,14 +39,12 @@ import {
   updateAgendaItem,
   createAgendaItem as apiCreateAgendaItem,
   deleteAgendaItem as apiDeleteAgendaItem,
-  updateMember,
-  createMember as apiCreateMember,
-  deleteMember as apiDeleteMember,
   updateAgendaItemById,
   uploadAttachment,
   deleteAttachment as apiDeleteAttachment,
   reorderAgendaItems,
   sendProtocolMessage,
+  deleteMember as apiDeleteMember,
 } from "./supabaseApi";
 
 const formatDate = (dateString: string) => {
@@ -102,14 +98,6 @@ export default function ProtocolPage() {
   });
   const [deletingAgendaItemId, setDeletingAgendaItemId] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState("content");
-  const [editingMember, setEditingMember] = useState<EditingMember | null>(null);
-  const [newMember, setNewMember] = useState<NewMember>({
-    name: "",
-    type: 1,
-    status: 1,
-    vote_status: null,
-    isEditing: false,
-  });
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
   const [isAgendaItemDialogOpen, setIsAgendaItemDialogOpen] = useState(false);
@@ -665,14 +653,10 @@ export default function ProtocolPage() {
               <TabsContent value="messages" className="mt-6">
                 <ProtocolMessages
                   protocolMessages={protocolMessages}
-                  newMessage={newMessage}
-                  selectedRecipients={selectedRecipients}
-                  selectedTemplate={selectedTemplate}
-                  handleSendMessage={handleSendMessage}
-                  setNewMessage={setNewMessage}
-                  handleOpenRecipientsDialog={handleOpenRecipientsDialog}
-                  handleTemplateChange={handleTemplateChange}
                   formatDate={formatDate}
+                  protocolId={protocolId}
+                  protocolMembers={protocolMembers}
+                  onMessageSent={msg => setProtocolMessages(prev => [...prev, msg])}
                 />
               </TabsContent>
             </Tabs>

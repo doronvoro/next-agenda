@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -7,31 +7,105 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ProtocolMessage } from "../types";
+import type { ProtocolMessage, ProtocolMember } from "../types";
+import { sendProtocolMessage } from "../supabaseApi";
+import { createClient } from "@/lib/supabase/client";
+import { RecipientsDialog } from "./dialogs/RecipientsDialog";
 
 interface ProtocolMessagesProps {
   protocolMessages: ProtocolMessage[];
-  newMessage: string;
-  selectedRecipients: string[];
-  selectedTemplate: string;
-  handleSendMessage: (e: React.FormEvent) => void;
-  setNewMessage: (message: string) => void;
-  handleOpenRecipientsDialog: () => void;
-  handleTemplateChange: (template: string) => void;
   formatDate: (dateString: string) => string;
+  protocolId: string;
+  onMessageSent?: (message: ProtocolMessage) => void;
+  protocolMembers?: ProtocolMember[];
 }
 
 const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
   protocolMessages,
-  newMessage,
-  selectedRecipients,
-  selectedTemplate,
-  handleSendMessage,
-  setNewMessage,
-  handleOpenRecipientsDialog,
-  handleTemplateChange,
   formatDate,
+  protocolId,
+  onMessageSent,
+  protocolMembers = [],
 }) => {
+  const [newMessage, setNewMessage] = useState("");
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (user) setUserId(user.id);
+      else setUserId(null);
+    };
+    fetchUser();
+  }, []);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+    if (!userId) {
+      setError("You must be logged in to send messages.");
+      return;
+    }
+    setError(null);
+    try {
+      const sentMessage = await sendProtocolMessage(protocolId, newMessage, userId);
+      if (onMessageSent) onMessageSent(sentMessage);
+      setNewMessage("");
+    } catch (err) {
+      setError("Failed to send message");
+    }
+  };
+
+  const handleTemplateChange = (template: string) => {
+    setSelectedTemplate(template);
+    switch (template) {
+      case "select-template":
+        setNewMessage("");
+        break;
+      case "pre-meeting materials":
+        setNewMessage("Pre-meeting materials are now available for review.");
+        break;
+      case "protocol approval":
+        setNewMessage("Protocol approval is required. Please review and approve.");
+        break;
+      case "general message":
+        setNewMessage("");
+        break;
+      default:
+        setNewMessage("");
+    }
+  };
+
+  const handleRecipientToggle = (memberId: string) => {
+    setSelectedRecipients(prev =>
+      prev.includes(memberId)
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
+
+  const handleSelectAllRecipients = () => {
+    setSelectedRecipients(protocolMembers.map(member => member.id));
+  };
+
+  const handleClearAllRecipients = () => {
+    setSelectedRecipients([]);
+  };
+
+  const handleCancelRecipientsDialog = () => {
+    setIsRecipientsDialogOpen(false);
+    setSelectedRecipients([]);
+  };
+
+  const handleCloseRecipientsDialog = () => {
+    setIsRecipientsDialogOpen(false);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -64,6 +138,7 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
         </div>
         <div className="border-t p-4">
           <form onSubmit={handleSendMessage} className="flex flex-col space-y-2">
+            {error && <div className="text-sm text-red-500">{error}</div>}
             <textarea
               id="new-message-textarea"
               value={newMessage}
@@ -75,7 +150,7 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
               <div className="flex items-center space-x-4">
                 <button
                   type="button"
-                  onClick={handleOpenRecipientsDialog}
+                  onClick={() => setIsRecipientsDialogOpen(true)}
                   className="text-sm text-primary hover:underline"
                 >
                   Select Recipients ({selectedRecipients.length} selected)
@@ -114,6 +189,17 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
           </form>
         </div>
       </div>
+      <RecipientsDialog
+        open={isRecipientsDialogOpen}
+        onOpenChange={setIsRecipientsDialogOpen}
+        protocolMembers={protocolMembers}
+        selectedRecipients={selectedRecipients}
+        onRecipientToggle={handleRecipientToggle}
+        onSelectAll={handleSelectAllRecipients}
+        onClearAll={handleClearAllRecipients}
+        onCancel={handleCancelRecipientsDialog}
+        onConfirm={handleCloseRecipientsDialog}
+      />
     </div>
   );
 };
