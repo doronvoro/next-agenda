@@ -46,6 +46,7 @@ import {
   sendProtocolMessage,
   deleteMember as apiDeleteMember,
 } from "./supabaseApi";
+import { createClient } from "@/lib/supabase/client";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -113,6 +114,7 @@ export default function ProtocolPage() {
   const [topicImproved, setTopicImproved] = useState<string | null>(null);
   const [decisionOriginal, setDecisionOriginal] = useState<string | null>(null);
   const [decisionImproved, setDecisionImproved] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -133,6 +135,15 @@ export default function ProtocolPage() {
       }
     }
   }, [protocol]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id ?? null);
+    };
+    fetchUser();
+  }, []);
 
   const handleEdit = () => {
     if (protocol) {
@@ -368,8 +379,7 @@ export default function ProtocolPage() {
     if (!files || files.length === 0) return;
     setError(null);
     try {
-      // Assume userId is available from context or session (replace as needed)
-      const userId = "user-id-placeholder";
+      if (!userId) throw new Error("No user ID");
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const attachmentData = await uploadAttachment(protocolId || '', file, userId);
