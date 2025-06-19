@@ -22,6 +22,7 @@ import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ProtocolMember, EditingMember, NewMember } from "../types";
 import { createMember, updateMember } from "../supabaseApi";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ProtocolMembersProps {
   protocolMembers: ProtocolMember[];
@@ -44,6 +45,7 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
     vote_status: null,
     isEditing: false,
   });
+  const { toast } = useToast();
 
   const handleCreateMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,8 +55,10 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
       if (error) throw error;
       setProtocolMembers(prev => [...prev, data]);
       setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
+      toast({ title: "Success", description: "Member added successfully" });
     } catch (err) {
       setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
+      toast({ variant: "destructive", title: "Error", description: "Failed to add member" });
     }
   };
 
@@ -65,9 +69,10 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
       if (error) throw error;
       setProtocolMembers(prev => prev.map(m => m.id === editingMember.id ? { ...m, ...editingMember } : m));
       setEditingMember(null);
+      toast({ title: "Success", description: "Member updated successfully" });
     } catch (err) {
-      // Optionally handle error
       setEditingMember(null);
+      toast({ variant: "destructive", title: "Error", description: "Failed to update member" });
     }
   };
 
