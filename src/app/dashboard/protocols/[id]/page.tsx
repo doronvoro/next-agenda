@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +36,15 @@ import ProtocolAttachments from "./components/ProtocolAttachments";
 import ProtocolMessages from "./components/ProtocolMessages";
 import { ProtocolDetailsFields } from "./components/ProtocolDetailsFields";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import {
+  updateProtocol,
+  updateAgendaItem,
+  createAgendaItem as apiCreateAgendaItem,
+  deleteAgendaItem as apiDeleteAgendaItem,
+  updateMember,
+  createMember as apiCreateMember,
+  deleteMember as apiDeleteMember,
+} from "./supabaseApi";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -152,27 +160,17 @@ export default function ProtocolPage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     try {
-      const supabase = createClient();
-
       // Validate required fields
       if (!editFormData.number || !editDate) {
         throw new Error("Please fill in all required fields");
       }
-
-      const { error } = await supabase
-        .from("protocols")
-        .update({
-          number: editFormData.number,
-          committee_id: editFormData.committee_id || null,
-          due_date: editDate.toISOString(),
-        })
-        .eq("id", protocolId);
-
+      const { error } = await updateProtocol(protocolId || '', {
+        number: editFormData.number,
+        committee_id: editFormData.committee_id || null,
+        due_date: editDate.toISOString(),
+      });
       if (error) throw error;
-
-      // Refresh the data
       await fetchData();
       setIsEditing(false);
     } catch (err) {
@@ -197,47 +195,17 @@ export default function ProtocolPage() {
   const handleUpdateAgendaItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingAgendaItem) return;
-
     setError(null);
-
     try {
-      const supabase = createClient();
-
-      const { error } = await supabase
-        .from("agenda_items")
-        .update({
-          title: editingAgendaItem.title,
-          topic_content: editingAgendaItem.topic_content,
-          decision_content: editingAgendaItem.decision_content,
-        })
-        .eq("id", editingAgendaItem.id);
-
+      const { error } = await updateAgendaItem(editingAgendaItem);
       if (error) throw error;
-
-      // Update the UI
-      setAgendaItems(prev => 
-        prev.map(item => 
-          item.id === editingAgendaItem.id 
-            ? { ...item, ...editingAgendaItem }
-            : item
-        )
-      );
-      
+      setAgendaItems(prev => prev.map(item => item.id === editingAgendaItem.id ? { ...item, ...editingAgendaItem } : item));
       setEditingAgendaItem(null);
-
-      toast({
-        title: "Success",
-        description: "Agenda item updated successfully",
-      });
+      toast({ title: "Success", description: "Agenda item updated successfully" });
     } catch (err) {
       console.error("Error updating agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update agenda item",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item" });
     }
   };
 
@@ -259,58 +227,19 @@ export default function ProtocolPage() {
 
   const handleCreateAgendaItem = async (title: string) => {
     if (!title.trim()) return;
-    
     setError(null);
-
     try {
-      const supabase = createClient();
-
-      // Get the highest display_order
       const maxOrder = Math.max(...agendaItems.map(item => item.display_order || 0), 0);
-
-      const { data, error } = await supabase
-        .from("agenda_items")
-        .insert([
-          {
-            protocol_id: protocolId,
-            title: title.trim(),
-            topic_content: "",
-            decision_content: "",
-            display_order: maxOrder + 1,
-          },
-        ])
-        .select()
-        .single();
-
+      const { data, error } = await apiCreateAgendaItem(protocolId || '', title, maxOrder + 1);
       if (error) throw error;
-
-      // Add the new item to the UI
       setAgendaItems(prev => [...prev, data]);
-      
-      // Reset the new item input
-      setNewAgendaItem({
-        title: "",
-        isEditing: false,
-      });
-
-      toast({
-        title: "Success",
-        description: "Agenda item added successfully",
-      });
+      setNewAgendaItem({ title: "", isEditing: false });
+      toast({ title: "Success", description: "Agenda item added successfully" });
     } catch (err) {
       console.error("Error creating agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-      // Reset the new item input on error
-      setNewAgendaItem({
-        title: "",
-        isEditing: false,
-      });
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to add agenda item",
-      });
+      setNewAgendaItem({ title: "", isEditing: false });
+      toast({ variant: "destructive", title: "Error", description: "Failed to add agenda item" });
     }
   };
 
@@ -334,36 +263,17 @@ export default function ProtocolPage() {
 
   const handleDeleteAgendaItem = async () => {
     if (!deletingAgendaItemId) return;
-
     setError(null);
-
     try {
-      const supabase = createClient();
-
-      const { error } = await supabase
-        .from("agenda_items")
-        .delete()
-        .eq("id", deletingAgendaItemId);
-
+      const { error } = await apiDeleteAgendaItem(deletingAgendaItemId);
       if (error) throw error;
-
-      // Update the UI
       setAgendaItems(prev => prev.filter(item => item.id !== deletingAgendaItemId));
       setDeletingAgendaItemId(null);
-
-      toast({
-        title: "Success",
-        description: "Agenda item deleted successfully",
-      });
+      toast({ title: "Success", description: "Agenda item deleted successfully" });
     } catch (err) {
       console.error("Error deleting agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete agenda item",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Failed to delete agenda item" });
     }
   };
 
@@ -474,48 +384,17 @@ export default function ProtocolPage() {
   const handleUpdateMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingMember) return;
-
     setError(null);
-
     try {
-      const supabase = createClient();
-
-      const { error } = await supabase
-        .from("protocol_members")
-        .update({
-          name: editingMember.name,
-          type: editingMember.type,
-          status: editingMember.status,
-          vote_status: editingMember.vote_status,
-        })
-        .eq("id", editingMember.id);
-
+      const { error } = await updateMember(editingMember);
       if (error) throw error;
-
-      // Update the UI
-      setProtocolMembers(prev => 
-        prev.map(member => 
-          member.id === editingMember.id 
-            ? { ...member, ...editingMember }
-            : member
-        )
-      );
-      
+      setProtocolMembers(prev => prev.map(m => m.id === editingMember.id ? { ...m, ...editingMember } : m));
       setEditingMember(null);
-
-      toast({
-        title: "Success",
-        description: "Member updated successfully",
-      });
+      toast({ title: "Success", description: "Member updated successfully" });
     } catch (err) {
       console.error("Error updating member:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update member",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Failed to update member" });
     }
   };
 
@@ -542,89 +421,34 @@ export default function ProtocolPage() {
   const handleCreateMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMember.name.trim()) return;
-    
     setError(null);
-
     try {
-      const supabase = createClient();
-
-      const { data, error } = await supabase
-        .from("protocol_members")
-        .insert([
-          {
-            protocol_id: protocolId,
-            name: newMember.name.trim(),
-            type: newMember.type,
-            status: newMember.status,
-            source_type: null,
-            vote_status: newMember.vote_status,
-          },
-        ])
-        .select()
-        .single();
-
+      const { data, error } = await apiCreateMember(protocolId || '', newMember);
       if (error) throw error;
-
-      // Add the new member to the UI
       setProtocolMembers(prev => [...prev, data]);
-      
-      // Reset the new member input
-      setNewMember({
-        name: "",
-        type: 1,
-        status: 1,
-        vote_status: null,
-        isEditing: false,
-      });
-
-      toast({
-        title: "Success",
-        description: "Member added successfully",
-      });
+      setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
+      toast({ title: "Success", description: "Member added successfully" });
     } catch (err) {
       console.error("Error creating member:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to add member",
-      });
+      setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
+      toast({ variant: "destructive", title: "Error", description: "Failed to add member" });
     }
   };
 
   const handleDeleteMember = async () => {
     if (!deletingMemberId) return;
-
     setError(null);
-
     try {
-      const supabase = createClient();
-
-      const { error } = await supabase
-        .from("protocol_members")
-        .delete()
-        .eq("id", deletingMemberId);
-
+      const { error } = await apiDeleteMember(deletingMemberId);
       if (error) throw error;
-
-      // Update the UI
-      setProtocolMembers(prev => prev.filter(member => member.id !== deletingMemberId));
+      setProtocolMembers(prev => prev.filter(m => m.id !== deletingMemberId));
       setDeletingMemberId(null);
-
-      toast({
-        title: "Success",
-        description: "Member deleted successfully",
-      });
+      toast({ title: "Success", description: "Member deleted successfully" });
     } catch (err) {
       console.error("Error deleting member:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete member",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Failed to delete member" });
     }
   };
 
