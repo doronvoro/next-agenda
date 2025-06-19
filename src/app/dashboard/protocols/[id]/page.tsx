@@ -10,13 +10,6 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import { Popover } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { useToast } from "@/components/ui/use-toast";
 import AgendaList from "./components/AgendaList";
 import AgendaDetails from "./components/AgendaDetails";
@@ -42,18 +35,13 @@ import { ProtocolEditForm } from "./components/ProtocolEditForm";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import ProtocolAttachments from "./components/ProtocolAttachments";
 import ProtocolMessages from "./components/ProtocolMessages";
+import { ProtocolDetailsFields } from "./components/ProtocolDetailsFields";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return isValid(date) ? format(date, "dd/MM/yyyy") : "Invalid date";
 };
-
-const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="space-y-1">
-    <h3 className="text-sm font-medium text-muted-foreground">{label}</h3>
-    <div className="text-lg">{value}</div>
-  </div>
-);
 
 declare global {
   interface Window {
@@ -1058,20 +1046,7 @@ export default function ProtocolPage() {
                     </div>
                   )}
                   <div className="grid gap-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <Field label="Protocol Number" value={protocol.number} />
-                      <Field label="Due Date" value={formatDate(protocol.due_date)} />
-                      <Field label="Created At" value={formatDate(protocol.created_at)} />
-                      <Field label="Last Updated" value={formatDate(protocol.updated_at)} />
-                      <Field 
-                        label="Committee" 
-                        value={
-                          <div className="flex items-center gap-2">
-                            <span>{protocol.committee?.name || "Not assigned"}</span>
-                          </div>
-                        } 
-                      />
-                    </div>
+                    <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} />
 
                     <Separator />
 
