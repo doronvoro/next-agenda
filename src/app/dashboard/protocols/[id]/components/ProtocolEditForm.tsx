@@ -20,6 +20,7 @@ interface ProtocolEditFormProps {
   updateProtocol: (id: string, data: any) => Promise<{ error: any }>;
   protocolId: string;
   fetchData: () => Promise<void>;
+  onCancel: () => void;
 }
 
 export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
@@ -32,13 +33,13 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
   updateProtocol,
   protocolId,
   fetchData,
+  onCancel,
 }) => {
-  const [isEditing, setIsEditing] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const handleCancelEdit = () => {
-    setIsEditing(false);
     setError(null);
+    onCancel();
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -59,14 +60,12 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
       });
       if (error) throw error;
       await fetchData();
-      setIsEditing(false);
+      onCancel();
     } catch (err) {
       console.error("Error updating protocol:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
-
-  if (!isEditing) return null;
 
   return (
     <form onSubmit={handleUpdate} className="space-y-6 mb-8">

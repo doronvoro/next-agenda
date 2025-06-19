@@ -306,20 +306,6 @@ export default function ProtocolPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isEditing && (
-              <ProtocolEditForm
-                editFormData={editFormData}
-                setEditFormData={setEditFormData}
-                editDate={editDate}
-                setEditDate={setEditDate}
-                committees={committees}
-                initialLoading={initialLoading}
-                updateProtocol={updateProtocol}
-                protocolId={protocolId}
-                fetchData={fetchData}
-              />
-            )}
-
             <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="content">Content</TabsTrigger>
@@ -329,53 +315,64 @@ export default function ProtocolPage() {
               </TabsList>
               <TabsContent value="content" className="mt-6">
                 <div className="grid gap-6">
-                  {!isEditing && (
-                    <div className="flex justify-end">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleEdit}
-                        className="h-8 w-8"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  {isEditing ? (
+                    <ProtocolEditForm
+                      editFormData={editFormData}
+                      setEditFormData={setEditFormData}
+                      editDate={editDate}
+                      setEditDate={setEditDate}
+                      committees={committees}
+                      initialLoading={initialLoading}
+                      updateProtocol={updateProtocol}
+                      protocolId={protocolId}
+                      fetchData={fetchData}
+                      onCancel={() => setIsEditing(false)}
+                    />
+                  ) : (
+                    <>
+                      <div className="flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleEdit}
+                          className="h-8 w-8"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid gap-4">
+                        <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} />
+                      </div>
+                    </>
                   )}
+                  <Separator />
                   <div className="grid gap-4">
-                    <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} />
-
-                    <Separator />
-
-                    <div className="grid gap-4">
-                     Commit <h3 className="text-lg font-medium">Agenda</h3>
-                      <AgendaList
-                        agendaItems={agendaItems}
-                        newAgendaItem={agendaItemsHook.newAgendaItem}
-                        setNewAgendaItem={agendaItemsHook.setNewAgendaItem}
-                        handleKeyDown={agendaItemsHook.handleKeyDown}
-                        handleBlur={agendaItemsHook.handleBlur}
-                        handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
-                        handleDragEnd={agendaItemsHook.handleDragEnd}
-                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
-                      />
-                    </div>
-
-                    <Separator />
-
-                    <div className="grid gap-6">
-                      <h3 className="text-lg font-medium">Agenda Items Details</h3>
-                      <AgendaDetails
-                        agendaItems={agendaItems}
-                        editingAgendaItem={agendaItemsHook.editingAgendaItem}
-                        handleEditAgendaItem={agendaItemsHook.handleEditAgendaItem}
-                        handleCancelEditAgendaItem={agendaItemsHook.handleCancelEditAgendaItem}
-                        handleUpdateAgendaItem={agendaItemsHook.handleUpdateAgendaItem}
-                        setEditingAgendaItem={agendaItemsHook.setEditingAgendaItem}
-                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
-                        setDeletingAgendaItemId={agendaItemsHook.setDeletingAgendaItemId}
-                        initialLoading={initialLoading}
-                      />
-                    </div>
+                    <h3 className="text-lg font-medium">Agenda</h3>
+                    <AgendaList
+                      agendaItems={agendaItems}
+                      newAgendaItem={agendaItemsHook.newAgendaItem}
+                      setNewAgendaItem={agendaItemsHook.setNewAgendaItem}
+                      handleKeyDown={agendaItemsHook.handleKeyDown}
+                      handleBlur={agendaItemsHook.handleBlur}
+                      handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
+                      handleDragEnd={agendaItemsHook.handleDragEnd}
+                      handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                    />
+                  </div>
+                  <Separator />
+                  <div className="grid gap-6">
+                    <h3 className="text-lg font-medium">Agenda Items Details</h3>
+                    <AgendaDetails
+                      agendaItems={agendaItems}
+                      editingAgendaItem={agendaItemsHook.editingAgendaItem}
+                      handleEditAgendaItem={agendaItemsHook.handleEditAgendaItem}
+                      handleCancelEditAgendaItem={agendaItemsHook.handleCancelEditAgendaItem}
+                      handleUpdateAgendaItem={agendaItemsHook.handleUpdateAgendaItem}
+                      setEditingAgendaItem={agendaItemsHook.setEditingAgendaItem}
+                      handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                      setDeletingAgendaItemId={agendaItemsHook.setDeletingAgendaItemId}
+                      initialLoading={initialLoading}
+                    />
                   </div>
                 </div>
               </TabsContent>
