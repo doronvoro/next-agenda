@@ -48,6 +48,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useAgendaItems } from "./hooks/useAgendaItems";
 import { useTextImprovement } from "./hooks/useTextImprovement";
+import { useAttachments } from "./hooks/useAttachments";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -93,7 +94,6 @@ export default function ProtocolPage() {
   const [mounted, setMounted] = useState(false);
   const [currentTab, setCurrentTab] = useState("content");
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
-  const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
   const [isAgendaItemDialogOpen, setIsAgendaItemDialogOpen] = useState(false);
   const [selectedAgendaItem, setSelectedAgendaItem] = useState<AgendaItem | null>(null);
   const [popupEditingAgendaItem, setPopupEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
@@ -148,6 +148,17 @@ export default function ProtocolPage() {
     handleAccept,
     handleRevert,
   } = useTextImprovement(toast);
+
+  const attachmentsHook = useAttachments({
+    protocolId,
+    userId,
+    uploadAttachment,
+    apiDeleteAttachment,
+    toast,
+    setError,
+    protocolAttachments,
+    setProtocolAttachments,
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -277,43 +288,6 @@ export default function ProtocolPage() {
         setError(err instanceof Error ? err.message : "Failed to update agenda item order");
         await fetchData();
       }
-    }
-  };
-
-  // Attachment management functions
-  const handleUploadAttachment = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setError(null);
-    try {
-      if (!userId) throw new Error("No user ID");
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const attachmentData = await uploadAttachment(protocolId || '', file, userId);
-        setProtocolAttachments(prev => [...prev, attachmentData]);
-      }
-      toast({ title: "Success", description: `Successfully uploaded ${files.length} file(s)` });
-    } catch (err) {
-      console.error("Error uploading attachments:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to upload attachments" });
-    }
-  };
-
-  const handleDeleteAttachment = async () => {
-    if (!deletingAttachmentId) return;
-    setError(null);
-    try {
-      const attachment = protocolAttachments.find(a => a.id === deletingAttachmentId);
-      if (!attachment) throw new Error("Attachment not found");
-      const { error } = await apiDeleteAttachment(deletingAttachmentId, attachment.file_path);
-      if (error) throw error;
-      setProtocolAttachments(prev => prev.filter(a => a.id !== deletingAttachmentId));
-      setDeletingAttachmentId(null);
-      toast({ title: "Success", description: "Attachment deleted successfully" });
-    } catch (err) {
-      console.error("Error deleting attachment:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to delete attachment" });
     }
   };
 
@@ -450,8 +424,8 @@ export default function ProtocolPage() {
               <TabsContent value="attachments" className="mt-6">
                 <ProtocolAttachments
                   protocolAttachments={protocolAttachments}
-                  handleUploadAttachment={handleUploadAttachment}
-                  setDeletingAttachmentId={setDeletingAttachmentId}
+                  handleUploadAttachment={attachmentsHook.handleUploadAttachment}
+                  setDeletingAttachmentId={attachmentsHook.setDeletingAttachmentId}
                   formatDate={formatDate}
                 />
               </TabsContent>
@@ -490,9 +464,9 @@ export default function ProtocolPage() {
       />
 
       <ConfirmDeleteAttachmentDialog
-        open={!!deletingAttachmentId}
-        onOpenChange={() => setDeletingAttachmentId(null)}
-        onConfirm={handleDeleteAttachment}
+        open={!!attachmentsHook.deletingAttachmentId}
+        onOpenChange={() => attachmentsHook.setDeletingAttachmentId(null)}
+        onConfirm={attachmentsHook.handleDeleteAttachment}
       />
 
       <AgendaItemDialog
