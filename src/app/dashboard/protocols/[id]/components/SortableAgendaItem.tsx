@@ -2,7 +2,7 @@ import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
-import { AgendaItem } from "./AgendaList";
+import { AgendaItem } from "../types";
 
 interface SortableAgendaItemProps {
   item: AgendaItem;

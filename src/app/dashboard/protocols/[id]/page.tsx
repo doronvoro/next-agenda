@@ -91,6 +91,7 @@ import type {
   NewMember,
   Protocol
 } from "./types";
+import { useProtocolData } from "./hooks/useProtocolData";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -161,14 +162,25 @@ export default function ProtocolPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const [protocol, setProtocol] = useState<Protocol | null>(null);
-  const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
-  const [protocolMembers, setProtocolMembers] = useState<ProtocolMember[]>([]);
-  const [protocolMessages, setProtocolMessages] = useState<ProtocolMessage[]>([]);
-  const [protocolAttachments, setProtocolAttachments] = useState<ProtocolAttachment[]>([]);
+  const protocolId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
+  const {
+    protocol,
+    agendaItems,
+    protocolMembers,
+    protocolMessages,
+    protocolAttachments,
+    committees,
+    loading: initialLoading,
+    error,
+    refresh: fetchData,
+    setAgendaItems,
+    setProtocolMembers,
+    setProtocolMessages,
+    setProtocolAttachments,
+    setProtocol,
+    setError,
+  } = useProtocolData(protocolId);
   const [newMessage, setNewMessage] = useState("");
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<{
     number: number;
@@ -178,7 +190,6 @@ export default function ProtocolPage() {
     committee_id: "",
   });
   const [editDate, setEditDate] = useState<Date>();
-  const [committees, setCommittees] = useState<Committee[]>([]);
   const [mounted, setMounted] = useState(false);
   const [editingAgendaItem, setEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
   const [isAddingAgendaItem, setIsAddingAgendaItem] = useState(false);
@@ -222,8 +233,7 @@ export default function ProtocolPage() {
   useEffect(() => {
     setMounted(true);
     fetchData();
-    fetchCommittees();
-  }, [params.id]);
+  }, [protocolId]);
 
   useEffect(() => {
     if (protocol && protocol.number) {
@@ -232,114 +242,6 @@ export default function ProtocolPage() {
       }
     }
   }, [protocol]);
-
-  const fetchCommittees = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("committees")
-        .select("id, name")
-        .order("name");
-
-      if (error) throw error;
-      setCommittees(data || []);
-    } catch (err) {
-      console.error("Error fetching committees:", err);
-      setError("Failed to load committees");
-    }
-  };
-
-  const fetchData = async () => {
-    try {
-      const supabase = createClient();
-      
-      // Fetch protocol
-      const { data: protocolData, error: protocolError } = await supabase
-        .from("protocols")
-        .select(`
-          *,
-          committee:committees!committee_id(*)
-        `)
-        .eq("id", params.id)
-        .single();
-
-      if (protocolError) {
-        console.error("Error fetching protocol:", protocolError);
-        setError(protocolError.message);
-        return;
-      }
-
-      setProtocol(protocolData);
-
-      // Fetch agenda items
-      const { data: agendaItemsData, error: agendaItemsError } = await supabase
-        .from("agenda_items")
-        .select("*")
-        .eq("protocol_id", params.id)
-        .order("display_order", { ascending: true });
-
-      if (agendaItemsError) {
-        console.error("Error fetching agenda items:", agendaItemsError);
-        setError(agendaItemsError.message);
-        return;
-      }
-
-      setAgendaItems(agendaItemsData || []);
-
-      // Fetch protocol members
-      const { data: membersData, error: membersError } = await supabase
-        .from("protocol_members")
-        .select("*")
-        .eq("protocol_id", params.id)
-        .order("created_at", { ascending: true });
-
-      if (membersError) {
-        console.error("Error fetching protocol members:", membersError);
-        setError(membersError.message);
-        return;
-      }
-
-      setProtocolMembers(membersData || []);
-
-      // Set all members as selected by default
-      setSelectedRecipients(membersData?.map(member => member.id) || []);
-
-      // Fetch protocol messages
-      const { data: messagesData, error: messagesError } = await supabase
-        .from("protocol_messages")
-        .select("*")
-        .eq("protocol_id", params.id)
-        .order("created_at", { ascending: true });
-
-      if (messagesError) {
-        console.error("Error fetching protocol messages:", messagesError);
-        setError(messagesError.message);
-        return;
-      }
-
-      setProtocolMessages(messagesData || []);
-
-      // Fetch protocol attachments
-      const { data: attachmentsData, error: attachmentsError } = await supabase
-        .from("protocol_attachments")
-        .select("*")
-        .eq("protocol_id", params.id)
-        .order("created_at", { ascending: true });
-
-      if (attachmentsError) {
-        console.error("Error fetching protocol attachments:", attachmentsError);
-        setError(attachmentsError.message);
-        return;
-      }
-
-      setProtocolAttachments(attachmentsData || []);
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
-    } finally {
-      setInitialLoading(false);
-    }
-  };
 
   const handleEdit = () => {
     if (protocol) {
@@ -376,7 +278,7 @@ export default function ProtocolPage() {
           committee_id: editFormData.committee_id || null,
           due_date: editDate.toISOString(),
         })
-        .eq("id", params.id);
+        .eq("id", protocolId);
 
       if (error) throw error;
 
@@ -480,7 +382,7 @@ export default function ProtocolPage() {
         .from("agenda_items")
         .insert([
           {
-            protocol_id: params.id,
+            protocol_id: protocolId,
             title: title.trim(),
             topic_content: "",
             decision_content: "",
@@ -760,7 +662,7 @@ export default function ProtocolPage() {
         .from("protocol_members")
         .insert([
           {
-            protocol_id: params.id,
+            protocol_id: protocolId,
             name: newMember.name.trim(),
             type: newMember.type,
             status: newMember.status,
@@ -902,7 +804,7 @@ export default function ProtocolPage() {
         .from("protocol_messages")
         .insert({
           id: crypto.randomUUID(),
-          protocol_id: params.id,
+          protocol_id: protocolId,
           message: newMessage.trim(),
           user_id: user?.id || null,
         })
@@ -949,7 +851,7 @@ export default function ProtocolPage() {
         // Generate unique file path
         const fileExt = file.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `protocols/${params.id}/${fileName}`;
+        const filePath = `protocols/${protocolId}/${fileName}`;
 
         // Upload file to Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -970,7 +872,7 @@ export default function ProtocolPage() {
         const { data: attachmentData, error: insertError } = await supabase
           .from("protocol_attachments")
           .insert({
-            protocol_id: params.id,
+            protocol_id: protocolId,
             file_name: file.name,
             file_path: filePath,
             file_size: file.size,
