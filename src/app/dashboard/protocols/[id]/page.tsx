@@ -665,10 +665,10 @@ export default function ProtocolPage() {
                 editDate={editDate}
                 setEditDate={setEditDate}
                 committees={committees}
-                error={error}
                 initialLoading={initialLoading}
-                handleUpdate={handleUpdate}
-                handleCancelEdit={handleCancelEdit}
+                updateProtocol={updateProtocol}
+                protocolId={protocolId}
+                fetchData={fetchData}
               />
             )}
 
