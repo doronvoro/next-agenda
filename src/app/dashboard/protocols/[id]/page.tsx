@@ -27,7 +27,6 @@ import { ConfirmDeleteAgendaItemDialog } from "./components/dialogs/ConfirmDelet
 import { ConfirmDeleteMemberDialog } from "./components/dialogs/ConfirmDeleteMemberDialog";
 import { ConfirmDeleteAttachmentDialog } from "./components/dialogs/ConfirmDeleteAttachmentDialog";
 import { AgendaItemDialog } from "./components/dialogs/AgendaItemDialog";
-import { RecipientsDialog } from "./components/dialogs/RecipientsDialog";
 import { ProtocolEditForm } from "./components/ProtocolEditForm";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import ProtocolAttachments from "./components/ProtocolAttachments";
@@ -80,7 +79,6 @@ export default function ProtocolPage() {
     setProtocol,
     setError,
   } = useProtocolData(protocolId);
-  const [newMessage, setNewMessage] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<{
     number: number;
@@ -105,9 +103,6 @@ export default function ProtocolPage() {
   const [selectedAgendaItem, setSelectedAgendaItem] = useState<AgendaItem | null>(null);
   const [popupEditingAgendaItem, setPopupEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
   const [isPopupEditing, setIsPopupEditing] = useState(false);
-  const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
-  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [isImprovingTopic, setIsImprovingTopic] = useState(false);
   const [isImprovingDecision, setIsImprovingDecision] = useState(false);
   const [topicOriginal, setTopicOriginal] = useState<string | null>(null);
@@ -357,23 +352,6 @@ export default function ProtocolPage() {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-    try {
-      // Assume userId is available from context or session (replace as needed)
-      const userId = "user-id-placeholder";
-      const data = await sendProtocolMessage(protocolId, newMessage.trim(), userId);
-      setProtocolMessages(prev => [...prev, data]);
-      setNewMessage("");
-      toast({ title: "Success", description: "Message sent successfully" });
-    } catch (err) {
-      console.error("Error sending message:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to send message" });
-    }
-  };
-
   // Attachment management functions
   const handleUploadAttachment = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -408,56 +386,6 @@ export default function ProtocolPage() {
       console.error("Error deleting attachment:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
       toast({ variant: "destructive", title: "Error", description: "Failed to delete attachment" });
-    }
-  };
-
-  const handleOpenRecipientsDialog = () => {
-    setIsRecipientsDialogOpen(true);
-  };
-
-  const handleCloseRecipientsDialog = () => {
-    setIsRecipientsDialogOpen(false);
-  };
-
-  const handleCancelRecipientsDialog = () => {
-    setIsRecipientsDialogOpen(false);
-    setSelectedRecipients([]);
-  };
-
-  const handleRecipientToggle = (memberId: string) => {
-    setSelectedRecipients(prev => 
-      prev.includes(memberId) 
-        ? prev.filter(id => id !== memberId)
-        : [...prev, memberId]
-    );
-  };
-
-  const handleSelectAllRecipients = () => {
-    setSelectedRecipients(protocolMembers.map(member => member.id));
-  };
-
-  const handleClearAllRecipients = () => {
-    setSelectedRecipients([]);
-  };
-
-  const handleTemplateChange = (template: string) => {
-    setSelectedTemplate(template);
-    // You can add template-specific message content here if needed
-    switch (template) {
-      case "select-template":
-        setNewMessage("");
-        break;
-      case "pre-meeting materials":
-        setNewMessage("Pre-meeting materials are now available for review.");
-        break;
-      case "protocol approval":
-        setNewMessage("Protocol approval is required. Please review and approve.");
-        break;
-      case "general message":
-        setNewMessage("");
-        break;
-      default:
-        setNewMessage("");
     }
   };
 
@@ -720,18 +648,6 @@ export default function ProtocolPage() {
         topicOriginal={topicOriginal}
         decisionImproved={decisionImproved}
         decisionOriginal={decisionOriginal}
-      />
-
-      <RecipientsDialog
-        open={isRecipientsDialogOpen}
-        onOpenChange={setIsRecipientsDialogOpen}
-        protocolMembers={protocolMembers}
-        selectedRecipients={selectedRecipients}
-        onRecipientToggle={handleRecipientToggle}
-        onSelectAll={handleSelectAllRecipients}
-        onClearAll={handleClearAllRecipients}
-        onCancel={handleCancelRecipientsDialog}
-        onConfirm={handleCloseRecipientsDialog}
       />
     </div>
   );
