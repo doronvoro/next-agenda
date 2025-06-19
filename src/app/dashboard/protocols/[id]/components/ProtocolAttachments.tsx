@@ -10,19 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Paperclip, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-
-export type ProtocolAttachment = {
-  id: string;
-  protocol_id: string;
-  file_name: string;
-  file_path: string;
-  file_size: number;
-  mime_type: string;
-  uploaded_by: string | null;
-  storage_object_id: string | null;
-  created_at: string;
-  updated_at: string;
-};
+import type { ProtocolAttachment } from "../types";
 
 interface ProtocolAttachmentsProps {
   protocolAttachments: ProtocolAttachment[];

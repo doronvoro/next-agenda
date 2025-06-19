@@ -5,22 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SortableAgendaItem from "./SortableAgendaItem";
-
-// Types should be imported or duplicated as needed
-export type AgendaItem = {
-  id: string;
-  protocol_id: string | null;
-  title: string;
-  topic_content: string | null;
-  decision_content: string | null;
-  display_order: number | null;
-  created_at: string;
-};
-
-export type NewAgendaItem = {
-  title: string;
-  isEditing: boolean;
-};
+import type { AgendaItem, NewAgendaItem } from "../types";
 
 interface AgendaListProps {
   agendaItems: AgendaItem[];

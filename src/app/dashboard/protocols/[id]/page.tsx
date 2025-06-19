@@ -79,84 +79,18 @@ import AgendaDetails from "./components/AgendaDetails";
 import ProtocolMembers from "./components/ProtocolMembers";
 import ProtocolAttachments from "./components/ProtocolAttachments";
 import ProtocolMessages from "./components/ProtocolMessages";
-
-type Committee = {
-  id: string;
-  name: string;
-};
-
-type ProtocolMember = {
-  id: string;
-  name: string | null;
-  type: number;
-  status: number;
-  source_type: number | null;
-  vote_status: number | null;
-  created_at: string;
-};
-
-type ProtocolMessage = {
-  id: string;
-  protocol_id: string;
-  message: string;
-  user_id: string | null;
-  created_at: string;
-};
-
-type ProtocolAttachment = {
-  id: string;
-  protocol_id: string;
-  file_name: string;
-  file_path: string;
-  file_size: number;
-  mime_type: string;
-  uploaded_by: string | null;
-  storage_object_id: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-type AgendaItem = {
-  id: string;
-  protocol_id: string | null;
-  title: string;
-  topic_content: string | null;
-  decision_content: string | null;
-  display_order: number | null;
-  created_at: string;
-};
-
-type EditingAgendaItem = {
-  id: string;
-  title: string;
-  topic_content: string;
-  decision_content: string;
-};
-
-type NewAgendaItem = {
-  title: string;
-  isEditing: boolean;
-};
-
-type EditingMember = {
-  id: string;
-  name: string;
-  type: number;
-  status: number;
-  vote_status: number | null;
-};
-
-type NewMember = {
-  name: string;
-  type: number;
-  status: number;
-  vote_status: number | null;
-  isEditing: boolean;
-};
-
-type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
-  committee: Database["public"]["Tables"]["committees"]["Row"] | null;
-};
+import type {
+  Committee,
+  ProtocolMember,
+  ProtocolMessage,
+  ProtocolAttachment,
+  AgendaItem,
+  EditingAgendaItem,
+  NewAgendaItem,
+  EditingMember,
+  NewMember,
+  Protocol
+} from "./types";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);

@@ -20,32 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-export type ProtocolMember = {
-  id: string;
-  name: string | null;
-  type: number;
-  status: number;
-  source_type: number | null;
-  vote_status: number | null;
-  created_at: string;
-};
-
-export type EditingMember = {
-  id: string;
-  name: string;
-  type: number;
-  status: number;
-  vote_status: number | null;
-};
-
-export type NewMember = {
-  name: string;
-  type: number;
-  status: number;
-  vote_status: number | null;
-  isEditing: boolean;
-};
+import type { ProtocolMember, EditingMember, NewMember } from "../types";
 
 interface ProtocolMembersProps {
   protocolMembers: ProtocolMember[];

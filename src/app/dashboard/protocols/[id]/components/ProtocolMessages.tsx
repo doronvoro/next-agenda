@@ -7,14 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-export type ProtocolMessage = {
-  id: string;
-  protocol_id: string;
-  message: string;
-  user_id: string | null;
-  created_at: string;
-};
+import type { ProtocolMessage } from "../types";
 
 interface ProtocolMessagesProps {
   protocolMessages: ProtocolMessage[];

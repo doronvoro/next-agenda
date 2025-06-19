@@ -3,14 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Eye, Pencil, Trash2, X, Check } from "lucide-react";
-import { AgendaItem } from "./AgendaList";
-
-export type EditingAgendaItem = {
-  id: string;
-  title: string;
-  topic_content: string;
-  decision_content: string;
-};
+import type { EditingAgendaItem, AgendaItem } from "../types";
 
 interface AgendaDetailsProps {
   agendaItems: AgendaItem[];
