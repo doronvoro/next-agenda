@@ -5,56 +5,25 @@ import { createClient } from "@/lib/supabase/client";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CalendarIcon, Pencil, Plus, Trash2, X, Check, Paperclip, Eye } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Pencil, X, Check } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Popover } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { useToast } from "@/components/ui/use-toast";
 import AgendaList from "./components/AgendaList";
 import AgendaDetails from "./components/AgendaDetails";
 import ProtocolMembers from "./components/ProtocolMembers";
-import ProtocolAttachments from "./components/ProtocolAttachments";
-import ProtocolMessages from "./components/ProtocolMessages";
 import type {
   Committee,
   ProtocolMember,
-  ProtocolMessage,
   ProtocolAttachment,
   AgendaItem,
   EditingAgendaItem,
@@ -69,6 +38,10 @@ import { ConfirmDeleteMemberDialog } from "./components/dialogs/ConfirmDeleteMem
 import { ConfirmDeleteAttachmentDialog } from "./components/dialogs/ConfirmDeleteAttachmentDialog";
 import { AgendaItemDialog } from "./components/dialogs/AgendaItemDialog";
 import { RecipientsDialog } from "./components/dialogs/RecipientsDialog";
+import { ProtocolEditForm } from "./components/ProtocolEditForm";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import ProtocolAttachments from "./components/ProtocolAttachments";
+import ProtocolMessages from "./components/ProtocolMessages";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -90,7 +63,6 @@ declare global {
 
 export default function ProtocolPage() {
   const params = useParams();
-  const router = useRouter();
   const { toast } = useToast();
   const protocolId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
   const {
@@ -1051,98 +1023,17 @@ export default function ProtocolPage() {
           </CardHeader>
           <CardContent>
             {isEditing && (
-              <form onSubmit={handleUpdate} className="space-y-6 mb-8">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="number">Protocol Number *</Label>
-                    <Input
-                      id="number"
-                      type="number"
-                      value={editFormData.number.toString()}
-                      onChange={(e) =>
-                        setEditFormData({ ...editFormData, number: parseInt(e.target.value) || 0 })
-                      }
-                      placeholder="Enter protocol number"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="committee">Committee</Label>
-                    <Select
-                      value={editFormData.committee_id}
-                      onValueChange={(value) =>
-                        setEditFormData({ ...editFormData, committee_id: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a committee" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {committees.map((committee) => (
-                          <SelectItem key={committee.id} value={committee.id}>
-                            {committee.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Due Date *</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !editDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {editDate ? format(editDate, "dd/MM/yyyy") : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={editDate}
-                          onSelect={(date: Date | undefined) => setEditDate(date)}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="text-sm text-red-500">
-                    {error}
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-4">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleCancelEdit}
-                    disabled={initialLoading}
-                    className="h-8 w-8"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    variant="ghost"
-                    size="icon"
-                    disabled={initialLoading}
-                    className="h-8 w-8"
-                  >
-                    <Check className="h-4 w-4" />
-                  </Button>
-                </div>
-              </form>
+              <ProtocolEditForm
+                editFormData={editFormData}
+                setEditFormData={setEditFormData}
+                editDate={editDate}
+                setEditDate={setEditDate}
+                committees={committees}
+                error={error}
+                initialLoading={initialLoading}
+                handleUpdate={handleUpdate}
+                handleCancelEdit={handleCancelEdit}
+              />
             )}
 
             <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
