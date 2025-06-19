@@ -340,91 +340,6 @@ export default function ProtocolPage() {
   };
 
   // Member management functions
-  const handleEditMember = (member: ProtocolMember) => {
-    setEditingMember({
-      id: member.id,
-      name: member.name || "",
-      type: member.type,
-      status: member.status,
-      vote_status: member.vote_status,
-    });
-  };
-
-  const handleCancelEditMember = () => {
-    setEditingMember(null);
-  };
-
-  const handleUpdateMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingMember) return;
-    setError(null);
-    try {
-      const { error } = await updateMember(editingMember);
-      if (error) throw error;
-      setProtocolMembers(prev => prev.map(m => m.id === editingMember.id ? { ...m, ...editingMember } : m));
-      setEditingMember(null);
-      toast({ title: "Success", description: "Member updated successfully" });
-    } catch (err) {
-      console.error("Error updating member:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to update member" });
-    }
-  };
-
-  const handleAddMember = () => {
-    setNewMember({
-      name: "",
-      type: 1,
-      status: 1,
-      vote_status: null,
-      isEditing: true,
-    });
-  };
-
-  const handleCancelAddMember = () => {
-    setNewMember({
-      name: "",
-      type: 1,
-      status: 1,
-      vote_status: null,
-      isEditing: false,
-    });
-  };
-
-  const handleCreateMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMember.name.trim()) return;
-    setError(null);
-    try {
-      const { data, error } = await apiCreateMember(protocolId || '', newMember);
-      if (error) throw error;
-      setProtocolMembers(prev => [...prev, data]);
-      setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
-      toast({ title: "Success", description: "Member added successfully" });
-    } catch (err) {
-      console.error("Error creating member:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
-      toast({ variant: "destructive", title: "Error", description: "Failed to add member" });
-    }
-  };
-
-  const handleDeleteMember = async () => {
-    if (!deletingMemberId) return;
-    setError(null);
-    try {
-      const { error } = await apiDeleteMember(deletingMemberId);
-      if (error) throw error;
-      setProtocolMembers(prev => prev.filter(m => m.id !== deletingMemberId));
-      setDeletingMemberId(null);
-      toast({ title: "Success", description: "Member deleted successfully" });
-    } catch (err) {
-      console.error("Error deleting member:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to delete member" });
-    }
-  };
-
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
@@ -734,17 +649,9 @@ export default function ProtocolPage() {
               <TabsContent value="members" className="mt-6">
                 <ProtocolMembers
                   protocolMembers={protocolMembers}
-                  editingMember={editingMember}
-                  newMember={newMember}
-                  handleAddMember={handleAddMember}
-                  handleCancelAddMember={handleCancelAddMember}
-                  handleCreateMember={handleCreateMember}
-                  setNewMember={setNewMember}
-                  handleEditMember={handleEditMember}
-                  handleCancelEditMember={handleCancelEditMember}
-                  handleUpdateMember={handleUpdateMember}
-                  setEditingMember={setEditingMember}
+                  setProtocolMembers={setProtocolMembers}
                   setDeletingMemberId={setDeletingMemberId}
+                  protocolId={protocolId}
                 />
               </TabsContent>
               <TabsContent value="attachments" className="mt-6">
@@ -782,7 +689,15 @@ export default function ProtocolPage() {
       <ConfirmDeleteMemberDialog
         open={!!deletingMemberId}
         onOpenChange={() => setDeletingMemberId(null)}
-        onConfirm={handleDeleteMember}
+        onConfirm={async () => {
+          if (!deletingMemberId) return;
+          const { error } = await apiDeleteMember(deletingMemberId);
+          if (!error) {
+            setProtocolMembers(prev => prev.filter(m => m.id !== deletingMemberId));
+            setDeletingMemberId(null);
+          }
+          // Optionally handle error (toast, etc.)
+        }}
       />
 
       <ConfirmDeleteAttachmentDialog

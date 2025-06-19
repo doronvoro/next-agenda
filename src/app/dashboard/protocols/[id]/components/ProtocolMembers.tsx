@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,42 +21,62 @@ import {
 import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ProtocolMember, EditingMember, NewMember } from "../types";
+import { createMember, updateMember } from "../supabaseApi";
 
 interface ProtocolMembersProps {
   protocolMembers: ProtocolMember[];
-  editingMember: EditingMember | null;
-  newMember: NewMember;
-  handleAddMember: () => void;
-  handleCancelAddMember: () => void;
-  handleCreateMember: (e: React.FormEvent) => void;
-  setNewMember: React.Dispatch<React.SetStateAction<NewMember>>;
-  handleEditMember: (member: ProtocolMember) => void;
-  handleCancelEditMember: () => void;
-  handleUpdateMember: (e: React.FormEvent) => void;
-  setEditingMember: React.Dispatch<React.SetStateAction<EditingMember | null>>;
+  setProtocolMembers: React.Dispatch<React.SetStateAction<ProtocolMember[]>>;
   setDeletingMemberId: (id: string) => void;
+  protocolId: string;
 }
 
 const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
   protocolMembers,
-  editingMember,
-  newMember,
-  handleAddMember,
-  handleCancelAddMember,
-  handleCreateMember,
-  setNewMember,
-  handleEditMember,
-  handleCancelEditMember,
-  handleUpdateMember,
-  setEditingMember,
+  setProtocolMembers,
   setDeletingMemberId,
+  protocolId,
 }) => {
+  const [editingMember, setEditingMember] = useState<EditingMember | null>(null);
+  const [newMember, setNewMember] = useState<NewMember>({
+    name: "",
+    type: 1,
+    status: 1,
+    vote_status: null,
+    isEditing: false,
+  });
+
+  const handleCreateMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMember.name.trim()) return;
+    try {
+      const { data, error } = await createMember(protocolId, newMember);
+      if (error) throw error;
+      setProtocolMembers(prev => [...prev, data]);
+      setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
+    } catch (err) {
+      setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
+    }
+  };
+
+  const handleUpdateMember = async () => {
+    if (!editingMember) return;
+    try {
+      const { error } = await updateMember(editingMember);
+      if (error) throw error;
+      setProtocolMembers(prev => prev.map(m => m.id === editingMember.id ? { ...m, ...editingMember } : m));
+      setEditingMember(null);
+    } catch (err) {
+      // Optionally handle error
+      setEditingMember(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Protocol Members</h3>
         <Button
-          onClick={handleAddMember}
+          onClick={() => setNewMember(prev => ({ ...prev, isEditing: true }))}
           className="gap-2"
           disabled={newMember.isEditing}
         >
@@ -153,7 +173,7 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={handleCancelAddMember}
+                  onClick={() => setNewMember(prev => ({ ...prev, isEditing: false }))}
                 >
                   Cancel
                 </Button>
@@ -262,7 +282,7 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={handleCancelEditMember}
+                            onClick={() => setEditingMember(null)}
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -304,7 +324,13 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEditMember(member)}
+                            onClick={() => setEditingMember({
+                              id: member.id,
+                              name: member.name || "",
+                              type: member.type,
+                              status: member.status,
+                              vote_status: member.vote_status,
+                            })}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
