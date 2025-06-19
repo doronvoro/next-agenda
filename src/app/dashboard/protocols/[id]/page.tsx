@@ -28,11 +28,9 @@ import { ConfirmDeleteMemberDialog } from "./components/dialogs/ConfirmDeleteMem
 import { ConfirmDeleteAttachmentDialog } from "./components/dialogs/ConfirmDeleteAttachmentDialog";
 import { AgendaItemDialog } from "./components/dialogs/AgendaItemDialog";
 import { ProtocolEditForm } from "./components/ProtocolEditForm";
-import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import ProtocolAttachments from "./components/ProtocolAttachments";
 import ProtocolMessages from "./components/ProtocolMessages";
 import { ProtocolDetailsFields } from "./components/ProtocolDetailsFields";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import {
   updateProtocol,
   updateAgendaItem,
@@ -98,20 +96,7 @@ export default function ProtocolPage() {
   const [selectedAgendaItem, setSelectedAgendaItem] = useState<AgendaItem | null>(null);
   const [popupEditingAgendaItem, setPopupEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
   const [isPopupEditing, setIsPopupEditing] = useState(false);
-  const [isImprovingTopic, setIsImprovingTopic] = useState(false);
-  const [isImprovingDecision, setIsImprovingDecision] = useState(false);
-  const [topicOriginal, setTopicOriginal] = useState<string | null>(null);
-  const [topicImproved, setTopicImproved] = useState<string | null>(null);
-  const [decisionOriginal, setDecisionOriginal] = useState<string | null>(null);
-  const [decisionImproved, setDecisionImproved] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   const agendaApi = {
     updateAgendaItem: async (item: EditingAgendaItem) => {
@@ -269,25 +254,6 @@ export default function ProtocolPage() {
       console.error("Error updating agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
       toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item" });
-    }
-  };
-
-  // Member management functions
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = agendaItems.findIndex((item) => item.id === active.id);
-      const newIndex = agendaItems.findIndex((item) => item.id === over.id);
-      const newItems = arrayMove(agendaItems, oldIndex, newIndex);
-      try {
-        await reorderAgendaItems(newItems);
-        setAgendaItems(newItems.map((item, index) => ({ ...item, display_order: index + 1 })));
-        toast({ title: "Success", description: "Agenda items reordered successfully" });
-      } catch (err) {
-        console.error("Error updating agenda item order:", err);
-        setError(err instanceof Error ? err.message : "Failed to update agenda item order");
-        await fetchData();
-      }
     }
   };
 
