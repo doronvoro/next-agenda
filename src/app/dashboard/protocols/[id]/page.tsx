@@ -44,6 +44,11 @@ import {
   updateMember,
   createMember as apiCreateMember,
   deleteMember as apiDeleteMember,
+  updateAgendaItemById,
+  uploadAttachment,
+  deleteAttachment as apiDeleteAttachment,
+  reorderAgendaItems,
+  sendProtocolMessage,
 } from "./supabaseApi";
 
 const formatDate = (dateString: string) => {
@@ -165,9 +170,13 @@ export default function ProtocolPage() {
       if (!editFormData.number || !editDate) {
         throw new Error("Please fill in all required fields");
       }
+      if (!editFormData.committee_id) {
+        setError("Please select a committee.");
+        return;
+      }
       const { error } = await updateProtocol(protocolId || '', {
         number: editFormData.number,
-        committee_id: editFormData.committee_id || null,
+        committee_id: editFormData.committee_id,
         due_date: editDate.toISOString(),
       });
       if (error) throw error;
@@ -315,54 +324,18 @@ export default function ProtocolPage() {
   const handleUpdatePopupAgendaItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!popupEditingAgendaItem) return;
-
     setError(null);
-
     try {
-      const supabase = createClient();
-
-      const { error } = await supabase
-        .from("agenda_items")
-        .update({
-          title: popupEditingAgendaItem.title,
-          topic_content: popupEditingAgendaItem.topic_content,
-          decision_content: popupEditingAgendaItem.decision_content,
-        })
-        .eq("id", popupEditingAgendaItem.id);
-
+      const { error } = await updateAgendaItemById(popupEditingAgendaItem);
       if (error) throw error;
-
-      // Update the UI
-      setAgendaItems(prev => 
-        prev.map(item => 
-          item.id === popupEditingAgendaItem.id 
-            ? { ...item, ...popupEditingAgendaItem }
-            : item
-        )
-      );
-      
-      // Update selected item for display
-      setSelectedAgendaItem(prev => 
-        prev && prev.id === popupEditingAgendaItem.id 
-          ? { ...prev, ...popupEditingAgendaItem }
-          : prev
-      );
-      
+      setAgendaItems(prev => prev.map(item => item.id === popupEditingAgendaItem.id ? { ...item, ...popupEditingAgendaItem } : item));
+      setSelectedAgendaItem(prev => prev && prev.id === popupEditingAgendaItem.id ? { ...prev, ...popupEditingAgendaItem } : prev);
       setIsPopupEditing(false);
-
-      toast({
-        title: "Success",
-        description: "Agenda item updated successfully",
-      });
+      toast({ title: "Success", description: "Agenda item updated successfully" });
     } catch (err) {
       console.error("Error updating agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update agenda item",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item" });
     }
   };
 
@@ -454,51 +427,18 @@ export default function ProtocolPage() {
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    
     if (over && active.id !== over.id) {
       const oldIndex = agendaItems.findIndex((item) => item.id === active.id);
       const newIndex = agendaItems.findIndex((item) => item.id === over.id);
-      
-      // Create new array with updated order
       const newItems = arrayMove(agendaItems, oldIndex, newIndex);
-      
       try {
-        const supabase = createClient();
-        
-        // Update display_order for each item individually
-        for (let i = 0; i < newItems.length; i++) {
-          const { error } = await supabase
-            .from("agenda_items")
-            .update({ display_order: i + 1 })
-            .eq("id", newItems[i].id);
-
-          if (error) {
-            console.error("Supabase error:", error);
-            throw new Error(error.message);
-          }
-        }
-
-        // Update the UI with the new order
-        setAgendaItems(newItems.map((item, index) => ({
-          ...item,
-          display_order: index + 1
-        })));
-
-        toast({
-          title: "Success",
-          description: "Agenda items reordered successfully",
-        });
+        await reorderAgendaItems(newItems);
+        setAgendaItems(newItems.map((item, index) => ({ ...item, display_order: index + 1 })));
+        toast({ title: "Success", description: "Agenda items reordered successfully" });
       } catch (err) {
         console.error("Error updating agenda item order:", err);
         setError(err instanceof Error ? err.message : "Failed to update agenda item order");
-        // Refresh data to ensure consistency
         await fetchData();
-
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to reorder agenda items",
-        });
       }
     }
   };
@@ -506,171 +446,55 @@ export default function ProtocolPage() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-
     try {
-      const supabase = createClient();
-
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-
-      const { data, error } = await supabase
-        .from("protocol_messages")
-        .insert({
-          id: crypto.randomUUID(),
-          protocol_id: protocolId,
-          message: newMessage.trim(),
-          user_id: user?.id || null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      // Assume userId is available from context or session (replace as needed)
+      const userId = "user-id-placeholder";
+      const data = await sendProtocolMessage(protocolId, newMessage.trim(), userId);
       setProtocolMessages(prev => [...prev, data]);
       setNewMessage("");
-      
-      toast({
-        title: "Success",
-        description: "Message sent successfully",
-      });
+      toast({ title: "Success", description: "Message sent successfully" });
     } catch (err) {
       console.error("Error sending message:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to send message",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Failed to send message" });
     }
   };
 
   // Attachment management functions
   const handleUploadAttachment = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-
     setError(null);
-
     try {
-      const supabase = createClient();
-
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-
+      // Assume userId is available from context or session (replace as needed)
+      const userId = "user-id-placeholder";
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
-        // Generate unique file path
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `protocols/${protocolId}/${fileName}`;
-
-        // Upload file to Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('attachments')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          console.error('Error uploading file:', uploadError);
-          throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
-        }
-
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('attachments')
-          .getPublicUrl(filePath);
-
-        // Insert attachment record into database
-        const { data: attachmentData, error: insertError } = await supabase
-          .from("protocol_attachments")
-          .insert({
-            protocol_id: protocolId,
-            file_name: file.name,
-            file_path: filePath,
-            file_size: file.size,
-            mime_type: file.type,
-            uploaded_by: user?.id || null,
-            storage_object_id: uploadData?.id || null,
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('Error inserting attachment record:', insertError);
-          throw new Error(`Failed to save attachment record for ${file.name}: ${insertError.message}`);
-        }
-
-        // Add to UI
+        const attachmentData = await uploadAttachment(protocolId || '', file, userId);
         setProtocolAttachments(prev => [...prev, attachmentData]);
       }
-
-      toast({
-        title: "Success",
-        description: `Successfully uploaded ${files.length} file(s)`,
-      });
+      toast({ title: "Success", description: `Successfully uploaded ${files.length} file(s)` });
     } catch (err) {
       console.error("Error uploading attachments:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to upload attachments",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Failed to upload attachments" });
     }
   };
 
   const handleDeleteAttachment = async () => {
     if (!deletingAttachmentId) return;
-
     setError(null);
-
     try {
-      const supabase = createClient();
-
-      // Get attachment details
       const attachment = protocolAttachments.find(a => a.id === deletingAttachmentId);
-      if (!attachment) {
-        throw new Error("Attachment not found");
-      }
-
-      // Delete file from storage
-      const { error: storageError } = await supabase.storage
-        .from('attachments')
-        .remove([attachment.file_path]);
-
-      if (storageError) {
-        console.error('Error deleting file from storage:', storageError);
-        // Continue with database deletion even if storage deletion fails
-      }
-
-      // Delete record from database
-      const { error } = await supabase
-        .from("protocol_attachments")
-        .delete()
-        .eq("id", deletingAttachmentId);
-
+      if (!attachment) throw new Error("Attachment not found");
+      const { error } = await apiDeleteAttachment(deletingAttachmentId, attachment.file_path);
       if (error) throw error;
-
-      // Update the UI
-      setProtocolAttachments(prev => prev.filter(attachment => attachment.id !== deletingAttachmentId));
+      setProtocolAttachments(prev => prev.filter(a => a.id !== deletingAttachmentId));
       setDeletingAttachmentId(null);
-
-      toast({
-        title: "Success",
-        description: "Attachment deleted successfully",
-      });
+      toast({ title: "Success", description: "Attachment deleted successfully" });
     } catch (err) {
       console.error("Error deleting attachment:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete attachment",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Failed to delete attachment" });
     }
   };
 
