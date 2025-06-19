@@ -46,6 +46,7 @@ import {
   deleteMember as apiDeleteMember,
 } from "./supabaseApi";
 import { createClient } from "@/lib/supabase/client";
+import { useAgendaItems } from "./hooks/useAgendaItems";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -89,13 +90,6 @@ export default function ProtocolPage() {
   });
   const [editDate, setEditDate] = useState<Date>();
   const [mounted, setMounted] = useState(false);
-  const [editingAgendaItem, setEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
-  const [isAddingAgendaItem, setIsAddingAgendaItem] = useState(false);
-  const [newAgendaItem, setNewAgendaItem] = useState<NewAgendaItem>({
-    title: "",
-    isEditing: false,
-  });
-  const [deletingAgendaItemId, setDeletingAgendaItemId] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState("content");
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
@@ -116,6 +110,33 @@ export default function ProtocolPage() {
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
+  );
+
+  const agendaApi = {
+    updateAgendaItem: async (item: EditingAgendaItem) => {
+      const { error } = await updateAgendaItem(item);
+      return { error };
+    },
+    createAgendaItem: async (protocolId: string, title: string, displayOrder: number) => {
+      const { data, error } = await apiCreateAgendaItem(protocolId, title, displayOrder);
+      return { data, error };
+    },
+    deleteAgendaItem: async (id: string) => {
+      const { error } = await apiDeleteAgendaItem(id);
+      return { error };
+    },
+    reorderAgendaItems: async (items: AgendaItem[]) => {
+      await reorderAgendaItems(items);
+    },
+  };
+
+  const agendaItemsHook = useAgendaItems(
+    agendaItems,
+    setAgendaItems,
+    agendaApi,
+    protocolId,
+    toast,
+    setError
   );
 
   useEffect(() => {
@@ -174,104 +195,6 @@ export default function ProtocolPage() {
     } catch (err) {
       console.error("Error updating protocol:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-    }
-  };
-
-  const handleEditAgendaItem = (item: AgendaItem) => {
-    setEditingAgendaItem({
-      id: item.id,
-      title: item.title,
-      topic_content: item.topic_content || "",
-      decision_content: item.decision_content || "",
-    });
-  };
-
-  const handleCancelEditAgendaItem = () => {
-    setEditingAgendaItem(null);
-  };
-
-  const handleUpdateAgendaItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingAgendaItem) return;
-    setError(null);
-    try {
-      const { error } = await updateAgendaItem(editingAgendaItem);
-      if (error) throw error;
-      setAgendaItems(prev => prev.map(item => item.id === editingAgendaItem.id ? { ...item, ...editingAgendaItem } : item));
-      setEditingAgendaItem(null);
-      toast({ title: "Success", description: "Agenda item updated successfully" });
-    } catch (err) {
-      console.error("Error updating agenda item:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item" });
-    }
-  };
-
-  const handleAddAgendaItem = () => {
-    setIsAddingAgendaItem(true);
-    setNewAgendaItem({
-      title: "",
-      isEditing: false,
-    });
-  };
-
-  const handleCancelAddAgendaItem = () => {
-    setIsAddingAgendaItem(false);
-    setNewAgendaItem({
-      title: "",
-      isEditing: false,
-    });
-  };
-
-  const handleCreateAgendaItem = async (title: string) => {
-    if (!title.trim()) return;
-    setError(null);
-    try {
-      const maxOrder = Math.max(...agendaItems.map(item => item.display_order || 0), 0);
-      const { data, error } = await apiCreateAgendaItem(protocolId || '', title, maxOrder + 1);
-      if (error) throw error;
-      setAgendaItems(prev => [...prev, data]);
-      setNewAgendaItem({ title: "", isEditing: false });
-      toast({ title: "Success", description: "Agenda item added successfully" });
-    } catch (err) {
-      console.error("Error creating agenda item:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      setNewAgendaItem({ title: "", isEditing: false });
-      toast({ variant: "destructive", title: "Error", description: "Failed to add agenda item" });
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleCreateAgendaItem(newAgendaItem.title);
-    }
-  };
-
-  const handleBlur = () => {
-    if (newAgendaItem.title.trim()) {
-      handleCreateAgendaItem(newAgendaItem.title);
-    } else {
-      setNewAgendaItem({
-        title: "",
-        isEditing: false,
-      });
-    }
-  };
-
-  const handleDeleteAgendaItem = async () => {
-    if (!deletingAgendaItemId) return;
-    setError(null);
-    try {
-      const { error } = await apiDeleteAgendaItem(deletingAgendaItemId);
-      if (error) throw error;
-      setAgendaItems(prev => prev.filter(item => item.id !== deletingAgendaItemId));
-      setDeletingAgendaItemId(null);
-      toast({ title: "Success", description: "Agenda item deleted successfully" });
-    } catch (err) {
-      console.error("Error deleting agenda item:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to delete agenda item" });
     }
   };
 
@@ -538,12 +461,12 @@ export default function ProtocolPage() {
                      Commit <h3 className="text-lg font-medium">Agenda</h3>
                       <AgendaList
                         agendaItems={agendaItems}
-                        newAgendaItem={newAgendaItem}
-                        setNewAgendaItem={setNewAgendaItem}
-                        handleKeyDown={handleKeyDown}
-                        handleBlur={handleBlur}
-                        handleCreateAgendaItem={handleCreateAgendaItem}
-                        handleDragEnd={handleDragEnd}
+                        newAgendaItem={agendaItemsHook.newAgendaItem}
+                        setNewAgendaItem={agendaItemsHook.setNewAgendaItem}
+                        handleKeyDown={agendaItemsHook.handleKeyDown}
+                        handleBlur={agendaItemsHook.handleBlur}
+                        handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
+                        handleDragEnd={agendaItemsHook.handleDragEnd}
                         handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
                       />
                     </div>
@@ -554,13 +477,13 @@ export default function ProtocolPage() {
                       <h3 className="text-lg font-medium">Agenda Items Details</h3>
                       <AgendaDetails
                         agendaItems={agendaItems}
-                        editingAgendaItem={editingAgendaItem}
-                        handleEditAgendaItem={handleEditAgendaItem}
-                        handleCancelEditAgendaItem={handleCancelEditAgendaItem}
-                        handleUpdateAgendaItem={handleUpdateAgendaItem}
-                        setEditingAgendaItem={setEditingAgendaItem}
+                        editingAgendaItem={agendaItemsHook.editingAgendaItem}
+                        handleEditAgendaItem={agendaItemsHook.handleEditAgendaItem}
+                        handleCancelEditAgendaItem={agendaItemsHook.handleCancelEditAgendaItem}
+                        handleUpdateAgendaItem={agendaItemsHook.handleUpdateAgendaItem}
+                        setEditingAgendaItem={agendaItemsHook.setEditingAgendaItem}
                         handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
-                        setDeletingAgendaItemId={setDeletingAgendaItemId}
+                        setDeletingAgendaItemId={agendaItemsHook.setDeletingAgendaItemId}
                         initialLoading={initialLoading}
                       />
                     </div>
@@ -598,9 +521,9 @@ export default function ProtocolPage() {
       </div>
 
       <ConfirmDeleteAgendaItemDialog
-        open={!!deletingAgendaItemId}
-        onOpenChange={() => setDeletingAgendaItemId(null)}
-        onConfirm={handleDeleteAgendaItem}
+        open={!!agendaItemsHook.deletingAgendaItemId}
+        onOpenChange={() => agendaItemsHook.setDeletingAgendaItemId(null)}
+        onConfirm={agendaItemsHook.handleDeleteAgendaItem}
       />
 
       <ConfirmDeleteMemberDialog
