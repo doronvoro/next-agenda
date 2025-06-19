@@ -74,6 +74,11 @@ import type {
   Protocol
 } from "./types";
 import { useProtocolData } from "./hooks/useProtocolData";
+import { ConfirmDeleteAgendaItemDialog } from "./components/dialogs/ConfirmDeleteAgendaItemDialog";
+import { ConfirmDeleteMemberDialog } from "./components/dialogs/ConfirmDeleteMemberDialog";
+import { ConfirmDeleteAttachmentDialog } from "./components/dialogs/ConfirmDeleteAttachmentDialog";
+import { AgendaItemDialog } from "./components/dialogs/AgendaItemDialog";
+import { RecipientsDialog } from "./components/dialogs/RecipientsDialog";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -1190,7 +1195,7 @@ export default function ProtocolPage() {
                     <Separator />
 
                     <div className="grid gap-4">
-                      <h3 className="text-lg font-medium">Agenda</h3>
+                     Commit <h3 className="text-lg font-medium">Agenda</h3>
                       <AgendaList
                         agendaItems={agendaItems}
                         newAgendaItem={newAgendaItem}
@@ -1264,324 +1269,57 @@ export default function ProtocolPage() {
         </Card>
       </div>
 
-      <AlertDialog open={!!deletingAgendaItemId} onOpenChange={() => setDeletingAgendaItemId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the agenda item.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteAgendaItem}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteAgendaItemDialog
+        open={!!deletingAgendaItemId}
+        onOpenChange={() => setDeletingAgendaItemId(null)}
+        onConfirm={handleDeleteAgendaItem}
+      />
 
-      <AlertDialog open={!!deletingMemberId} onOpenChange={() => setDeletingMemberId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the member from this protocol.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteMember}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteMemberDialog
+        open={!!deletingMemberId}
+        onOpenChange={() => setDeletingMemberId(null)}
+        onConfirm={handleDeleteMember}
+      />
 
-      <AlertDialog open={!!deletingAttachmentId} onOpenChange={() => setDeletingAttachmentId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the attachment from this protocol.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteAttachment}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteAttachmentDialog
+        open={!!deletingAttachmentId}
+        onOpenChange={() => setDeletingAttachmentId(null)}
+        onConfirm={handleDeleteAttachment}
+      />
 
-      <Dialog open={isAgendaItemDialogOpen} onOpenChange={setIsAgendaItemDialogOpen}>
-        <DialogContent className="max-w-5xl w-full max-h-[95vh] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedAgendaItem && (
-                <span>
-                  {selectedAgendaItem.display_order ? `${selectedAgendaItem.display_order}.` : '•'} {selectedAgendaItem.title}
-                </span>
-              )}
-            </DialogTitle>
-            <DialogDescription>
-              <span className="text-base text-muted-foreground">View and edit agenda item details</span>
-            </DialogDescription>
-          </DialogHeader>
+      <AgendaItemDialog
+        open={isAgendaItemDialogOpen}
+        onOpenChange={setIsAgendaItemDialogOpen}
+        selectedAgendaItem={selectedAgendaItem}
+        isPopupEditing={isPopupEditing}
+        popupEditingAgendaItem={popupEditingAgendaItem}
+        setPopupEditingAgendaItem={setPopupEditingAgendaItem}
+        onStartEdit={handleStartPopupEdit}
+        onCancelEdit={handleCancelPopupEdit}
+        onClose={handleCloseAgendaItemDialog}
+        onSubmit={handleUpdatePopupAgendaItem}
+        onImproveText={handleImprovePopupText}
+        onAcceptImproved={handleAcceptImproved}
+        onRevertImproved={handleRevertImproved}
+        isImprovingTopic={isImprovingTopic}
+        isImprovingDecision={isImprovingDecision}
+        topicImproved={topicImproved}
+        topicOriginal={topicOriginal}
+        decisionImproved={decisionImproved}
+        decisionOriginal={decisionOriginal}
+      />
 
-          {selectedAgendaItem && (
-            <div className="space-y-8">
-              {isPopupEditing ? (
-                <div className="bg-muted border border-border rounded-xl p-8 shadow-sm">
-                  <form onSubmit={handleUpdatePopupAgendaItem} className="space-y-8">
-                    <h3 className="text-xl font-semibold mb-4 text-primary">Edit Agenda Item</h3>
-                    <div className="space-y-2">
-                      <Label htmlFor="popup-title">Title</Label>
-                      <Input
-                        id="popup-title"
-                        className="rounded-lg px-4 py-3 text-base"
-                        value={popupEditingAgendaItem?.title || ""}
-                        onChange={(e) =>
-                          setPopupEditingAgendaItem(prev =>
-                            prev ? { ...prev, title: e.target.value } : null
-                          )
-                        }
-                        placeholder="Enter agenda item title"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="popup-topic">Topic Content</Label>
-                      <div className="flex gap-2">
-                        <textarea
-                          id="popup-topic"
-                          value={popupEditingAgendaItem?.topic_content || ""}
-                          onChange={(e) =>
-                            setPopupEditingAgendaItem(prev =>
-                              prev ? { ...prev, topic_content: e.target.value } : null
-                            )
-                          }
-                          className="min-h-[180px] w-full rounded-lg border border-input bg-background px-4 py-3 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right text-base"
-                          placeholder="Enter topic content"
-                          disabled={!!topicImproved}
-                        />
-                        <Button
-                          type="button"
-                          onClick={() => handleImprovePopupText('topic_content', popupEditingAgendaItem?.topic_content || "")}
-                          disabled={isImprovingTopic || !!topicImproved}
-                          variant="outline"
-                          className="h-auto px-4 py-2 text-base"
-                        >
-                          {isImprovingTopic ? "Improving..." : "Improve it"}
-                        </Button>
-                      </div>
-                      {topicImproved && (
-                        <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
-                          <div className="font-bold mb-2 text-primary">Compare Versions</div>
-                          <div className="flex flex-col md:flex-row gap-4">
-                            <div className="flex-1">
-                              <div className="text-xs text-muted-foreground mb-1">Original</div>
-                              <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{topicOriginal}</div>
-                            </div>
-                            <div className="flex-1">
-                              <div className="text-xs text-muted-foreground mb-1">Improved Suggestion</div>
-                              <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{topicImproved}</div>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 mt-4 justify-end">
-                            <Button size="lg" className="px-6" onClick={() => handleAcceptImproved('topic_content')}>Accept</Button>
-                            <Button size="lg" variant="outline" className="px-6" onClick={() => handleRevertImproved('topic_content')}>Revert</Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="popup-decision">Decision Content</Label>
-                      <div className="flex gap-2">
-                        <textarea
-                          id="popup-decision"
-                          value={popupEditingAgendaItem?.decision_content || ""}
-                          onChange={(e) =>
-                            setPopupEditingAgendaItem(prev =>
-                              prev ? { ...prev, decision_content: e.target.value } : null
-                            )
-                          }
-                          className="min-h-[180px] w-full rounded-lg border border-input bg-background px-4 py-3 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right text-base"
-                          placeholder="Enter decision content"
-                          disabled={!!decisionImproved}
-                        />
-                        <Button
-                          type="button"
-                          onClick={() => handleImprovePopupText('decision_content', popupEditingAgendaItem?.decision_content || "")}
-                          disabled={isImprovingDecision || !!decisionImproved}
-                          variant="outline"
-                          className="h-auto px-4 py-2 text-base"
-                        >
-                          {isImprovingDecision ? "Improving..." : "Improve it"}
-                        </Button>
-                      </div>
-                      {decisionImproved && (
-                        <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
-                          <div className="font-bold mb-2 text-primary">Compare Versions</div>
-                          <div className="flex flex-col md:flex-row gap-4">
-                            <div className="flex-1">
-                              <div className="text-xs text-muted-foreground mb-1">Original</div>
-                              <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{decisionOriginal}</div>
-                            </div>
-                            <div className="flex-1">
-                              <div className="text-xs text-muted-foreground mb-1">Improved Suggestion</div>
-                              <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{decisionImproved}</div>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 mt-4 justify-end">
-                            <Button size="lg" className="px-6" onClick={() => handleAcceptImproved('decision_content')}>Accept</Button>
-                            <Button size="lg" variant="outline" className="px-6" onClick={() => handleRevertImproved('decision_content')}>Revert</Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <DialogFooter>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleCancelPopupEdit}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit">
-                        Save Changes
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Topic Content
-                    </label>
-                    <div className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right">
-                      {selectedAgendaItem.topic_content || "No topic content"}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Decision Content
-                    </label>
-                    <div className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right">
-                      {selectedAgendaItem.decision_content || "No decision content"}
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleCloseAgendaItemDialog}
-                    >
-                      Close
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleStartPopupEdit}
-                    >
-                      Edit
-                    </Button>
-                  </DialogFooter>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isRecipientsDialogOpen} onOpenChange={setIsRecipientsDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Message Recipients</DialogTitle>
-            <DialogDescription>
-              Choose which protocol members should receive this message
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">
-                {selectedRecipients.length} of {protocolMembers.length} selected
-              </span>
-              <div className="flex space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSelectAllRecipients}
-                >
-                  Select All
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearAllRecipients}
-                >
-                  Clear All
-                </Button>
-              </div>
-            </div>
-
-            <div className="max-h-[300px] overflow-y-auto space-y-2">
-              {protocolMembers.length === 0 ? (
-                <div className="text-center text-muted-foreground py-4">
-                  No protocol members found
-                </div>
-              ) : (
-                protocolMembers.map((member) => (
-                  <div key={member.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`recipient-${member.id}`}
-                      checked={selectedRecipients.includes(member.id)}
-                      onCheckedChange={() => handleRecipientToggle(member.id)}
-                    />
-                    <Label
-                      htmlFor={`recipient-${member.id}`}
-                      className="text-sm cursor-pointer flex-1"
-                    >
-                      {member.name || `Member ${member.id}`}
-                    </Label>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancelRecipientsDialog}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleCloseRecipientsDialog}
-            >
-              Confirm Selection
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RecipientsDialog
+        open={isRecipientsDialogOpen}
+        onOpenChange={setIsRecipientsDialogOpen}
+        protocolMembers={protocolMembers}
+        selectedRecipients={selectedRecipients}
+        onRecipientToggle={handleRecipientToggle}
+        onSelectAll={handleSelectAllRecipients}
+        onClearAll={handleClearAllRecipients}
+        onCancel={handleCancelRecipientsDialog}
+        onConfirm={handleCloseRecipientsDialog}
+      />
     </div>
   );
 } 
