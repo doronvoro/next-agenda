@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Database } from "@/types/supabase";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,14 +10,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -53,7 +44,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DndContext,
@@ -64,15 +54,7 @@ import {
   useSensors,
   DragEndEvent,
 } from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useToast } from "@/components/ui/use-toast";
 import AgendaList from "./components/AgendaList";
 import AgendaDetails from "./components/AgendaDetails";
@@ -104,53 +86,6 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
     <div className="text-lg">{value}</div>
   </div>
 );
-
-type SortableAgendaItemProps = {
-  item: AgendaItem;
-  onViewClick?: (item: AgendaItem) => void;
-};
-
-function SortableAgendaItem({ item, onViewClick }: SortableAgendaItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="flex items-center gap-2"
-    >
-      <button
-        className="cursor-grab touch-none p-1 hover:bg-accent rounded-md"
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
-      </button>
-      <span className="text-muted-foreground">
-        {item.display_order ? `${item.display_order}.` : '•'}
-      </span>
-      <span 
-        className={onViewClick ? "cursor-pointer hover:text-primary hover:underline" : ""}
-        onClick={onViewClick ? () => onViewClick(item) : undefined}
-      >
-        {item.title}
-      </span>
-    </div>
-  );
-}
 
 declare global {
   interface Window {
