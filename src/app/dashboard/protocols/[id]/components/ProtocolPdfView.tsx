@@ -9,7 +9,7 @@ interface ProtocolPdfViewProps {
   protocolAttachments: ProtocolAttachment[];
   protocolMessages: ProtocolMessage[];
   formatDate: (dateString: string) => string;
-  company?: { name?: string | null; number?: string | null };
+  company?: { name?: string | null; number?: string | null; address?: string | null };
 }
 
 const PdfSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -35,91 +35,63 @@ const ProtocolPdfView: React.FC<ProtocolPdfViewProps> = ({
   const formatName = (m: ProtocolMember) => m.name + (m.type === 2 ? ' (external)' : '');
 
   return (
-    <div className="p-8 bg-white text-black print:p-0 print:bg-white print:text-black">
-      <h1 className="text-3xl font-bold mb-2 text-center">{company?.name || `Protocol #${protocol.number}`}</h1>
-      {company?.number && (
-        <div className="text-center text-lg text-muted-foreground mb-2">Company Number: {company.number}</div>
-      )}
-      <div className="text-center mb-6">
-        <div className="text-lg font-semibold">Protocol #{protocol.number}</div>
-        <div className="text-base">Committee: {protocol.committee?.name || "Not assigned"}</div>
-        <div className="text-base">Due Date: {formatDate(protocol.due_date)}</div>
+    <div className="p-12 bg-white text-black print:p-0 print:bg-white print:text-black min-h-[90vh]">
+      {/* Header 1: Centered */}
+      <div className="text-center mb-2">
+        <h1 className="text-4xl font-extrabold mb-1">{company?.name || ''}</h1>
+        {company?.number && <div className="text-lg mb-1">ח.פ{company.number}</div>}
+        {company?.address && <div className="text-base mb-1">{company.address}</div>}
+        <div className="text-xl font-semibold mb-1">
+          פרוטוקול {protocol.committee?.name || ''} מספר {protocol.number}
+        </div>
       </div>
-      <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} company={company} />
-
-      <PdfSection title="Agenda">
-        {agendaItems.length === 0 ? (
-          <div className="text-muted-foreground">No agenda items found</div>
-        ) : (
-          <ol className="space-y-4 list-decimal list-inside">
-            {agendaItems
-              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-              .map((item) => (
-                <li key={item.id}>
-                  <div className="font-semibold">{item.title}</div>
-                  <div className="ml-4">
-                    <div className="text-sm"><span className="font-medium">Topic:</span> {item.topic_content || "-"}</div>
-                    <div className="text-sm"><span className="font-medium">Decision:</span> {item.decision_content || "-"}</div>
-                  </div>
-                </li>
-              ))}
-          </ol>
-        )}
-      </PdfSection>
-
-      <PdfSection title="Members">
-        {protocolMembers.length === 0 ? (
-          <div className="text-muted-foreground">No members found</div>
-        ) : (
-          <div className="space-y-2">
-            <div><span className="font-semibold">Invited:</span> {invited.map(formatName).join(", ")}</div>
-            <div><span className="font-semibold">Present:</span> {present.map(formatName).join(", ")}</div>
-            <div><span className="font-semibold">Absent:</span> {absent.map(formatName).join(", ")}</div>
+      {/* Main content: right-aligned */}
+      <div className="text-right">
+        {/* Header 2: Right-aligned */}
+        <div className="flex flex-row-reverse mb-8">
+          <div className="text-right space-y-1">
+            <div>תאריך הישיבה {formatDate(protocol.due_date)}</div>
+            <div>מספר חברי הישיבה {protocolMembers.length}</div>
+            <div className="flex flex-row-reverse items-baseline"><span className="inline-block w-24 font-semibold shrink-0 text-right">הוזמנו:</span> {invited.map(formatName).join(", ")}</div>
+            <div className="flex flex-row-reverse items-baseline"><span className="inline-block w-24 font-semibold shrink-0 text-right">נחכו:</span> {present.map(formatName).join(", ")}</div>
+            <div className="flex flex-row-reverse items-baseline"><span className="inline-block w-24 font-semibold shrink-0 text-right">נעדרו:</span> {absent.map(formatName).join(", ")}</div>
           </div>
-        )}
-      </PdfSection>
-
-      <PdfSection title="Attachments">
-        {protocolAttachments.length === 0 ? (
-          <div className="text-muted-foreground">No attachments found</div>
-        ) : (
-          <table className="w-full border print:text-xs">
-            <thead>
-              <tr>
-                <th className="border px-2 py-1">File Name</th>
-                <th className="border px-2 py-1">Size</th>
-                <th className="border px-2 py-1">Type</th>
-                <th className="border px-2 py-1">Uploaded</th>
-              </tr>
-            </thead>
-            <tbody>
-              {protocolAttachments.map((a) => (
-                <tr key={a.id}>
-                  <td className="border px-2 py-1">{a.file_name}</td>
-                  <td className="border px-2 py-1">{(a.file_size / 1024 / 1024).toFixed(2)} MB</td>
-                  <td className="border px-2 py-1">{a.mime_type}</td>
-                  <td className="border px-2 py-1">{formatDate(a.created_at)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </PdfSection>
-
-      <PdfSection title="Messages">
-        {protocolMessages.length === 0 ? (
-          <div className="text-muted-foreground">No messages found</div>
-        ) : (
-          <ul className="space-y-2">
-            {protocolMessages.map((msg) => (
-              <li key={msg.id} className="border-b pb-2">
-                <div className="text-sm whitespace-pre-wrap">{msg.message}</div>
-                <div className="text-xs text-muted-foreground">{formatDate(msg.created_at)}</div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </PdfSection>
+        </div>
+        {/* Agenda */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">סדר יום</h2>
+          {agendaItems.length === 0 ? (
+            <div className="text-muted-foreground">לא נמצאו נושאים</div>
+          ) : (
+            <ol className="space-y-2 list-decimal list-inside">
+              {agendaItems
+                .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                .map((item, idx) => (
+                  <li key={item.id} className="ml-2">{item.title}</li>
+                ))}
+            </ol>
+          )}
+        </section>
+        {/* Agenda Details */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">דיון והחלטות</h2>
+          {agendaItems.length === 0 ? (
+            <div className="text-muted-foreground">לא נמצאו נושאים</div>
+          ) : (
+            <ol className="space-y-6 list-decimal list-inside">
+              {agendaItems
+                .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                .map((item, idx) => (
+                  <li key={item.id} className="ml-2">
+                    <div className="font-semibold mb-1">{item.title}</div>
+                    <div className="ml-4 mb-1 text-sm"><span className="font-medium">נושא:</span> {item.topic_content || "-"}</div>
+                    <div className="ml-4 text-sm"><span className="font-medium">החלטה:</span> {item.decision_content || "-"}</div>
+                  </li>
+                ))}
+            </ol>
+          )}
+        </section>
+      </div>
     </div>
   );
 };
