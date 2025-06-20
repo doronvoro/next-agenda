@@ -227,7 +227,6 @@ export function AgendaItemDialog({
                       Cancel
                     </Button>
                     <Button type="submit" className="flex items-center gap-2">
-                      <Wand2 className="w-4 h-4" />
                       Save Changes
                     </Button>
                   </DialogFooter>

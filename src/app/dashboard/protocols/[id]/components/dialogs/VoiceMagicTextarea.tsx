@@ -34,7 +34,7 @@ export const VoiceMagicTextarea: React.FC<VoiceMagicTextareaProps> = ({
       <textarea
         value={value}
         onChange={onChange}
-        className="min-h-[180px] w-full rounded-lg border border-input bg-background px-4 py-3 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right text-base pr-24"
+        className="min-h-[180px] w-full rounded-lg border border-input bg-background px-4 py-3 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right text-base"
         placeholder={placeholder}
         disabled={disabled}
         aria-label={ariaLabel}
