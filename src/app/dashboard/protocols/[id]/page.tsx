@@ -217,7 +217,7 @@ export default function ProtocolPage() {
       topic_content: item.topic_content || "",
       decision_content: item.decision_content || "",
     });
-    setIsPopupEditing(false);
+    setIsPopupEditing(true);
     setIsAgendaItemDialogOpen(true);
   };
 
