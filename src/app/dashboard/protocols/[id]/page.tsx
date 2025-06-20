@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, FileText, X, Printer } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -47,6 +47,9 @@ import { createClient } from "@/lib/supabase/client";
 import { useAgendaItems } from "./hooks/useAgendaItems";
 import { useTextImprovement } from "./hooks/useTextImprovement";
 import { useAttachments } from "./hooks/useAttachments";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ProtocolPdfView from "./components/ProtocolPdfView";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -79,6 +82,7 @@ export default function ProtocolPage() {
     setProtocolAttachments,
     setProtocol,
     setError,
+    company,
   } = useProtocolData(protocolId);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<{
@@ -97,6 +101,7 @@ export default function ProtocolPage() {
   const [popupEditingAgendaItem, setPopupEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
   const [isPopupEditing, setIsPopupEditing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   const agendaApi = {
     updateAgendaItem: async (item: EditingAgendaItem) => {
@@ -301,25 +306,25 @@ export default function ProtocolPage() {
       <div className="grid gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl">
-              {isEditing ? "Edit Protocol" : `Protocol #${protocol?.number}`}
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-2xl">
+                {isEditing ? "Edit Protocol" : `Protocol #${protocol?.number}`}
+              </CardTitle>
+              {!isEditing && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={() => setIsPdfModalOpen(true)} className="h-8 w-8">
+                        <FileText className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>View as PDF</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            {isEditing && (
-              <ProtocolEditForm
-                editFormData={editFormData}
-                setEditFormData={setEditFormData}
-                editDate={editDate}
-                setEditDate={setEditDate}
-                committees={committees}
-                initialLoading={initialLoading}
-                updateProtocol={updateProtocol}
-                protocolId={protocolId}
-                fetchData={fetchData}
-              />
-            )}
-
             <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="content">Content</TabsTrigger>
@@ -329,53 +334,64 @@ export default function ProtocolPage() {
               </TabsList>
               <TabsContent value="content" className="mt-6">
                 <div className="grid gap-6">
-                  {!isEditing && (
-                    <div className="flex justify-end">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleEdit}
-                        className="h-8 w-8"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  {isEditing ? (
+                    <ProtocolEditForm
+                      editFormData={editFormData}
+                      setEditFormData={setEditFormData}
+                      editDate={editDate}
+                      setEditDate={setEditDate}
+                      committees={committees}
+                      initialLoading={initialLoading}
+                      updateProtocol={updateProtocol}
+                      protocolId={protocolId}
+                      fetchData={fetchData}
+                      onCancel={() => setIsEditing(false)}
+                    />
+                  ) : (
+                    <>
+                      <div className="flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleEdit}
+                          className="h-8 w-8"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid gap-4">
+                        <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} company={company ?? undefined} />
+                      </div>
+                    </>
                   )}
+                  <Separator />
                   <div className="grid gap-4">
-                    <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} />
-
-                    <Separator />
-
-                    <div className="grid gap-4">
-                     Commit <h3 className="text-lg font-medium">Agenda</h3>
-                      <AgendaList
-                        agendaItems={agendaItems}
-                        newAgendaItem={agendaItemsHook.newAgendaItem}
-                        setNewAgendaItem={agendaItemsHook.setNewAgendaItem}
-                        handleKeyDown={agendaItemsHook.handleKeyDown}
-                        handleBlur={agendaItemsHook.handleBlur}
-                        handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
-                        handleDragEnd={agendaItemsHook.handleDragEnd}
-                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
-                      />
-                    </div>
-
-                    <Separator />
-
-                    <div className="grid gap-6">
-                      <h3 className="text-lg font-medium">Agenda Items Details</h3>
-                      <AgendaDetails
-                        agendaItems={agendaItems}
-                        editingAgendaItem={agendaItemsHook.editingAgendaItem}
-                        handleEditAgendaItem={agendaItemsHook.handleEditAgendaItem}
-                        handleCancelEditAgendaItem={agendaItemsHook.handleCancelEditAgendaItem}
-                        handleUpdateAgendaItem={agendaItemsHook.handleUpdateAgendaItem}
-                        setEditingAgendaItem={agendaItemsHook.setEditingAgendaItem}
-                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
-                        setDeletingAgendaItemId={agendaItemsHook.setDeletingAgendaItemId}
-                        initialLoading={initialLoading}
-                      />
-                    </div>
+                    <h3 className="text-lg font-medium">Agenda</h3>
+                    <AgendaList
+                      agendaItems={agendaItems}
+                      newAgendaItem={agendaItemsHook.newAgendaItem}
+                      setNewAgendaItem={agendaItemsHook.setNewAgendaItem}
+                      handleKeyDown={agendaItemsHook.handleKeyDown}
+                      handleBlur={agendaItemsHook.handleBlur}
+                      handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
+                      handleDragEnd={agendaItemsHook.handleDragEnd}
+                      handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                    />
+                  </div>
+                  <Separator />
+                  <div className="grid gap-6">
+                    <h3 className="text-lg font-medium">Agenda Items Details</h3>
+                    <AgendaDetails
+                      agendaItems={agendaItems}
+                      editingAgendaItem={agendaItemsHook.editingAgendaItem}
+                      handleEditAgendaItem={agendaItemsHook.handleEditAgendaItem}
+                      handleCancelEditAgendaItem={agendaItemsHook.handleCancelEditAgendaItem}
+                      handleUpdateAgendaItem={agendaItemsHook.handleUpdateAgendaItem}
+                      setEditingAgendaItem={agendaItemsHook.setEditingAgendaItem}
+                      handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                      setDeletingAgendaItemId={agendaItemsHook.setDeletingAgendaItemId}
+                      initialLoading={initialLoading}
+                    />
                   </div>
                 </div>
               </TabsContent>
@@ -456,6 +472,35 @@ export default function ProtocolPage() {
         decisionImproved={improved.decision_content}
         decisionOriginal={original.decision_content}
       />
+
+      <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
+        <DialogContent className="max-w-5xl w-full max-h-[80vh] bg-white flex flex-col p-0" style={{ borderRadius: 0 }}>
+          <DialogHeader className="sticky top-0 z-10 bg-white text-black flex flex-row items-center justify-between p-6 border-b shadow">
+            <div className="flex items-center gap-2">
+              <DialogTitle>Protocol PDF View</DialogTitle>
+              <Button variant="secondary" onClick={() => window.print()} className="ml-4 rounded-md border border-blue-600 bg-blue-600 text-white shadow-sm flex items-center gap-2 hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
+              <Button variant="secondary" onClick={() => setIsPdfModalOpen(false)} className="ml-2 rounded-md border border-gray-300 shadow-sm flex items-center gap-2 hover:bg-gray-100 hover:border-gray-400 focus:ring-2 focus:ring-blue-400">
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="overflow-auto p-12 pt-6" style={{ maxHeight: "calc(80vh - 80px)" }}>
+            <ProtocolPdfView
+              protocol={protocol}
+              agendaItems={agendaItems}
+              protocolMembers={protocolMembers}
+              protocolAttachments={protocolAttachments}
+              protocolMessages={protocolMessages}
+              formatDate={formatDate}
+              company={company ?? undefined}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

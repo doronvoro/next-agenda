@@ -11,21 +11,27 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
 interface ProtocolDetailsFieldsProps {
   protocol: Protocol;
   formatDate: (dateString: string) => string;
+  company?: { name?: string | null; number?: string | null };
 }
 
-export const ProtocolDetailsFields: React.FC<ProtocolDetailsFieldsProps> = ({ protocol, formatDate }) => (
+export const ProtocolDetailsFields: React.FC<ProtocolDetailsFieldsProps> = ({ protocol, formatDate, company }) => (
   <div className="grid grid-cols-2 gap-4">
-    <Field label="Protocol Number" value={protocol.number} />
-    <Field label="Due Date" value={formatDate(protocol.due_date)} />
-    <Field label="Created At" value={formatDate(protocol.created_at)} />
-    <Field label="Last Updated" value={formatDate(protocol.updated_at)} />
+    {company && (
+      <Field
+        label="Company"
+        value={
+          <div className="flex flex-col">
+            <span className="font-semibold">{company.name || "No company"}</span>
+            {company.number && <span className="text-xs text-muted-foreground">Number: {company.number}</span>}
+          </div>
+        }
+      />
+    )}
     <Field
       label="Committee"
-      value={
-        <div className="flex items-center gap-2">
-          <span>{protocol.committee?.name || "Not assigned"}</span>
-        </div>
-      }
+      value={<span>{protocol.committee?.name || "Not assigned"}</span>}
     />
+    <Field label="Protocol Number" value={protocol.number} />
+    <Field label="Due Date" value={formatDate(protocol.due_date)} />
   </div>
 ); 
