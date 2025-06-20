@@ -242,6 +242,7 @@ export default function ProtocolPage() {
       });
     }
     setIsPopupEditing(false);
+    setIsAgendaItemDialogOpen(false);
   };
 
   const handleUpdatePopupAgendaItem = async (e: React.FormEvent) => {
@@ -254,6 +255,7 @@ export default function ProtocolPage() {
       setAgendaItems(prev => prev.map(item => item.id === popupEditingAgendaItem.id ? { ...item, ...popupEditingAgendaItem } : item));
       setSelectedAgendaItem(prev => prev && prev.id === popupEditingAgendaItem.id ? { ...prev, ...popupEditingAgendaItem } : prev);
       setIsPopupEditing(false);
+      setIsAgendaItemDialogOpen(false);
       toast({ title: "Success", description: "Agenda item updated successfully" });
     } catch (err) {
       console.error("Error updating agenda item:", err);

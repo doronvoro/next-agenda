@@ -11,6 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import type { AgendaItem, EditingAgendaItem } from "../../types";
+import { Mic, MicOff, X as XIcon, Wand2, Info } from "lucide-react";
+import { useSpeechToText } from "@/lib/hooks/useSpeechToText";
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { VoiceMagicTextarea } from "./VoiceMagicTextarea";
 
 interface AgendaItemDialogProps {
   open: boolean;
@@ -55,11 +59,38 @@ export function AgendaItemDialog({
   decisionImproved,
   decisionOriginal,
 }: AgendaItemDialogProps) {
+  const {
+    listening,
+    transcript,
+    startListening,
+    stopListening,
+    isSupported,
+    setTranscript,
+  } = useSpeechToText();
+  const [dictatingField, setDictatingField] = React.useState<null | 'topic_content' | 'decision_content'>(null);
+
+  React.useEffect(() => {
+    if (!dictatingField || !transcript) return;
+    setPopupEditingAgendaItem(prev =>
+      prev ? { ...prev, [dictatingField]: prev[dictatingField] ? prev[dictatingField] + ' ' + transcript : transcript } : null
+    );
+    setTranscript("");
+  }, [transcript, dictatingField, setPopupEditingAgendaItem, setTranscript]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-full max-h-[95vh] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background">
+      <DialogContent className="max-w-3xl w-full max-h-[95vh] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background relative">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+          className="absolute top-4 right-4 flex items-center gap-2 h-8 w-8 p-0"
+          aria-label="Close dialog"
+        >
+          <XIcon className="w-4 h-4" />
+        </Button>
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
             {selectedAgendaItem && (
               <span>
                 {selectedAgendaItem.display_order ? `${selectedAgendaItem.display_order}.` : '•'} {selectedAgendaItem.title}
@@ -94,28 +125,30 @@ export function AgendaItemDialog({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="popup-topic">Topic Content</Label>
-                    <div className="flex gap-2">
-                      <textarea
-                        id="popup-topic"
-                        value={popupEditingAgendaItem?.topic_content || ""}
-                        onChange={(e) =>
-                          setPopupEditingAgendaItem(prev =>
-                            prev ? { ...prev, topic_content: e.target.value } : null
-                          )
+                    <VoiceMagicTextarea
+                      value={popupEditingAgendaItem?.topic_content || ""}
+                      onChange={e => setPopupEditingAgendaItem(prev => prev ? { ...prev, topic_content: e.target.value } : null)}
+                      onImprove={() => onImproveText('topic_content', popupEditingAgendaItem?.topic_content || "")}
+                      onMic={() => {
+                        if (dictatingField === 'topic_content' && listening) {
+                          stopListening();
+                          setDictatingField(null);
+                        } else {
+                          setDictatingField('topic_content');
+                          startListening();
                         }
-                        className="min-h-[180px] w-full rounded-lg border border-input bg-background px-4 py-3 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right text-base"
-                        placeholder="Enter topic content"
-                        disabled={!!topicImproved}
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => onImproveText('topic_content', popupEditingAgendaItem?.topic_content || "")}
-                        disabled={isImprovingTopic || !!topicImproved}
-                        variant="outline"
-                        className="h-auto px-4 py-2 text-base"
-                      >
-                        {isImprovingTopic ? "Improving..." : "Improve it"}
-                      </Button>
+                      }}
+                      isImproving={isImprovingTopic}
+                      isSupported={isSupported}
+                      dictating={dictatingField === 'topic_content'}
+                      listening={listening}
+                      disabled={!!topicImproved}
+                      placeholder="Enter topic content"
+                      ariaLabel="Topic Content"
+                    />
+                    <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                      <Info className="w-3 h-3" />
+                      <span>Enter the topic content for this agenda item. You can dictate or paste text.</span>
                     </div>
                     {topicImproved && (
                       <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
@@ -139,28 +172,30 @@ export function AgendaItemDialog({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="popup-decision">Decision Content</Label>
-                    <div className="flex gap-2">
-                      <textarea
-                        id="popup-decision"
-                        value={popupEditingAgendaItem?.decision_content || ""}
-                        onChange={(e) =>
-                          setPopupEditingAgendaItem(prev =>
-                            prev ? { ...prev, decision_content: e.target.value } : null
-                          )
+                    <VoiceMagicTextarea
+                      value={popupEditingAgendaItem?.decision_content || ""}
+                      onChange={e => setPopupEditingAgendaItem(prev => prev ? { ...prev, decision_content: e.target.value } : null)}
+                      onImprove={() => onImproveText('decision_content', popupEditingAgendaItem?.decision_content || "")}
+                      onMic={() => {
+                        if (dictatingField === 'decision_content' && listening) {
+                          stopListening();
+                          setDictatingField(null);
+                        } else {
+                          setDictatingField('decision_content');
+                          startListening();
                         }
-                        className="min-h-[180px] w-full rounded-lg border border-input bg-background px-4 py-3 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right text-base"
-                        placeholder="Enter decision content"
-                        disabled={!!decisionImproved}
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => onImproveText('decision_content', popupEditingAgendaItem?.decision_content || "")}
-                        disabled={isImprovingDecision || !!decisionImproved}
-                        variant="outline"
-                        className="h-auto px-4 py-2 text-base"
-                      >
-                        {isImprovingDecision ? "Improving..." : "Improve it"}
-                      </Button>
+                      }}
+                      isImproving={isImprovingDecision}
+                      isSupported={isSupported}
+                      dictating={dictatingField === 'decision_content'}
+                      listening={listening}
+                      disabled={!!decisionImproved}
+                      placeholder="Enter decision content"
+                      ariaLabel="Decision Content"
+                    />
+                    <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                      <Info className="w-3 h-3" />
+                      <span>Enter the decision content for this agenda item. You can dictate or paste text.</span>
                     </div>
                     {decisionImproved && (
                       <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
@@ -182,15 +217,17 @@ export function AgendaItemDialog({
                       </div>
                     )}
                   </div>
-                  <DialogFooter>
+                  <DialogFooter className="flex gap-2 justify-end mt-8">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={onCancelEdit}
+                      className="flex items-center gap-2"
                     >
+                      <XIcon className="w-4 h-4" />
                       Cancel
                     </Button>
-                    <Button type="submit">
+                    <Button type="submit" className="flex items-center gap-2">
                       Save Changes
                     </Button>
                   </DialogFooter>
