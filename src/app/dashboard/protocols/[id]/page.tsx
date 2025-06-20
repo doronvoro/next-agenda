@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, FileText } from "lucide-react";
+import { ArrowLeft, Pencil, FileText, X, Printer } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -474,12 +474,21 @@ export default function ProtocolPage() {
       />
 
       <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
-        <DialogContent className="max-w-5xl w-full max-h-[80vh] overflow-auto bg-white" style={{ borderRadius: 0 }}>
-          <div className="bg-white">
-            <DialogHeader className="sticky top-0 z-10 bg-white">
+        <DialogContent className="max-w-5xl w-full max-h-[80vh] bg-white flex flex-col p-0" style={{ borderRadius: 0 }}>
+          <DialogHeader className="sticky top-0 z-10 bg-white text-black flex flex-row items-center justify-between p-6 border-b shadow">
+            <div className="flex items-center gap-2">
               <DialogTitle>Protocol PDF View</DialogTitle>
-              <Button variant="outline" onClick={() => window.print()} className="ml-4">Print</Button>
-            </DialogHeader>
+              <Button variant="secondary" onClick={() => window.print()} className="ml-4 rounded-md border border-blue-600 bg-blue-600 text-white shadow-sm flex items-center gap-2 hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
+              <Button variant="secondary" onClick={() => setIsPdfModalOpen(false)} className="ml-2 rounded-md border border-gray-300 shadow-sm flex items-center gap-2 hover:bg-gray-100 hover:border-gray-400 focus:ring-2 focus:ring-blue-400">
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="overflow-auto p-12 pt-6" style={{ maxHeight: "calc(80vh - 80px)" }}>
             <ProtocolPdfView
               protocol={protocol}
               agendaItems={agendaItems}
