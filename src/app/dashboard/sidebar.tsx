@@ -38,6 +38,11 @@ const items = [
     icon: FileText,
   },
   {
+    title: "AI Protocol",
+    url: "/dashboard/protocols/ai",
+    icon: Computer,
+  },
+  {
     title: "Committees",
     url: "/dashboard/committees",
     icon: Users,
