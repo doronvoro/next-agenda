@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import type { AgendaItem, EditingAgendaItem } from "../../types";
+import { Mic, MicOff } from "lucide-react";
+import { useSpeechToText } from "@/lib/hooks/useSpeechToText";
 
 interface AgendaItemDialogProps {
   open: boolean;
@@ -55,6 +57,24 @@ export function AgendaItemDialog({
   decisionImproved,
   decisionOriginal,
 }: AgendaItemDialogProps) {
+  const {
+    listening,
+    transcript,
+    startListening,
+    stopListening,
+    isSupported,
+    setTranscript,
+  } = useSpeechToText();
+  const [dictatingField, setDictatingField] = React.useState<null | 'topic_content' | 'decision_content'>(null);
+
+  React.useEffect(() => {
+    if (!dictatingField || !transcript) return;
+    setPopupEditingAgendaItem(prev =>
+      prev ? { ...prev, [dictatingField]: prev[dictatingField] ? prev[dictatingField] + ' ' + transcript : transcript } : null
+    );
+    setTranscript("");
+  }, [transcript, dictatingField, setPopupEditingAgendaItem, setTranscript]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl w-full max-h-[95vh] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background">
@@ -94,7 +114,7 @@ export function AgendaItemDialog({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="popup-topic">Topic Content</Label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-start">
                       <textarea
                         id="popup-topic"
                         value={popupEditingAgendaItem?.topic_content || ""}
@@ -107,6 +127,26 @@ export function AgendaItemDialog({
                         placeholder="Enter topic content"
                         disabled={!!topicImproved}
                       />
+                      {isSupported && (
+                        <Button
+                          type="button"
+                          variant={dictatingField === 'topic_content' && listening ? "secondary" : "outline"}
+                          className="h-auto px-2 py-2 text-base flex items-center"
+                          onClick={() => {
+                            if (dictatingField === 'topic_content' && listening) {
+                              stopListening();
+                              setDictatingField(null);
+                            } else {
+                              setDictatingField('topic_content');
+                              startListening();
+                            }
+                          }}
+                          aria-label={dictatingField === 'topic_content' && listening ? "Stop voice input" : "Start voice input"}
+                          disabled={!!topicImproved}
+                        >
+                          {dictatingField === 'topic_content' && listening ? <MicOff className="text-red-500" /> : <Mic />}
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         onClick={() => onImproveText('topic_content', popupEditingAgendaItem?.topic_content || "")}
@@ -139,7 +179,7 @@ export function AgendaItemDialog({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="popup-decision">Decision Content</Label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-start">
                       <textarea
                         id="popup-decision"
                         value={popupEditingAgendaItem?.decision_content || ""}
@@ -152,6 +192,26 @@ export function AgendaItemDialog({
                         placeholder="Enter decision content"
                         disabled={!!decisionImproved}
                       />
+                      {isSupported && (
+                        <Button
+                          type="button"
+                          variant={dictatingField === 'decision_content' && listening ? "secondary" : "outline"}
+                          className="h-auto px-2 py-2 text-base flex items-center"
+                          onClick={() => {
+                            if (dictatingField === 'decision_content' && listening) {
+                              stopListening();
+                              setDictatingField(null);
+                            } else {
+                              setDictatingField('decision_content');
+                              startListening();
+                            }
+                          }}
+                          aria-label={dictatingField === 'decision_content' && listening ? "Stop voice input" : "Start voice input"}
+                          disabled={!!decisionImproved}
+                        >
+                          {dictatingField === 'decision_content' && listening ? <MicOff className="text-red-500" /> : <Mic />}
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         onClick={() => onImproveText('decision_content', popupEditingAgendaItem?.decision_content || "")}
