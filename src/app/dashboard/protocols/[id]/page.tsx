@@ -474,7 +474,7 @@ export default function ProtocolPage() {
       />
 
       <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
-        <DialogContent className="max-w-5xl w-full h-[80vh] overflow-auto">
+        <DialogContent className="max-w-5xl w-full max-h-[80vh] overflow-auto bg-white" style={{ borderRadius: 0 }}>
           <DialogHeader>
             <DialogTitle>Protocol PDF View</DialogTitle>
             <Button variant="outline" onClick={() => window.print()} className="ml-4">Print</Button>
