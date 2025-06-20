@@ -475,19 +475,21 @@ export default function ProtocolPage() {
 
       <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
         <DialogContent className="max-w-5xl w-full max-h-[80vh] overflow-auto bg-white" style={{ borderRadius: 0 }}>
-          <DialogHeader>
-            <DialogTitle>Protocol PDF View</DialogTitle>
-            <Button variant="outline" onClick={() => window.print()} className="ml-4">Print</Button>
-          </DialogHeader>
-          <ProtocolPdfView
-            protocol={protocol}
-            agendaItems={agendaItems}
-            protocolMembers={protocolMembers}
-            protocolAttachments={protocolAttachments}
-            protocolMessages={protocolMessages}
-            formatDate={formatDate}
-            company={company ?? undefined}
-          />
+          <div className="bg-white">
+            <DialogHeader className="sticky top-0 z-10 bg-white">
+              <DialogTitle>Protocol PDF View</DialogTitle>
+              <Button variant="outline" onClick={() => window.print()} className="ml-4">Print</Button>
+            </DialogHeader>
+            <ProtocolPdfView
+              protocol={protocol}
+              agendaItems={agendaItems}
+              protocolMembers={protocolMembers}
+              protocolAttachments={protocolAttachments}
+              protocolMessages={protocolMessages}
+              formatDate={formatDate}
+              company={company ?? undefined}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

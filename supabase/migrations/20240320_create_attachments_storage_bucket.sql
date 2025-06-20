@@ -1,4 +1,4 @@
--- Create storage bucket for attachments
+  -- Create storage bucket for attachments
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'attachments',
