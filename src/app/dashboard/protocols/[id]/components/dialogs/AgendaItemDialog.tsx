@@ -80,14 +80,15 @@ export function AgendaItemDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl w-full max-h-[95vh] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background relative">
-        <button
-          className="absolute top-4 right-4 text-muted-foreground hover:text-primary transition-colors"
-          onClick={() => onOpenChange(false)}
-          aria-label="Close dialog"
+        <Button
           type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+          className="absolute top-4 right-4 flex items-center gap-2 h-8 w-8 p-0"
+          aria-label="Close dialog"
         >
-          <XIcon className="w-6 h-6" />
-        </button>
+          <XIcon className="w-4 h-4" />
+        </Button>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
             {selectedAgendaItem && (
