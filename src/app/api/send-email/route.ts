@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { createClient } from "@/lib/supabase/server/server";
+import { format } from "date-fns";
+import type { Database } from "@/types/supabase";
 
 // Email configuration - you'll need to set these environment variables
 const transporter = nodemailer.createTransport({
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
       .from("protocols")
       .select(`
         *,
-        committees (name)
+        committees (*)
       `)
       .eq("id", protocolId)
       .single();
@@ -42,6 +44,17 @@ export async function POST(request: NextRequest) {
         { error: "Protocol not found" },
         { status: 404 }
       );
+    }
+
+    // Fetch company using committee.company_id
+    let company = null;
+    if (protocol?.committees?.company_id) {
+      const { data: companyData } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("id", protocol.committees.company_id)
+        .single();
+      company = companyData;
     }
 
     // Get recipient information (protocol members)
@@ -77,14 +90,77 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, we'll send to a default email or log the message
-    // In a real implementation, you might want to:
-    // 1. Add email fields to protocol_members table
-    // 2. Or create a separate users table with emails
-    // 3. Or use a default admin email for notifications
+    // Generate PDF (dynamic imports)
+    let pdfAttachment;
+    try {
+      const { default: React } = await import("react");
+      const ReactDOMServer = await import("react-dom/server");
+      const ProtocolPdfView = (await import("@/app/dashboard/protocols/[id]/components/ProtocolPdfView")).default;
+      const puppeteer = (await import("puppeteer")).default;
+      type Company = Database["public"]["Tables"]["companies"]["Row"];
+      const formatDate = (dateString: string) => format(new Date(dateString), "PPP");
 
-    const defaultEmail = process.env.DEFAULT_RECIPIENT_EMAIL || process.env.SMTP_USER;
-    
+      // Fetch all protocol data for the PDF
+      const { data: agendaItems } = await supabase
+        .from("agenda_items")
+        .select("*")
+        .eq("protocol_id", protocolId)
+        .order("display_order");
+      const { data: protocolMembers } = await supabase
+        .from("protocol_members")
+        .select("*")
+        .eq("protocol_id", protocolId);
+      const { data: protocolAttachments } = await supabase
+        .from("protocol_attachments")
+        .select("*")
+        .eq("protocol_id", protocolId);
+      const { data: protocolMessages } = await supabase
+        .from("protocol_messages")
+        .select("*")
+        .eq("protocol_id", protocolId)
+        .order("created_at");
+
+      const htmlContent = ReactDOMServer.renderToStaticMarkup(
+        React.createElement(ProtocolPdfView, {
+          protocol,
+          agendaItems: agendaItems ?? [],
+          protocolMembers: protocolMembers ?? [],
+          protocolAttachments: protocolAttachments ?? [],
+          protocolMessages: protocolMessages ?? [],
+          formatDate,
+          company: company as Company,
+        })
+      );
+      const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+      const page = await browser.newPage();
+      const fullHtml = `
+        <html>
+          <head>
+            <meta charset=\"UTF-8\">
+            <link href=\"https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css\" rel=\"stylesheet\">
+          </head>
+          <body>
+            ${htmlContent}
+          </body>
+        </html>
+      `;
+      await page.setContent(fullHtml, { waitUntil: "networkidle0" });
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' },
+      });
+      await browser.close();
+      pdfAttachment = {
+        filename: `protocol-${protocol.number}.pdf`,
+        content: Buffer.from(pdfBuffer),
+        contentType: "application/pdf",
+      };
+    } catch (pdfError) {
+      console.error("Failed to generate PDF for email:", pdfError);
+      // We can still send the email without the PDF, but we'll log the error.
+    }
+
     // Prepare email content
     const emailSubject = `Protocol ${protocol.number} - New Message`;
     const recipientNames = recipients.map(r => r.name || `Member ${r.id}`).join(", ");
@@ -110,11 +186,14 @@ export async function POST(request: NextRequest) {
     `;
 
     // Send email to default recipient
+    const defaultEmail = process.env.DEFAULT_RECIPIENT_EMAIL || process.env.SMTP_USER;
+    
     const mailOptions = {
       from: process.env.SMTP_USER,
       to: defaultEmail,
       subject: emailSubject,
       html: emailHtml,
+      attachments: pdfAttachment ? [pdfAttachment] : [],
     };
 
     try {
