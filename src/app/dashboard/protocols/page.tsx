@@ -273,6 +273,10 @@ export default function ProtocolsPage() {
     setSelectedProtocol(null);
   };
 
+  const handleEditProtocol = (protocolId: string) => {
+    window.location.href = `/dashboard/protocols/${protocolId}`;
+  };
+
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <Button
       variant="ghost"
@@ -535,7 +539,7 @@ export default function ProtocolsPage() {
                               <Eye className="mr-2 h-4 w-4" />
                               View as PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditProtocol(protocol.id)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
