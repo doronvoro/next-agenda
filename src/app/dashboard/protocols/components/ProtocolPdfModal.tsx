@@ -81,7 +81,7 @@ export default function ProtocolPdfModal({
         <DialogHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle>Protocol #{protocolNumber}</DialogTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mr-10">
               {pdfUrl && (
                 <Button
                   variant="outline"
@@ -93,14 +93,6 @@ export default function ProtocolPdfModal({
                   Download
                 </Button>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClose}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </DialogHeader>

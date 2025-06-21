@@ -69,6 +69,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
 
 type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
   committee: Database["public"]["Tables"]["committees"]["Row"] | null;
@@ -140,6 +141,8 @@ export default function ProtocolsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingProtocol, setDeletingProtocol] = useState<Protocol | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -350,12 +353,21 @@ export default function ProtocolsPage() {
       // Remove from local state
       setProtocols(prev => prev.filter(p => p.id !== deletingProtocol.id));
       
+      toast({
+        title: "Protocol Deleted",
+        description: `Protocol #${deletingProtocol.number} has been successfully deleted.`,
+      });
+
       // Close dialog and reset state
       setIsDeleteDialogOpen(false);
       setDeletingProtocol(null);
     } catch (error) {
       console.error("Error deleting protocol:", error);
-      alert("Failed to delete protocol. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error Deleting Protocol",
+        description: "Failed to delete protocol. Please try again.",
+      });
     } finally {
       setIsDeleting(false);
     }
