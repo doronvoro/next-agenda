@@ -50,11 +50,15 @@ import {
   Edit,
   Trash2,
   Download,
-  MoreHorizontal
+  MoreHorizontal,
+  X,
+  Printer
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ProtocolPdfModal from "./components/ProtocolPdfModal";
-import { deleteProtocol } from "./[id]/supabaseApi";
+import { deleteProtocol, getProtocolViewData } from "./[id]/supabaseApi";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import ProtocolPdfView from "./[id]/components/ProtocolPdfView";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,6 +123,18 @@ export default function ProtocolsPage() {
   // PDF Viewer states
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null);
+
+  // View modal states (for showing ProtocolPdfView like in protocol page)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingProtocol, setViewingProtocol] = useState<Protocol | null>(null);
+  const [viewModalData, setViewModalData] = useState<{
+    agendaItems: any[];
+    protocolMembers: any[];
+    protocolAttachments: any[];
+    protocolMessages: any[];
+    company: any;
+  } | null>(null);
+  const [isLoadingViewData, setIsLoadingViewData] = useState(false);
 
   // Delete confirmation states
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -287,6 +303,32 @@ export default function ProtocolsPage() {
   const handleClosePdfViewer = () => {
     setIsPdfViewerOpen(false);
     setSelectedProtocol(null);
+  };
+
+  const handleViewProtocol = async (protocol: Protocol) => {
+    setViewingProtocol(protocol);
+    setIsViewModalOpen(true);
+    setIsLoadingViewData(true);
+
+    try {
+      const data = await getProtocolViewData(protocol.id);
+      setViewModalData({
+        agendaItems: data.agendaItems,
+        protocolMembers: data.protocolMembers,
+        protocolAttachments: data.protocolAttachments,
+        protocolMessages: data.protocolMessages,
+        company: data.company
+      });
+    } catch (error) {
+      console.error("Error fetching protocol data for view:", error);
+    } finally {
+      setIsLoadingViewData(false);
+    }
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewingProtocol(null);
   };
 
   const handleEditProtocol = (protocolId: string) => {
@@ -582,15 +624,15 @@ export default function ProtocolsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewPdf(protocol)}>
+                            <DropdownMenuItem onClick={() => handleViewProtocol(protocol)}>
                               <Eye className="mr-2 h-4 w-4" />
-                              View as PDF
+                              View
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleEditProtocol(protocol.id)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewPdf(protocol)}>
                               <Download className="mr-2 h-4 w-4" />
                               Export
                             </DropdownMenuItem>
@@ -663,6 +705,51 @@ export default function ProtocolsPage() {
           protocolId={selectedProtocol.id}
           protocolNumber={selectedProtocol.number.toString()}
         />
+      )}
+
+      {/* View Protocol Modal */}
+      {viewingProtocol && (
+        <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+          <DialogContent className="max-w-5xl w-full max-h-[80vh] bg-white flex flex-col p-0" style={{ borderRadius: 0 }}>
+            <DialogHeader className="sticky top-0 z-10 bg-white text-black flex flex-row items-center justify-between p-6 border-b shadow">
+              <div className="flex items-center gap-2">
+                <DialogTitle>Protocol #{viewingProtocol.number}</DialogTitle>
+                <Button variant="secondary" onClick={() => window.print()} className="ml-4 rounded-md border border-blue-600 bg-blue-600 text-white shadow-sm flex items-center gap-2 hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                  <Printer className="h-4 w-4" />
+                  Print
+                </Button>
+                <Button variant="secondary" onClick={handleCloseViewModal} className="ml-2 rounded-md border border-gray-300 shadow-sm flex items-center gap-2 hover:bg-gray-100 hover:border-gray-400 focus:ring-2 focus:ring-blue-400">
+                  <X className="h-4 w-4" />
+                  Close
+                </Button>
+              </div>
+            </DialogHeader>
+            <div className="overflow-auto p-12 pt-6" style={{ maxHeight: "calc(80vh - 80px)" }}>
+              {isLoadingViewData ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p>Loading protocol data...</p>
+                  </div>
+                </div>
+              ) : viewModalData ? (
+                <ProtocolPdfView
+                  protocol={viewingProtocol}
+                  agendaItems={viewModalData.agendaItems}
+                  protocolMembers={viewModalData.protocolMembers}
+                  protocolAttachments={viewModalData.protocolAttachments}
+                  protocolMessages={viewModalData.protocolMessages}
+                  formatDate={formatDate}
+                  company={viewModalData.company}
+                />
+              ) : (
+                <div className="text-center text-red-500">
+                  Failed to load protocol data
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Delete Confirmation Dialog */}
