@@ -33,6 +33,7 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
   const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -51,13 +52,55 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
       setError("You must be logged in to send messages.");
       return;
     }
+    
+    setIsSending(true);
     setError(null);
+    
     try {
+      // First, save the message to the database
       const sentMessage = await sendProtocolMessage(protocolId, newMessage, userId);
       if (onMessageSent) onMessageSent(sentMessage);
+      
+      // Then, send emails to selected recipients if any
+      if (selectedRecipients.length > 0) {
+        try {
+          const emailResponse = await fetch("/api/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              protocolId,
+              message: newMessage,
+              recipientIds: selectedRecipients,
+            }),
+          });
+
+          const emailResult = await emailResponse.json();
+          
+          if (!emailResponse.ok) {
+            console.error("Email sending failed:", emailResult.error);
+            // Show a warning but don't prevent the message from being sent
+            setError(`Message sent successfully, but email notification failed: ${emailResult.error}`);
+          } else {
+            console.log("Email sending result:", emailResult);
+            // Show success message for email
+            if (emailResult.note) {
+              setError(`Message sent successfully! ${emailResult.note}`);
+            }
+          }
+        } catch (emailError) {
+          console.error("Error sending emails:", emailError);
+          setError("Message sent successfully, but email notification failed due to network error");
+        }
+      }
+      
       setNewMessage("");
+      setSelectedRecipients([]); // Clear selected recipients after sending
     } catch (err) {
       setError("Failed to send message");
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -177,12 +220,12 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
                   type="button"
                   variant="ghost"
                   onClick={() => setNewMessage("")}
-                  disabled={!newMessage.trim()}
+                  disabled={!newMessage.trim() || isSending}
                 >
                   Clear
                 </Button>
-                <Button type="submit" disabled={!newMessage.trim()}>
-                  Send Message
+                <Button type="submit" disabled={!newMessage.trim() || isSending}>
+                  {isSending ? "Sending..." : "Send Message"}
                 </Button>
               </div>
             </div>
