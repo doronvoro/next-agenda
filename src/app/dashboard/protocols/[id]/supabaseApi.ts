@@ -170,4 +170,82 @@ export async function sendProtocolMessage(protocolId: string, message: string, u
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function deleteProtocol(protocolId: string) {
+  const supabase = createClient();
+  
+  // Delete related records first (due to foreign key constraints)
+  const { error: messagesError } = await supabase
+    .from("protocol_messages")
+    .delete()
+    .eq("protocol_id", protocolId);
+  if (messagesError) throw messagesError;
+
+  const { error: attachmentsError } = await supabase
+    .from("protocol_attachments")
+    .delete()
+    .eq("protocol_id", protocolId);
+  if (attachmentsError) throw attachmentsError;
+
+  const { error: membersError } = await supabase
+    .from("protocol_members")
+    .delete()
+    .eq("protocol_id", protocolId);
+  if (membersError) throw membersError;
+
+  const { error: agendaError } = await supabase
+    .from("agenda_items")
+    .delete()
+    .eq("protocol_id", protocolId);
+  if (agendaError) throw agendaError;
+
+  // Delete the protocol
+  const { error: protocolError } = await supabase
+    .from("protocols")
+    .delete()
+    .eq("id", protocolId);
+  if (protocolError) throw protocolError;
+
+  return { success: true };
+}
+
+export async function getProtocolViewData(protocolId: string) {
+  const supabase = createClient();
+  
+  // Fetch protocol with committee data
+  const { data: protocol, error: protocolError } = await supabase
+    .from("protocols")
+    .select("*, committees(*)")
+    .eq("id", protocolId)
+    .single();
+  if (protocolError) throw protocolError;
+
+  // Fetch company using committee.company_id
+  let company = null;
+  if (protocol?.committees?.company_id) {
+    const { data: companyData } = await supabase
+      .from("companies")
+      .select("*")
+      .eq("id", protocol.committees.company_id)
+      .single();
+    company = companyData;
+  }
+
+  // Fetch all related data
+  const [agendaItemsResult, membersResult, attachmentsResult, messagesResult] = await Promise.all([
+    supabase.from("agenda_items").select("*").eq("protocol_id", protocolId).order("display_order"),
+    supabase.from("protocol_members").select("*").eq("protocol_id", protocolId),
+    supabase.from("protocol_attachments").select("*").eq("protocol_id", protocolId),
+    supabase.from("protocol_messages").select("*").eq("protocol_id", protocolId).order("created_at")
+  ]);
+
+  return {
+    protocol,
+    agendaItems: agendaItemsResult.data || [],
+    protocolMembers: membersResult.data || [],
+    protocolAttachments: attachmentsResult.data || [],
+    protocolMessages: messagesResult.data || [],
+    company
+  };
 } 

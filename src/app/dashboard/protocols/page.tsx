@@ -50,9 +50,26 @@ import {
   Edit,
   Trash2,
   Download,
-  MoreHorizontal
+  MoreHorizontal,
+  X,
+  Printer
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ProtocolPdfModal from "./components/ProtocolPdfModal";
+import { deleteProtocol, getProtocolViewData } from "./[id]/supabaseApi";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import ProtocolPdfView from "./[id]/components/ProtocolPdfView";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
 
 type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
   committee: Database["public"]["Tables"]["committees"]["Row"] | null;
@@ -103,6 +120,29 @@ export default function ProtocolsPage() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+  // PDF Viewer states
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
+  const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null);
+
+  // View modal states (for showing ProtocolPdfView like in protocol page)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingProtocol, setViewingProtocol] = useState<Protocol | null>(null);
+  const [viewModalData, setViewModalData] = useState<{
+    agendaItems: any[];
+    protocolMembers: any[];
+    protocolAttachments: any[];
+    protocolMessages: any[];
+    company: any;
+  } | null>(null);
+  const [isLoadingViewData, setIsLoadingViewData] = useState(false);
+
+  // Delete confirmation states
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingProtocol, setDeletingProtocol] = useState<Protocol | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -256,6 +296,86 @@ export default function ProtocolsPage() {
     setDateRange(undefined);
     setStatusFilter("all");
     setCurrentPage(1);
+  };
+
+  const handleViewPdf = (protocol: Protocol) => {
+    setSelectedProtocol(protocol);
+    setIsPdfViewerOpen(true);
+  };
+
+  const handleClosePdfViewer = () => {
+    setIsPdfViewerOpen(false);
+    setSelectedProtocol(null);
+  };
+
+  const handleViewProtocol = async (protocol: Protocol) => {
+    setViewingProtocol(protocol);
+    setIsViewModalOpen(true);
+    setIsLoadingViewData(true);
+
+    try {
+      const data = await getProtocolViewData(protocol.id);
+      setViewModalData({
+        agendaItems: data.agendaItems,
+        protocolMembers: data.protocolMembers,
+        protocolAttachments: data.protocolAttachments,
+        protocolMessages: data.protocolMessages,
+        company: data.company
+      });
+    } catch (error) {
+      console.error("Error fetching protocol data for view:", error);
+    } finally {
+      setIsLoadingViewData(false);
+    }
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewingProtocol(null);
+  };
+
+  const handleEditProtocol = (protocolId: string) => {
+    window.location.href = `/dashboard/protocols/${protocolId}`;
+  };
+
+  const handleDeleteProtocol = (protocol: Protocol) => {
+    setDeletingProtocol(protocol);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingProtocol) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteProtocol(deletingProtocol.id);
+
+      // Remove from local state
+      setProtocols(prev => prev.filter(p => p.id !== deletingProtocol.id));
+      
+      toast({
+        title: "Protocol Deleted",
+        description: `Protocol #${deletingProtocol.number} has been successfully deleted.`,
+      });
+
+      // Close dialog and reset state
+      setIsDeleteDialogOpen(false);
+      setDeletingProtocol(null);
+    } catch (error) {
+      console.error("Error deleting protocol:", error);
+      toast({
+        variant: "destructive",
+        title: "Error Deleting Protocol",
+        description: "Failed to delete protocol. Please try again.",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setDeletingProtocol(null);
   };
 
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
@@ -516,21 +636,22 @@ export default function ProtocolsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/protocols/${protocol.id}`}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Details
-                              </Link>
+                            <DropdownMenuItem onClick={() => handleViewProtocol(protocol)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditProtocol(protocol.id)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewPdf(protocol)}>
                               <Download className="mr-2 h-4 w-4" />
                               Export
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteProtocol(protocol)}
+                              className="text-destructive"
+                            >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
                             </DropdownMenuItem>
@@ -587,6 +708,83 @@ export default function ProtocolsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* PDF Viewer Modal */}
+      {selectedProtocol && (
+        <ProtocolPdfModal
+          isOpen={isPdfViewerOpen}
+          onClose={handleClosePdfViewer}
+          protocolId={selectedProtocol.id}
+          protocolNumber={selectedProtocol.number.toString()}
+        />
+      )}
+
+      {/* View Protocol Modal */}
+      {viewingProtocol && (
+        <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+          <DialogContent className="max-w-5xl w-full max-h-[80vh] bg-white flex flex-col p-0" style={{ borderRadius: 0 }}>
+            <DialogHeader className="sticky top-0 z-10 bg-white text-black flex flex-row items-center justify-between p-6 border-b shadow">
+              <div className="flex items-center gap-2">
+                <DialogTitle>Protocol #{viewingProtocol.number}</DialogTitle>
+                <Button variant="secondary" onClick={() => window.print()} className="ml-4 rounded-md border border-blue-600 bg-blue-600 text-white shadow-sm flex items-center gap-2 hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                  <Printer className="h-4 w-4" />
+                  Print
+                </Button>
+                <Button variant="secondary" onClick={handleCloseViewModal} className="ml-2 rounded-md border border-gray-300 shadow-sm flex items-center gap-2 hover:bg-gray-100 hover:border-gray-400 focus:ring-2 focus:ring-blue-400">
+                  <X className="h-4 w-4" />
+                  Close
+                </Button>
+              </div>
+            </DialogHeader>
+            <div className="overflow-auto p-12 pt-6" style={{ maxHeight: "calc(80vh - 80px)" }}>
+              {isLoadingViewData ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p>Loading protocol data...</p>
+                  </div>
+                </div>
+              ) : viewModalData ? (
+                <ProtocolPdfView
+                  protocol={viewingProtocol}
+                  agendaItems={viewModalData.agendaItems}
+                  protocolMembers={viewModalData.protocolMembers}
+                  protocolAttachments={viewModalData.protocolAttachments}
+                  protocolMessages={viewModalData.protocolMessages}
+                  formatDate={formatDate}
+                  company={viewModalData.company}
+                />
+              ) : (
+                <div className="text-center text-red-500">
+                  Failed to load protocol data
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Protocol</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete Protocol #{deletingProtocol?.number}? This action cannot be undone and will permanently remove the protocol and all its associated data including agenda items, members, attachments, and messages.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 } 
