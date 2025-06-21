@@ -53,6 +53,7 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ProtocolPdfModal from "./components/ProtocolPdfModal";
 
 type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
   committee: Database["public"]["Tables"]["committees"]["Row"] | null;
@@ -103,6 +104,10 @@ export default function ProtocolsPage() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+  // PDF Viewer states
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
+  const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -256,6 +261,16 @@ export default function ProtocolsPage() {
     setDateRange(undefined);
     setStatusFilter("all");
     setCurrentPage(1);
+  };
+
+  const handleViewPdf = (protocol: Protocol) => {
+    setSelectedProtocol(protocol);
+    setIsPdfViewerOpen(true);
+  };
+
+  const handleClosePdfViewer = () => {
+    setIsPdfViewerOpen(false);
+    setSelectedProtocol(null);
   };
 
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
@@ -516,11 +531,9 @@ export default function ProtocolsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/protocols/${protocol.id}`}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Details
-                              </Link>
+                            <DropdownMenuItem onClick={() => handleViewPdf(protocol)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View as PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Edit className="mr-2 h-4 w-4" />
@@ -586,6 +599,16 @@ export default function ProtocolsPage() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* PDF Viewer Modal */}
+      {selectedProtocol && (
+        <ProtocolPdfModal
+          isOpen={isPdfViewerOpen}
+          onClose={handleClosePdfViewer}
+          protocolId={selectedProtocol.id}
+          protocolNumber={selectedProtocol.number.toString()}
+        />
       )}
     </div>
   );
