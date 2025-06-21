@@ -50,7 +50,7 @@ Assistant:
 }
 \`\`\`
 
-When all required fields are provided, confirm the protocol creation and show the complete JSON.
+When allSMTP_PASS=eoff zhgc nnpq ruhd required fields are provided, confirm the protocol creation and show the complete JSON.
 
 If the user wants to add more details (like members or agenda items), ask for those as well.
 
