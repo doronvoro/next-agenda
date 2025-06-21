@@ -54,6 +54,17 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ProtocolPdfModal from "./components/ProtocolPdfModal";
+import { deleteProtocol } from "./[id]/supabaseApi";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
   committee: Database["public"]["Tables"]["committees"]["Row"] | null;
@@ -108,6 +119,11 @@ export default function ProtocolsPage() {
   // PDF Viewer states
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null);
+
+  // Delete confirmation states
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingProtocol, setDeletingProtocol] = useState<Protocol | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -275,6 +291,37 @@ export default function ProtocolsPage() {
 
   const handleEditProtocol = (protocolId: string) => {
     window.location.href = `/dashboard/protocols/${protocolId}`;
+  };
+
+  const handleDeleteProtocol = (protocol: Protocol) => {
+    setDeletingProtocol(protocol);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingProtocol) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteProtocol(deletingProtocol.id);
+
+      // Remove from local state
+      setProtocols(prev => prev.filter(p => p.id !== deletingProtocol.id));
+      
+      // Close dialog and reset state
+      setIsDeleteDialogOpen(false);
+      setDeletingProtocol(null);
+    } catch (error) {
+      console.error("Error deleting protocol:", error);
+      alert("Failed to delete protocol. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setDeletingProtocol(null);
   };
 
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
@@ -547,7 +594,10 @@ export default function ProtocolsPage() {
                               <Download className="mr-2 h-4 w-4" />
                               Export
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteProtocol(protocol)}
+                              className="text-destructive"
+                            >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
                             </DropdownMenuItem>
@@ -614,6 +664,28 @@ export default function ProtocolsPage() {
           protocolNumber={selectedProtocol.number.toString()}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Protocol</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete Protocol #{deletingProtocol?.number}? This action cannot be undone and will permanently remove the protocol and all its associated data including agenda items, members, attachments, and messages.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 } 

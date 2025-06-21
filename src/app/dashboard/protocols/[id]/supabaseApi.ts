@@ -170,4 +170,42 @@ export async function sendProtocolMessage(protocolId: string, message: string, u
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function deleteProtocol(protocolId: string) {
+  const supabase = createClient();
+  
+  // Delete related records first (due to foreign key constraints)
+  const { error: messagesError } = await supabase
+    .from("protocol_messages")
+    .delete()
+    .eq("protocol_id", protocolId);
+  if (messagesError) throw messagesError;
+
+  const { error: attachmentsError } = await supabase
+    .from("protocol_attachments")
+    .delete()
+    .eq("protocol_id", protocolId);
+  if (attachmentsError) throw attachmentsError;
+
+  const { error: membersError } = await supabase
+    .from("protocol_members")
+    .delete()
+    .eq("protocol_id", protocolId);
+  if (membersError) throw membersError;
+
+  const { error: agendaError } = await supabase
+    .from("agenda_items")
+    .delete()
+    .eq("protocol_id", protocolId);
+  if (agendaError) throw agendaError;
+
+  // Delete the protocol
+  const { error: protocolError } = await supabase
+    .from("protocols")
+    .delete()
+    .eq("id", protocolId);
+  if (protocolError) throw protocolError;
+
+  return { success: true };
 } 
