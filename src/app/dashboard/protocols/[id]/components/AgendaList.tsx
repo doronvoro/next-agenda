@@ -2,9 +2,11 @@ import React from "react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronDown } from "lucide-react";
+import { Plus, ChevronDown, Sparkles, X, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import SortableAgendaItem from "./SortableAgendaItem";
 import type { AgendaItem, NewAgendaItem } from "../types";
 import type { Database } from "@/types/supabase";
@@ -42,12 +44,37 @@ const AgendaList: React.FC<AgendaListProps> = ({
   );
 
   const [selectedTopicId, setSelectedTopicId] = React.useState<string>("");
+  const [isCreating, setIsCreating] = React.useState(false);
 
   const handleTopicSelection = (topicId: string) => {
     setSelectedTopicId(topicId);
     handleCreateFromFutureTopic(topicId);
     // Reset the select after a short delay
     setTimeout(() => setSelectedTopicId(""), 100);
+  };
+
+  const handleCancelEdit = () => {
+    setNewAgendaItem({ title: "", isEditing: false });
+  };
+
+  const handleSaveItem = async () => {
+    if (!newAgendaItem.title.trim()) return;
+    setIsCreating(true);
+    try {
+      await handleCreateAgendaItem(newAgendaItem.title);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveItem();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelEdit();
+    }
   };
 
   return (
@@ -75,45 +102,159 @@ const AgendaList: React.FC<AgendaListProps> = ({
             ))
           )}
           {newAgendaItem.isEditing ? (
-            <div className="flex items-center gap-2">
-              <Input
-                value={newAgendaItem.title}
-                onChange={(e) => setNewAgendaItem({ ...newAgendaItem, title: e.target.value })}
-                onKeyDown={handleKeyDown}
-                onBlur={handleBlur}
-                placeholder="Enter new agenda item title"
-                autoFocus
-                className="flex-1"
-              />
+            <div className="flex flex-col sm:flex-row gap-2 p-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/20">
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={newAgendaItem.title}
+                  onChange={(e) => setNewAgendaItem({ ...newAgendaItem, title: e.target.value })}
+                  onKeyDown={handleInputKeyDown}
+                  onBlur={handleBlur}
+                  placeholder="Type agenda item title and press Enter to save"
+                  autoFocus
+                  className="flex-1"
+                  disabled={isCreating}
+                />
+                <div className="flex items-center gap-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3"
+                          onClick={handleSaveItem}
+                          disabled={!newAgendaItem.title.trim() || isCreating}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Save agenda item (Enter)</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3"
+                          onClick={handleCancelEdit}
+                          disabled={isCreating}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Cancel (Esc)</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+              {isCreating && (
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  Creating agenda item...
+                </div>
+              )}
             </div>
           ) : (
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setNewAgendaItem({ title: "", isEditing: true })}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Agenda Item
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-2 p-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/20">
+              <div className="flex items-center gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-3"
+                        onClick={() => setNewAgendaItem({ title: "", isEditing: true })}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Item
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Add a new agenda item</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                {futureTopics.length > 0 && (
+                  <>
+                    <div className="hidden sm:block text-muted-foreground text-sm">or</div>
+                    <div className="flex items-center gap-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Select 
+                              value={selectedTopicId} 
+                              onValueChange={handleTopicSelection} 
+                              disabled={loadingFutureTopics}
+                            >
+                              <SelectTrigger className="h-9 px-3 w-auto min-w-[200px]">
+                                <Sparkles className="h-4 w-4 mr-2 text-blue-500" />
+                                <SelectValue placeholder={loadingFutureTopics ? "Loading..." : "From Future Topic"} />
+                                <Badge variant="secondary" className="ml-2 text-xs">
+                                  {futureTopics.length}
+                                </Badge>
+                              </SelectTrigger>
+                              <SelectContent className="max-w-md">
+                                <div className="p-2 text-xs text-muted-foreground border-b mb-2">
+                                  Available future topics
+                                </div>
+                                {futureTopics.map((topic) => (
+                                  <SelectItem key={topic.id} value={topic.id} className="py-3">
+                                    <div className="flex flex-col gap-1">
+                                      <span className="font-medium text-sm">{topic.title}</span>
+                                      {topic.content && (
+                                        <span className="text-xs text-muted-foreground line-clamp-2">
+                                          {topic.content}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Create agenda item from existing future topic</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </>
+                )}
+              </div>
+              
               {futureTopics.length > 0 && (
-                <div className="flex items-center gap-2">
+                <div className="sm:hidden text-center">
+                  <div className="text-muted-foreground text-sm mb-2">or</div>
                   <Select 
                     value={selectedTopicId} 
                     onValueChange={handleTopicSelection} 
                     disabled={loadingFutureTopics}
                   >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder={loadingFutureTopics ? "Loading topics..." : "Add from Future Topic"} />
+                    <SelectTrigger className="w-full">
+                      <Sparkles className="h-4 w-4 mr-2 text-blue-500" />
+                      <SelectValue placeholder={loadingFutureTopics ? "Loading..." : "Add from Future Topic"} />
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        {futureTopics.length}
+                      </Badge>
                     </SelectTrigger>
                     <SelectContent>
                       {futureTopics.map((topic) => (
                         <SelectItem key={topic.id} value={topic.id}>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col gap-1">
                             <span className="font-medium">{topic.title}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {topic.content ? topic.content.substring(0, 50) + (topic.content.length > 50 ? "..." : "") : "No content"}
-                            </span>
+                            {topic.content && (
+                              <span className="text-xs text-muted-foreground line-clamp-2">
+                                {topic.content}
+                              </span>
+                            )}
                           </div>
                         </SelectItem>
                       ))}
