@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Computer, LayoutDashboard, FileText, Users, Home, Building2, LogOutIcon, CheckSquare } from "lucide-react";
+import { Computer, LayoutDashboard, FileText, Users, Home, Building2, LogOutIcon, CheckSquare, BookOpen } from "lucide-react";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
 import {
   Sidebar,
@@ -41,6 +42,11 @@ const items = [
     title: "Task Tracking",
     url: "/dashboard/task-tracking",
     icon: CheckSquare,
+  },
+  {
+    title: "Future Topics",
+    url: "/dashboard/future-topics",
+    icon: BookOpen,
   },
   {
     title: "AI Protocol",
