@@ -319,6 +319,44 @@ export type Database = {
           created_at?: string;
         };
       };
+      agenda_item_tasks: {
+        Row: {
+          id: string;
+          agenda_item_id: string;
+          title: string;
+          description: string | null;
+          status: 'pending' | 'in_progress' | 'completed' | 'overdue';
+          priority: 'low' | 'medium' | 'high';
+          assigned_to: string | null;
+          due_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agenda_item_id: string;
+          title: string;
+          description?: string | null;
+          status?: 'pending' | 'in_progress' | 'completed' | 'overdue';
+          priority?: 'low' | 'medium' | 'high';
+          assigned_to?: string | null;
+          due_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agenda_item_id?: string;
+          title?: string;
+          description?: string | null;
+          status?: 'pending' | 'in_progress' | 'completed' | 'overdue';
+          priority?: 'low' | 'medium' | 'high';
+          assigned_to?: string | null;
+          due_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

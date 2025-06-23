@@ -52,7 +52,8 @@ import {
   Download,
   MoreHorizontal,
   X,
-  Printer
+  Printer,
+  CheckSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ProtocolPdfModal from "./components/ProtocolPdfModal";
@@ -336,6 +337,10 @@ export default function ProtocolsPage() {
 
   const handleEditProtocol = (protocolId: string) => {
     window.location.href = `/dashboard/protocols/${protocolId}`;
+  };
+
+  const handleTasksProtocol = (protocolId: string) => {
+    window.location.href = `/dashboard/protocols/protocol-task-tracking?protocolId=${protocolId}`;
   };
 
   const handleDeleteProtocol = (protocol: Protocol) => {
@@ -647,6 +652,10 @@ export default function ProtocolsPage() {
                             <DropdownMenuItem onClick={() => handleViewPdf(protocol)}>
                               <Download className="mr-2 h-4 w-4" />
                               Export
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleTasksProtocol(protocol.id)}>
+                              <CheckSquare className="mr-2 h-4 w-4" />
+                              Tasks
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDeleteProtocol(protocol)}
