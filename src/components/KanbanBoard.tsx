@@ -55,7 +55,7 @@ interface KanbanColumn {
 interface KanbanBoardProps {
   tasks: Task[];
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => Promise<void>;
-  onTaskCreate?: () => void;
+  onTaskCreate?: (defaultStatus: TaskStatus) => void;
 }
 
 const getStatusColor = (status: TaskStatus) => {
@@ -161,7 +161,7 @@ const KanbanColumn = ({
   onTaskCreate 
 }: { 
   column: KanbanColumn;
-  onTaskCreate?: () => void;
+  onTaskCreate?: (defaultStatus: TaskStatus) => void;
 }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
@@ -184,7 +184,7 @@ const KanbanColumn = ({
             </Badge>
           </div>
           {onTaskCreate && (
-            <Button variant="ghost" size="sm" onClick={onTaskCreate} className="h-6 w-6 p-0">
+            <Button variant="ghost" size="sm" onClick={() => onTaskCreate(column.id)} className="h-6 w-6 p-0">
               <Plus className="h-3 w-3" />
             </Button>
           )}

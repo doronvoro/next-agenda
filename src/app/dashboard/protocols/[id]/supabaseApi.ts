@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import type { EditingAgendaItem, NewAgendaItem, EditingMember, NewMember } from "./types";
+import type { Task } from '@/components/KanbanBoard';
+import type { Protocol, AgendaItem } from './types';
 
 export async function updateProtocol(protocolId: string, updateData: { number: number; committee_id: string; due_date: string }) {
   const supabase = createClient();
@@ -278,4 +280,92 @@ export async function getProtocolViewData(protocolId: string) {
     protocolMessages: messagesResult.data || [],
     company
   };
+}
+
+// --- Protocol Task Tracking API ---
+
+export async function fetchProtocol(protocolId: string): Promise<Protocol | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('protocols')
+    .select('id, number, due_date')
+    .eq('id', protocolId)
+    .single();
+  if (error) {
+    console.error('Error fetching protocol:', error);
+    return null;
+  }
+  return data as Protocol;
+}
+
+export async function fetchAgendaItemsByProtocol(protocolId: string): Promise<AgendaItem[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('agenda_items')
+    .select('id, title')
+    .eq('protocol_id', protocolId);
+  if (error) {
+    console.error('Error fetching agenda items:', error);
+    return [];
+  }
+  return data as AgendaItem[];
+}
+
+export async function fetchTasksByAgendaItemIds(agendaItemIds: string[]): Promise<Task[]> {
+  if (!agendaItemIds.length) return [];
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('agenda_item_tasks')
+    .select('*')
+    .in('agenda_item_id', agendaItemIds)
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.error('Error fetching tasks:', error);
+    return [];
+  }
+  return (data || []) as Task[];
+}
+
+export async function updateTask(taskId: string, updates: Partial<Task>): Promise<boolean> {
+  const supabase = createClient();
+  const updateData: any = { ...updates };
+  if (updates.status || updates.priority || updates.title || updates.description) {
+    updateData.updated_at = new Date().toISOString();
+  }
+  const { error } = await supabase
+    .from('agenda_item_tasks')
+    .update(updateData)
+    .eq('id', taskId);
+  if (error) {
+    console.error('Error updating task:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function createTask(taskData: {
+  agenda_item_id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  assigned_to?: string | null;
+  due_date?: string | null;
+}): Promise<Task | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('agenda_item_tasks')
+    .insert([{
+      ...taskData,
+      updated_at: new Date().toISOString(),
+    }])
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error creating task:', error);
+    return null;
+  }
+  
+  return data as Task;
 } 
