@@ -357,6 +357,35 @@ export type Database = {
           updated_at?: string;
         };
       };
+      future_topics: {
+        Row: {
+          id: string;
+          title: string;
+          content: string | null;
+          related_agenda_item_id: string | null;
+          priority: 'low' | 'medium' | 'high';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          content?: string | null;
+          related_agenda_item_id?: string | null;
+          priority?: 'low' | 'medium' | 'high';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          content?: string | null;
+          related_agenda_item_id?: string | null;
+          priority?: 'low' | 'medium' | 'high';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

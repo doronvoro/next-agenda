@@ -23,7 +23,7 @@ export async function updateAgendaItem(editingAgendaItem: EditingAgendaItem) {
     .eq("id", editingAgendaItem.id);
 }
 
-export async function createAgendaItem(protocolId: string, title: string, display_order: number) {
+export async function createAgendaItem(protocolId: string, title: string, display_order: number, topic_content?: string) {
   const supabase = createClient();
   
   // First, create the agenda item
@@ -33,7 +33,7 @@ export async function createAgendaItem(protocolId: string, title: string, displa
       {
         protocol_id: protocolId,
         title: title.trim(),
-        topic_content: "",
+        topic_content: topic_content || "",
         decision_content: "",
         display_order,
       },
@@ -604,4 +604,33 @@ export async function fetchTasksWithCascadingFilters(filters: {
   }));
 
   return transformedData;
+}
+
+export async function updateFutureTopic(topicId: string, relatedAgendaItemId: string | null) {
+  const supabase = createClient();
+  return supabase
+    .from("future_topics")
+    .update({
+      related_agenda_item_id: relatedAgendaItemId,
+    })
+    .eq("id", topicId);
+}
+
+export async function unlinkFutureTopicsFromAgendaItem(agendaItemId: string) {
+  const supabase = createClient();
+  return supabase
+    .from("future_topics")
+    .update({
+      related_agenda_item_id: null,
+    })
+    .eq("related_agenda_item_id", agendaItemId);
+}
+
+export async function fetchFutureTopicsWithoutAgendaItem() {
+  const supabase = createClient();
+  return supabase
+    .from("future_topics")
+    .select("*")
+    .is("related_agenda_item_id", null)
+    .order("created_at", { ascending: false });
 } 

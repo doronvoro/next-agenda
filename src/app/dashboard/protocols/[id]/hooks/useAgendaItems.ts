@@ -6,6 +6,7 @@ export function useAgendaItems(initialAgendaItems: AgendaItem[], setAgendaItems:
   createAgendaItem: (protocolId: string, title: string, displayOrder: number) => Promise<{ data: AgendaItem, error?: any }>,
   deleteAgendaItem: (id: string) => Promise<{ error?: any }>,
   reorderAgendaItems: (items: AgendaItem[]) => Promise<void>,
+  unlinkFutureTopics?: (agendaItemId: string) => Promise<{ error?: any }>,
 }, protocolId: string, toast: any, setError: (err: string | null) => void) {
   const [editingAgendaItem, setEditingAgendaItem] = useState<EditingAgendaItem | null>(null);
   const [isAddingAgendaItem, setIsAddingAgendaItem] = useState(false);
@@ -90,6 +91,17 @@ export function useAgendaItems(initialAgendaItems: AgendaItem[], setAgendaItems:
     try {
       const { error } = await api.deleteAgendaItem(deletingAgendaItemId);
       if (error) throw error;
+      
+      // Unlink any future topics that reference this agenda item
+      if (api.unlinkFutureTopics) {
+        try {
+          await api.unlinkFutureTopics(deletingAgendaItemId);
+        } catch (unlinkError) {
+          console.error("Error unlinking future topics:", unlinkError);
+          // Don't fail the deletion if unlinking fails
+        }
+      }
+      
       const filtered = initialAgendaItems.filter(item => item.id !== deletingAgendaItemId);
       setAgendaItems(filtered);
       setDeletingAgendaItemId(null);
