@@ -72,6 +72,7 @@ import {
 } from "../protocols/[id]/supabaseApi";
 import { useRouter } from "next/navigation";
 import { CascadingFilterDialog } from "./components/CascadingFilterDialog";
+import { EditTaskDialog } from "./components/EditTaskDialog";
 
 type SortField = "title" | "status" | "priority" | "due_date" | "created_at" | "protocol_number" | "agenda_item_title";
 type SortOrder = "asc" | "desc";
@@ -132,9 +133,11 @@ export default function TaskTrackingPage() {
   const [deletingTask, setDeletingTask] = useState<TaskWithDetails | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { toast } = useToast();
+  // Edit task dialog states
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<TaskWithDetails | null>(null);
 
-  // Cascading filter states
+  // Cascading filter dialog states
   const [cascadingFilterDialogOpen, setCascadingFilterDialogOpen] = useState(false);
   const [cascadingFilters, setCascadingFilters] = useState({
     companyId: null as string | null,
@@ -142,18 +145,50 @@ export default function TaskTrackingPage() {
     protocolId: null as string | null,
   });
 
+  const { toast } = useToast();
+
+  // Debounced search effect
   useEffect(() => {
-    fetchTasks();
+    const timeoutId = setTimeout(() => {
+      loadTasks();
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  // Effect for other filters
+  useEffect(() => {
+    loadTasks();
+  }, [selectedStatus, selectedPriority, selectedProtocol, dateRange, cascadingFilters]);
+
+  useEffect(() => {
+    loadTasks();
   }, []);
 
-  const fetchTasks = async () => {
+  const loadTasks = async () => {
     try {
       setLoading(true);
-      const tasksData = await fetchAllTasks();
+      
+      // Use the new cascading filter function
+      const filters = {
+        search: searchTerm || undefined,
+        status: selectedStatus === "all" ? undefined : selectedStatus,
+        priority: selectedPriority === "all" ? undefined : selectedPriority,
+        dateFrom: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+        dateTo: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
+        companyId: cascadingFilters.companyId,
+        committeeId: cascadingFilters.committeeId,
+        protocolId: selectedProtocol === "all" ? undefined : selectedProtocol,
+      };
+
+      const tasksData = await fetchTasksWithCascadingFilters(filters);
       setTasks(tasksData);
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      
+      // Calculate pagination based on the returned data
+      setTotalPages(Math.ceil(tasksData.length / itemsPerPage));
+      setCurrentPage(1);
+    } catch (error) {
+      console.error("Error loading tasks:", error);
     } finally {
       setLoading(false);
     }
@@ -283,6 +318,7 @@ export default function TaskTrackingPage() {
     setSelectedProtocol("all");
     setDateRange(undefined);
     setCurrentPage(1);
+    loadTasks();
   };
 
   const handleViewTask = (task: TaskWithDetails) => {
@@ -293,6 +329,11 @@ export default function TaskTrackingPage() {
   const handleDeleteTask = (task: TaskWithDetails) => {
     setDeletingTask(task);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditTask = (task: TaskWithDetails) => {
+    setEditingTask(task);
+    setIsEditDialogOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -345,48 +386,6 @@ export default function TaskTrackingPage() {
     </Button>
   );
 
-  const loadTasks = async () => {
-    try {
-      setLoading(true);
-      
-      // Use the new cascading filter function
-      const filters = {
-        search: searchTerm || undefined,
-        status: selectedStatus === "all" ? undefined : selectedStatus,
-        priority: selectedPriority === "all" ? undefined : selectedPriority,
-        dateFrom: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
-        dateTo: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
-        companyId: cascadingFilters.companyId,
-        committeeId: cascadingFilters.committeeId,
-        protocolId: selectedProtocol === "all" ? undefined : selectedProtocol,
-      };
-
-      const tasksData = await fetchTasksWithCascadingFilters(filters);
-      setTasks(tasksData);
-      
-      // Calculate pagination based on filtered results
-      const filteredTasks = tasksData.filter(task => {
-        // Apply client-side filters that aren't handled by the API
-        const matchesSearch = !searchTerm || 
-          task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (task.description && task.description.toLowerCase().includes(searchTerm.toLowerCase()));
-        
-        const matchesStatus = selectedStatus === "all" || task.status === selectedStatus;
-        const matchesPriority = selectedPriority === "all" || task.priority === selectedPriority;
-        const matchesProtocol = selectedProtocol === "all" || task.protocol?.id === selectedProtocol;
-        
-        return matchesSearch && matchesStatus && matchesPriority && matchesProtocol;
-      });
-      
-      setTotalPages(Math.ceil(filteredTasks.length / itemsPerPage));
-      setCurrentPage(1);
-    } catch (error) {
-      console.error("Error loading tasks:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCascadingFiltersApply = (filters: {
     companyId: string | null;
     committeeId: string | null;
@@ -418,6 +417,8 @@ export default function TaskTrackingPage() {
       committeeId: null,
       protocolId: null,
     });
+    setCurrentPage(1);
+    loadTasks();
   };
 
   if (loading) {
@@ -461,7 +462,8 @@ export default function TaskTrackingPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* First row: Search, Status, Priority, Protocol */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -475,10 +477,9 @@ export default function TaskTrackingPage() {
                 className="pl-10"
               />
             </div>
-
             {/* Status Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+            <div>
+              <Label htmlFor="status" className="mb-1 block">Status</Label>
               <Select
                 value={selectedStatus}
                 onValueChange={(value) => {
@@ -498,10 +499,9 @@ export default function TaskTrackingPage() {
                 </SelectContent>
               </Select>
             </div>
-
             {/* Priority Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+            <div>
+              <Label htmlFor="priority" className="mb-1 block">Priority</Label>
               <Select
                 value={selectedPriority}
                 onValueChange={(value) => {
@@ -520,10 +520,9 @@ export default function TaskTrackingPage() {
                 </SelectContent>
               </Select>
             </div>
-
             {/* Protocol Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="protocol">Protocol</Label>
+            <div>
+              <Label htmlFor="protocol" className="mb-1 block">Protocol</Label>
               <Select
                 value={selectedProtocol}
                 onValueChange={(value) => {
@@ -544,10 +543,13 @@ export default function TaskTrackingPage() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
+          {/* Second row: Date Range and Advanced Filter */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end mb-4">
             {/* Date Range */}
-            <div className="space-y-2">
-              <Label>Due Date Range</Label>
+            <div>
+              <Label className="mb-1 block">Due Date Range</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -586,26 +588,35 @@ export default function TaskTrackingPage() {
                 </PopoverContent>
               </Popover>
             </div>
-
             {/* Advanced Filters Button */}
-            <Button
-              variant="outline"
-              onClick={() => setCascadingFilterDialogOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              Advanced
-              {(cascadingFilters.companyId || cascadingFilters.committeeId || cascadingFilters.protocolId) && (
-                <Badge variant="secondary" className="ml-1">
-                  {(cascadingFilters.companyId ? 1 : 0) + (cascadingFilters.committeeId ? 1 : 0) + (cascadingFilters.protocolId ? 1 : 0)}
-                </Badge>
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setCascadingFilterDialogOpen(true)}
+                className="flex items-center gap-2 w-full md:w-auto"
+              >
+                <Filter className="h-4 w-4" />
+                Advanced Filters
+                {(cascadingFilters.companyId || cascadingFilters.committeeId || cascadingFilters.protocolId) && (
+                  <Badge variant="secondary" className="ml-1">
+                    {(cascadingFilters.companyId ? 1 : 0) + (cascadingFilters.committeeId ? 1 : 0) + (cascadingFilters.protocolId ? 1 : 0)}
+                  </Badge>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="text-muted-foreground hover:text-foreground ml-2"
+              >
+                Clear all
+              </Button>
+            </div>
           </div>
 
           {/* Active Filters Display */}
           {getActiveFiltersCount() > 0 && (
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
               <span className="text-sm text-muted-foreground">Active filters:</span>
               <div className="flex flex-wrap gap-2">
                 {searchTerm && (
@@ -656,7 +667,10 @@ export default function TaskTrackingPage() {
                   <Badge variant="outline" className="gap-1">
                     Company filter
                     <button
-                      onClick={() => setCascadingFilters({ companyId: null, committeeId: null, protocolId: null })}
+                      onClick={() => {
+                        setCascadingFilters({ companyId: null, committeeId: null, protocolId: null });
+                        loadTasks();
+                      }}
                       className="ml-1 hover:text-destructive"
                     >
                       ×
@@ -664,14 +678,6 @@ export default function TaskTrackingPage() {
                   </Badge>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Clear all
-              </Button>
             </div>
           )}
         </CardContent>
@@ -778,6 +784,10 @@ export default function TaskTrackingPage() {
                               <Eye className="mr-2 h-4 w-4" />
                               View in Board
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditTask(task)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Task
+                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDeleteTask(task)}
                               className="text-destructive"
@@ -867,6 +877,14 @@ export default function TaskTrackingPage() {
         onOpenChange={setCascadingFilterDialogOpen}
         onApplyFilters={handleCascadingFiltersApply}
         currentFilters={cascadingFilters}
+      />
+
+      {/* Edit Task Dialog */}
+      <EditTaskDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        task={editingTask}
+        onTaskUpdated={loadTasks}
       />
     </div>
   );
