@@ -368,4 +368,240 @@ export async function createTask(taskData: {
   }
   
   return data as Task;
+}
+
+// --- Task Tracking API ---
+
+export interface TaskWithDetails extends Task {
+  agenda_item: {
+    id: string;
+    title: string;
+    protocol_id: string;
+  };
+  protocol: {
+    id: string;
+    number: number;
+    committee: {
+      id: string;
+      name: string;
+    } | null;
+  };
+}
+
+export async function fetchAllTasks(): Promise<TaskWithDetails[]> {
+  const supabase = createClient();
+  
+  const { data: tasksData, error: tasksError } = await supabase
+    .from("agenda_item_tasks")
+    .select(`
+      *,
+      agenda_item:agenda_items!agenda_item_id(
+        id,
+        title,
+        protocol_id
+      ),
+      protocol:agenda_items!agenda_item_id(
+        protocols!protocol_id(
+          id,
+          number,
+          committee:committees!committee_id(
+            id,
+            name
+          )
+        )
+      )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (tasksError) {
+    console.error("Error fetching tasks:", tasksError);
+    throw tasksError;
+  }
+
+  // Transform the data to flatten the nested structure
+  const transformedTasks: TaskWithDetails[] = (tasksData || []).map((task: any) => ({
+    ...task,
+    protocol: task.protocol?.protocols || null,
+  }));
+
+  return transformedTasks;
+}
+
+export async function deleteTask(taskId: string): Promise<boolean> {
+  const supabase = createClient();
+  
+  const { error } = await supabase
+    .from("agenda_item_tasks")
+    .delete()
+    .eq("id", taskId);
+
+  if (error) {
+    console.error("Error deleting task:", error);
+    throw error;
+  }
+
+  return true;
+}
+
+// --- Cascading Filter API ---
+
+export interface Company {
+  id: string;
+  name: string;
+}
+
+export interface Committee {
+  id: string;
+  name: string;
+  company_id: string;
+}
+
+export interface ProtocolForFilter {
+  id: string;
+  number: number;
+  committee_id: string;
+}
+
+export async function fetchCompanies(): Promise<Company[]> {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from("companies")
+    .select("id, name")
+    .order("name");
+
+  if (error) {
+    console.error("Error fetching companies:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+export async function fetchCommitteesByCompany(companyId: string): Promise<Committee[]> {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from("committees")
+    .select("id, name, company_id")
+    .eq("company_id", companyId)
+    .order("name");
+
+  if (error) {
+    console.error("Error fetching committees:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+export async function fetchProtocolsByCommittee(committeeId: string): Promise<ProtocolForFilter[]> {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from("protocols")
+    .select("id, number, committee_id")
+    .eq("committee_id", committeeId)
+    .order("number", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching protocols:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+export async function fetchTasksWithCascadingFilters(filters: {
+  search?: string;
+  status?: string;
+  priority?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  companyId?: string | null;
+  committeeId?: string | null;
+  protocolId?: string | null;
+}): Promise<TaskWithDetails[]> {
+  const supabase = createClient();
+  
+  let query = supabase
+    .from("agenda_item_tasks")
+    .select(`
+      *,
+      agenda_items (
+        id,
+        title,
+        protocols (
+          id,
+          number,
+          committees (
+            id,
+            name,
+            companies (
+              id,
+              name
+            )
+          )
+        )
+      )
+    `);
+
+  // Apply search filter
+  if (filters.search) {
+    query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+  }
+
+  // Apply status filter
+  if (filters.status) {
+    query = query.eq("status", filters.status);
+  }
+
+  // Apply priority filter
+  if (filters.priority) {
+    query = query.eq("priority", filters.priority);
+  }
+
+  // Apply date range filters
+  if (filters.dateFrom) {
+    query = query.gte("due_date", filters.dateFrom);
+  }
+  if (filters.dateTo) {
+    query = query.lte("due_date", filters.dateTo);
+  }
+
+  // Apply cascading filters
+  if (filters.protocolId) {
+    query = query.eq("agenda_items.protocols.id", filters.protocolId);
+  } else if (filters.committeeId) {
+    query = query.eq("agenda_items.protocols.committees.id", filters.committeeId);
+  } else if (filters.companyId) {
+    query = query.eq("agenda_items.protocols.committees.companies.id", filters.companyId);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching tasks with cascading filters:", error);
+    throw error;
+  }
+
+  // Transform the data to match TaskWithDetails interface
+  const transformedData: TaskWithDetails[] = (data || []).map((task: any) => ({
+    ...task,
+    agenda_item: {
+      id: task.agenda_items.id,
+      title: task.agenda_items.title,
+      protocol_id: task.agenda_items.protocols?.id || "",
+    },
+    protocol: task.agenda_items.protocols ? {
+      id: task.agenda_items.protocols.id,
+      number: task.agenda_items.protocols.number,
+      committee: task.agenda_items.protocols.committees ? {
+        id: task.agenda_items.protocols.committees.id,
+        name: task.agenda_items.protocols.committees.name,
+      } : null,
+    } : null,
+  }));
+
+  return transformedData;
 } 

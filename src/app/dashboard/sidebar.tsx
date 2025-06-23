@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Computer, LayoutDashboard, FileText, Users, Home, Building2, LogOutIcon } from "lucide-react";
+import { Computer, LayoutDashboard, FileText, Users, Home, Building2, LogOutIcon, CheckSquare } from "lucide-react";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -36,6 +36,11 @@ const items = [
     title: "Protocols",
     url: "/dashboard/protocols",
     icon: FileText,
+  },
+  {
+    title: "Task Tracking",
+    url: "/dashboard/task-tracking",
+    icon: CheckSquare,
   },
   {
     title: "AI Protocol",
