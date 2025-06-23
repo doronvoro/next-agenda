@@ -23,7 +23,9 @@ export async function updateAgendaItem(editingAgendaItem: EditingAgendaItem) {
 
 export async function createAgendaItem(protocolId: string, title: string, display_order: number) {
   const supabase = createClient();
-  return supabase
+  
+  // First, create the agenda item
+  const { data: agendaItem, error: agendaError } = await supabase
     .from("agenda_items")
     .insert([
       {
@@ -36,6 +38,34 @@ export async function createAgendaItem(protocolId: string, title: string, displa
     ])
     .select()
     .single();
+
+  if (agendaError) {
+    throw agendaError;
+  }
+
+  // Then, automatically create a default task for this agenda item
+  try {
+    await supabase
+      .from("agenda_item_tasks")
+      .insert([
+        {
+          agenda_item_id: agendaItem.id,
+          title: `Follow up on: ${title.trim()}`,
+          description: `Default task for agenda item: ${title.trim()}`,
+          status: 'pending',
+          priority: 'medium',
+          assigned_to: null,
+          due_date: null,
+          updated_at: new Date().toISOString(),
+        },
+      ]);
+  } catch (taskError) {
+    // If task creation fails, we still return the agenda item
+    // but log the error for debugging
+    console.warn("Failed to create default task for agenda item:", taskError);
+  }
+
+  return { data: agendaItem, error: null };
 }
 
 export async function deleteAgendaItem(agendaItemId: string) {
