@@ -14,6 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { VoiceMagicTextarea } from "@/app/dashboard/protocols/[id]/components/dialogs/VoiceMagicTextarea";
+import { useToast } from "@/components/ui/use-toast";
+import { useSpeechToText } from "@/lib/hooks/useSpeechToText";
 
 export default function FutureTopicsPage() {
   const [topics, setTopics] = useState<Database["public"]["Tables"]["future_topics"]["Row"][]>([]);
@@ -32,6 +35,19 @@ export default function FutureTopicsPage() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<string>("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const { toast } = useToast();
+  const {
+    listening,
+    transcript,
+    startListening,
+    stopListening,
+    isSupported,
+    setTranscript,
+  } = useSpeechToText();
+  const [isImprovingContent, setIsImprovingContent] = useState(false);
+  const [contentImproved, setContentImproved] = useState<string | null>(null);
+  const [contentOriginal, setContentOriginal] = useState<string | null>(null);
+  const [dictatingContent, setDictatingContent] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -186,6 +202,52 @@ export default function FutureTopicsPage() {
     }
   };
 
+  // Handle AI improve for content
+  const handleImproveContent = async () => {
+    if (!formData.content.trim()) return;
+    setIsImprovingContent(true);
+    try {
+      const response = await fetch("/api/improve-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: formData.content }),
+      });
+      const data = await response.json();
+      if (data.improvedText) {
+        setContentOriginal(formData.content);
+        setContentImproved(data.improvedText);
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to improve text",
+      });
+    } finally {
+      setIsImprovingContent(false);
+    }
+  };
+
+  // Accept or revert improved content
+  const handleAcceptImprovedContent = () => {
+    if (contentImproved) {
+      setFormData((prev) => ({ ...prev, content: contentImproved }));
+      setContentOriginal(null);
+      setContentImproved(null);
+    }
+  };
+  const handleRevertImprovedContent = () => {
+    setContentOriginal(null);
+    setContentImproved(null);
+  };
+
+  // Handle voice dictation for content
+  useEffect(() => {
+    if (!dictatingContent || !transcript) return;
+    setFormData((prev) => ({ ...prev, content: prev.content ? prev.content + " " + transcript : transcript }));
+    setTranscript("");
+  }, [transcript, dictatingContent, setTranscript]);
+
   if (loading) {
     return <div className="container mx-auto p-6 text-center">Loading future topics...</div>;
   }
@@ -313,13 +375,46 @@ export default function FutureTopicsPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="content">Content</Label>
-              <Textarea
-                id="content"
+              <VoiceMagicTextarea
                 value={formData.content}
-                onChange={(e) => handleFormChange("content", e.target.value)}
+                onChange={e => handleFormChange("content", e.target.value)}
+                onImprove={handleImproveContent}
+                onMic={() => {
+                  if (dictatingContent && listening) {
+                    stopListening();
+                    setDictatingContent(false);
+                  } else {
+                    setDictatingContent(true);
+                    startListening();
+                  }
+                }}
+                isImproving={isImprovingContent}
+                isSupported={isSupported}
+                dictating={dictatingContent}
+                listening={listening}
+                disabled={!!contentImproved}
                 placeholder="Enter topic content"
-                rows={4}
+                ariaLabel="Topic Content"
               />
+              {contentImproved && (
+                <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
+                  <div className="font-bold mb-2 text-primary">Compare Versions</div>
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1">
+                      <div className="text-xs text-muted-foreground mb-1">Original</div>
+                      <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{contentOriginal}</div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-xs text-muted-foreground mb-1">Improved Suggestion</div>
+                      <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{contentImproved}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4 justify-end">
+                    <Button size="lg" className="px-6" onClick={handleAcceptImprovedContent}>Accept</Button>
+                    <Button size="lg" variant="outline" className="px-6" onClick={handleRevertImprovedContent}>Revert</Button>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="priority">Priority</Label>
