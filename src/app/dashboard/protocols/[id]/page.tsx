@@ -22,6 +22,7 @@ import type {
   NewAgendaItem,
   Protocol
 } from "./types";
+import type { Database } from "@/types/supabase";
 import { useProtocolData } from "./hooks/useProtocolData";
 import { ConfirmDeleteAgendaItemDialog } from "./components/dialogs/ConfirmDeleteAgendaItemDialog";
 import { ConfirmDeleteMemberDialog } from "./components/dialogs/ConfirmDeleteMemberDialog";
@@ -42,6 +43,9 @@ import {
   reorderAgendaItems,
   sendProtocolMessage,
   deleteMember as apiDeleteMember,
+  updateFutureTopic,
+  fetchFutureTopicsWithoutAgendaItem,
+  unlinkFutureTopicsFromAgendaItem,
 } from "./supabaseApi";
 import { createClient } from "@/lib/supabase/client";
 import { useAgendaItems } from "./hooks/useAgendaItems";
@@ -102,14 +106,16 @@ export default function ProtocolPage() {
   const [isPopupEditing, setIsPopupEditing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [futureTopics, setFutureTopics] = useState<Database["public"]["Tables"]["future_topics"]["Row"][]>([]);
+  const [loadingFutureTopics, setLoadingFutureTopics] = useState(false);
 
   const agendaApi = {
     updateAgendaItem: async (item: EditingAgendaItem) => {
       const { error } = await updateAgendaItem(item);
       return { error };
     },
-    createAgendaItem: async (protocolId: string, title: string, displayOrder: number) => {
-      const { data, error } = await apiCreateAgendaItem(protocolId, title, displayOrder);
+    createAgendaItem: async (protocolId: string, title: string, displayOrder: number, topic_content?: string) => {
+      const { data, error } = await apiCreateAgendaItem(protocolId, title, displayOrder, topic_content);
       return { data, error };
     },
     deleteAgendaItem: async (id: string) => {
@@ -118,6 +124,14 @@ export default function ProtocolPage() {
     },
     reorderAgendaItems: async (items: AgendaItem[]) => {
       await reorderAgendaItems(items);
+    },
+    unlinkFutureTopics: async (agendaItemId: string) => {
+      const { error } = await unlinkFutureTopicsFromAgendaItem(agendaItemId);
+      if (!error) {
+        // Refresh future topics to show newly available ones
+        await fetchFutureTopics();
+      }
+      return { error };
     },
   };
 
@@ -153,6 +167,7 @@ export default function ProtocolPage() {
   useEffect(() => {
     setMounted(true);
     fetchData();
+    fetchFutureTopics();
   }, [protocolId]);
 
   useEffect(() => {
@@ -261,6 +276,60 @@ export default function ProtocolPage() {
       console.error("Error updating agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
       toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item" });
+    }
+  };
+
+  const fetchFutureTopics = async () => {
+    setLoadingFutureTopics(true);
+    try {
+      const { data, error } = await fetchFutureTopicsWithoutAgendaItem();
+      if (error) {
+        console.error("Error fetching future topics:", error);
+        return;
+      }
+      setFutureTopics(data || []);
+    } catch (err) {
+      console.error("Error fetching future topics:", err);
+    } finally {
+      setLoadingFutureTopics(false);
+    }
+  };
+
+  const handleCreateFromFutureTopic = async (topicId: string) => {
+    const selectedTopic = futureTopics.find(topic => topic.id === topicId);
+    if (!selectedTopic) return;
+
+    try {
+      // Create the agenda item with the topic's title and content
+      const displayOrder = agendaItems.length + 1;
+      const { data: newAgendaItem, error } = await agendaApi.createAgendaItem(
+        protocolId,
+        selectedTopic.title,
+        displayOrder,
+        selectedTopic.content || ""
+      );
+
+      if (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to create agenda item" });
+        return;
+      }
+
+      if (newAgendaItem) {
+        // Update the future topic with the new agenda item ID
+        const { error: updateError } = await updateFutureTopic(topicId, newAgendaItem.id);
+        if (updateError) {
+          console.error("Error updating future topic:", updateError);
+        }
+
+        // Update state directly instead of refetching
+        setAgendaItems(prev => [...prev, newAgendaItem]);
+        setFutureTopics(prev => prev.filter(topic => topic.id !== topicId));
+
+        toast({ title: "Success", description: "Agenda item created from future topic" });
+      }
+    } catch (err) {
+      console.error("Error creating agenda item from future topic:", err);
+      toast({ variant: "destructive", title: "Error", description: "Failed to create agenda item from future topic" });
     }
   };
 
@@ -376,8 +445,11 @@ export default function ProtocolPage() {
                       handleKeyDown={agendaItemsHook.handleKeyDown}
                       handleBlur={agendaItemsHook.handleBlur}
                       handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
+                      handleCreateFromFutureTopic={handleCreateFromFutureTopic}
                       handleDragEnd={agendaItemsHook.handleDragEnd}
                       handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                      futureTopics={futureTopics}
+                      loadingFutureTopics={loadingFutureTopics}
                     />
                   </div>
                   <Separator />

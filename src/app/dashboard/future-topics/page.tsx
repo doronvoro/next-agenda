@@ -319,6 +319,7 @@ export default function FutureTopicsPage() {
                 <TableRow>
                   <TableHead><SortableHeader field="title">Title</SortableHeader></TableHead>
                   <TableHead><SortableHeader field="priority">Priority</SortableHeader></TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead><SortableHeader field="created_at">Created</SortableHeader></TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -326,7 +327,7 @@ export default function FutureTopicsPage() {
               <TableBody>
                 {filteredTopics.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
                       No future topics found
                     </TableCell>
                   </TableRow>
@@ -340,6 +341,17 @@ export default function FutureTopicsPage() {
                       </TableCell>
                       <TableCell>
                         {getPriorityBadge(topic.priority as "low" | "medium" | "high")}
+                      </TableCell>
+                      <TableCell>
+                        {topic.related_agenda_item_id ? (
+                          <Badge variant="secondary" className="bg-green-100 text-green-800">
+                            Linked to Agenda
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground">
+                            Available
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>{new Date(topic.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
