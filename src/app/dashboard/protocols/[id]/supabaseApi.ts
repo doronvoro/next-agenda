@@ -633,4 +633,41 @@ export async function fetchFutureTopicsWithoutAgendaItem() {
     .select("*")
     .is("related_agenda_item_id", null)
     .order("created_at", { ascending: false });
+}
+
+export async function addCommitteeMembersToProtocol(committeeId: string, protocolId: string) {
+  const supabase = createClient();
+
+  // Fetch committee members
+  const { data: committeeMembers, error: membersError } = await supabase
+    .from("committees_members")
+    .select("name")
+    .eq("committee_id", committeeId);
+
+  if (membersError) {
+    console.error("Error fetching committee members:", membersError);
+    return { error: membersError };
+  }
+
+  if (committeeMembers && committeeMembers.length > 0) {
+    // Create protocol members from committee members
+    const protocolMembersData = committeeMembers.map(member => ({
+      protocol_id: protocolId,
+      name: member.name,
+      type: 1, // Default type
+      status: 2, // Default status changed from 1 to 2
+      source_type: 1, // Committee member source type
+    }));
+
+    const { error: insertMembersError } = await supabase
+      .from("protocol_members")
+      .insert(protocolMembersData);
+
+    if (insertMembersError) {
+      console.error("Error inserting protocol members:", insertMembersError);
+      return { error: insertMembersError };
+    }
+  }
+
+  return { error: null };
 } 
