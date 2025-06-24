@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, FileText, X, Printer } from "lucide-react";
+import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -54,6 +54,7 @@ import { useAttachments } from "./hooks/useAttachments";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ProtocolPdfView from "./components/ProtocolPdfView";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -108,6 +109,7 @@ export default function ProtocolPage() {
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [futureTopics, setFutureTopics] = useState<Database["public"]["Tables"]["future_topics"]["Row"][]>([]);
   const [loadingFutureTopics, setLoadingFutureTopics] = useState(false);
+  const router = useRouter();
 
   const agendaApi = {
     updateAgendaItem: async (item: EditingAgendaItem) => {
@@ -382,16 +384,33 @@ export default function ProtocolPage() {
                 {isEditing ? "Edit Protocol" : `Protocol #${protocol?.number}`}
               </CardTitle>
               {!isEditing && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={() => setIsPdfModalOpen(true)} className="h-8 w-8">
-                        <FileText className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>View as PDF</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <div className="flex items-center gap-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={() => setIsPdfModalOpen(true)} className="h-8 w-8">
+                          <FileText className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>View as PDF</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => router.push(`/dashboard/protocols/protocol-task-tracking?protocolId=${protocolId}&returnTo=protocol`)}
+                          className="h-8 w-8"
+                        >
+                          <CheckSquare className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Task Tracking</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               )}
             </div>
           </CardHeader>

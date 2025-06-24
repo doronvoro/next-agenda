@@ -27,6 +27,7 @@ interface Protocol {
 function ProtocolTaskTrackingContent() {
   const searchParams = useSearchParams();
   const protocolId = searchParams.get('protocolId');
+  const returnTo = searchParams.get('returnTo') || 'protocols'; // Default to protocols
   const [tasks, setTasks] = useState<Task[]>([]);
   const [protocol, setProtocol] = useState<Protocol | null>(null);
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
@@ -35,6 +36,21 @@ function ProtocolTaskTrackingContent() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('pending');
   const { toast } = useToast();
+
+  // Determine return path based on returnTo parameter
+  const getReturnPath = () => {
+    if (returnTo === 'protocol' && protocolId) {
+      return `/dashboard/protocols/${protocolId}`;
+    }
+    return '/dashboard/protocols';
+  };
+
+  const getReturnText = () => {
+    if (returnTo === 'protocol') {
+      return 'Back to Protocol';
+    }
+    return 'Back to Protocols';
+  };
 
   useEffect(() => {
     if (protocolId) {
@@ -147,10 +163,10 @@ function ProtocolTaskTrackingContent() {
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/protocols">
+          <Link href={getReturnPath()}>
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Back to Protocols
+              {getReturnText()}
             </Button>
           </Link>
           <h1 className="text-3xl font-bold">
