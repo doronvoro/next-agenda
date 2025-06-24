@@ -343,6 +343,56 @@ export default function ProtocolPage() {
     }
   };
 
+  const handleEditAgendaItemTitle = async (itemId: string, newTitle: string) => {
+    try {
+      const item = agendaItems.find(item => item.id === itemId);
+      if (!item) {
+        toast({ variant: "destructive", title: "Error", description: "Agenda item not found" });
+        return;
+      }
+
+      const { error } = await updateAgendaItemById({
+        id: itemId,
+        title: newTitle,
+        topic_content: item.topic_content || "",
+        decision_content: item.decision_content || ""
+      });
+      if (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item title" });
+        return;
+      }
+
+      // Update local state
+      setAgendaItems(prev => prev.map(item => 
+        item.id === itemId ? { ...item, title: newTitle } : item
+      ));
+
+      toast({ title: "Success", description: "Agenda item title updated" });
+    } catch (err) {
+      console.error("Error updating agenda item title:", err);
+      toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item title" });
+      throw err;
+    }
+  };
+
+  const handleDeleteAgendaItem = async (itemId: string) => {
+    try {
+      const { error } = await apiDeleteAgendaItem(itemId);
+      if (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to delete agenda item" });
+        return;
+      }
+
+      // Update local state
+      setAgendaItems(prev => prev.filter(item => item.id !== itemId));
+
+      toast({ title: "Success", description: "Agenda item deleted" });
+    } catch (err) {
+      console.error("Error deleting agenda item:", err);
+      toast({ variant: "destructive", title: "Error", description: "Failed to delete agenda item" });
+    }
+  };
+
   if (!mounted) {
     return null;
   }
@@ -549,6 +599,8 @@ export default function ProtocolPage() {
                         handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
                         futureTopics={futureTopics}
                         loadingFutureTopics={loadingFutureTopics}
+                        handleEditAgendaItemTitle={handleEditAgendaItemTitle}
+                        handleDeleteAgendaItem={handleDeleteAgendaItem}
                       />
                     </div>
                   </section>

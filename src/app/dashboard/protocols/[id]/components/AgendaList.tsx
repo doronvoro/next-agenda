@@ -21,6 +21,8 @@ interface AgendaListProps {
   handleCreateFromFutureTopic: (topicId: string) => void;
   handleDragEnd: (event: DragEndEvent) => void;
   handleOpenAgendaItemDialog: (item: AgendaItem) => void;
+  handleEditAgendaItemTitle?: (itemId: string, newTitle: string) => Promise<void>;
+  handleDeleteAgendaItem?: (itemId: string) => void;
   futureTopics: Database["public"]["Tables"]["future_topics"]["Row"][];
   loadingFutureTopics: boolean;
 }
@@ -35,6 +37,8 @@ const AgendaList: React.FC<AgendaListProps> = ({
   handleCreateFromFutureTopic,
   handleDragEnd,
   handleOpenAgendaItemDialog,
+  handleEditAgendaItemTitle,
+  handleDeleteAgendaItem,
   futureTopics,
   loadingFutureTopics,
 }) => {
@@ -99,6 +103,8 @@ const AgendaList: React.FC<AgendaListProps> = ({
                 key={item.id}
                 item={item}
                 onViewClick={handleOpenAgendaItemDialog}
+                onEditTitle={handleEditAgendaItemTitle}
+                onDelete={handleDeleteAgendaItem}
               />
             ))
           )}
