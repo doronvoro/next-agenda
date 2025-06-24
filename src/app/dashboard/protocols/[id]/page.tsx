@@ -65,7 +65,7 @@ const formatDate = (dateString: string) => {
 
 declare global {
   interface Window {
-    __protocolNumber?: number;
+    __protocolNumber?: string;
   }
 }
 
@@ -176,12 +176,26 @@ export default function ProtocolPage() {
     fetchFutureTopics();
   }, [protocolId]);
 
+  // Set protocol number immediately when protocol data is available
+  useEffect(() => {
+    if (protocol && protocol.number && typeof window !== 'undefined') {
+      (window as any).__protocolNumber = protocol.number;
+    }
+  }, [protocol?.number]);
+
   useEffect(() => {
     if (protocol && protocol.number) {
       if (typeof window !== 'undefined') {
         (window as any).__protocolNumber = protocol.number;
       }
     }
+    
+    // Cleanup when component unmounts
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).__protocolNumber;
+      }
+    };
   }, [protocol]);
 
   useEffect(() => {
@@ -230,6 +244,11 @@ export default function ProtocolPage() {
           due_date: editDate.toISOString(),
         };
         setProtocol(updatedProtocol);
+        
+        // Update the window protocol number for breadcrumb
+        if (typeof window !== 'undefined') {
+          (window as any).__protocolNumber = editFormData.number.trim();
+        }
       }
 
       const { error } = await updateProtocol(protocolId || '', {

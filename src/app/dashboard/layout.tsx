@@ -23,8 +23,26 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [protocolNumber, setProtocolNumber] = React.useState<string | undefined>(undefined);
 
   const pathSegments = pathname.split("/").filter(Boolean);
+
+  // Listen for protocol number updates
+  React.useEffect(() => {
+    const checkProtocolNumber = () => {
+      if (typeof window !== "undefined" && (window as any).__protocolNumber) {
+        setProtocolNumber((window as any).__protocolNumber);
+      }
+    };
+
+    // Check immediately
+    checkProtocolNumber();
+
+    // Set up an interval to check for updates
+    const interval = setInterval(checkProtocolNumber, 100);
+
+    return () => clearInterval(interval);
+  }, [pathname]);
 
   // Custom breadcrumb for protocol details page
   let customBreadcrumb: React.ReactNode = null;
@@ -33,11 +51,15 @@ export default function DashboardLayout({
     pathSegments[1] === "protocols" &&
     pathSegments.length === 3
   ) {
-    // Try to get protocol number from window
-    let protocolNumber: string | number | undefined = undefined;
-    if (typeof window !== "undefined" && (window as any).__protocolNumber) {
-      protocolNumber = (window as any).__protocolNumber;
+    // Format the display text
+    let displayText = "Loading..."; // Show loading initially
+    if (protocolNumber) {
+      displayText = protocolNumber;
+    } else if (pathSegments[2]) {
+      // If no protocol number but we have the ID, show a generic message
+      displayText = "Protocol";
     }
+    
     customBreadcrumb = (
       <Breadcrumb>
         <BreadcrumbList>
@@ -51,7 +73,7 @@ export default function DashboardLayout({
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              {protocolNumber ? protocolNumber : pathSegments[2]}
+              {displayText}
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
