@@ -535,17 +535,7 @@ export default function ProtocolPage() {
                   <section>
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-xl font-semibold text-foreground">Agenda</h2>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => agendaItemsHook.setNewAgendaItem({ title: "", isEditing: true })}
-                        className="gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add Item
-                      </Button>
                     </div>
-                    
                     <div className="bg-card border border-border rounded-lg">
                       <AgendaList
                         agendaItems={agendaItems}
