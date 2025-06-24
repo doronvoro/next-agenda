@@ -1,7 +1,8 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AgendaItem } from "../types";
 
 interface SortableAgendaItemProps {
@@ -29,24 +30,37 @@ const SortableAgendaItem: React.FC<SortableAgendaItemProps> = ({ item, onViewCli
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2"
+      className="group flex items-center gap-3 py-3 px-4 hover:bg-muted/50 transition-colors"
     >
       <button
-        className="cursor-grab touch-none p-1 hover:bg-accent rounded-md"
+        className="cursor-grab touch-none p-1 hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
         {...attributes}
         {...listeners}
       >
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </button>
-      <span className="text-muted-foreground">
-        {item.display_order ? `${item.display_order}.` : '•'}
-      </span>
+      
+      <div className="flex items-center justify-center w-6 h-6 bg-muted text-muted-foreground rounded-full text-xs font-medium flex-shrink-0">
+        {item.display_order || '•'}
+      </div>
+      
       <span 
-        className={onViewClick ? "cursor-pointer hover:text-primary hover:underline" : ""}
+        className="flex-1 text-foreground cursor-pointer hover:text-primary transition-colors"
         onClick={onViewClick ? () => onViewClick(item) : undefined}
       >
         {item.title}
       </span>
+      
+      {onViewClick && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onViewClick(item)}
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };

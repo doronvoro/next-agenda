@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download } from "lucide-react";
+import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -56,6 +56,7 @@ import ProtocolPdfView from "./components/ProtocolPdfView";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
 import ProtocolPdfModal from "../components/ProtocolPdfModal";
+import { Badge } from "@/components/ui/badge";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -111,6 +112,7 @@ export default function ProtocolPage() {
   const [futureTopics, setFutureTopics] = useState<Database["public"]["Tables"]["future_topics"]["Row"][]>([]);
   const [loadingFutureTopics, setLoadingFutureTopics] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
   const agendaApi = {
@@ -205,6 +207,7 @@ export default function ProtocolPage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSaving(true);
     try {
       // Validate required fields
       if (!editFormData.number || !editDate) {
@@ -222,9 +225,12 @@ export default function ProtocolPage() {
       if (error) throw error;
       await fetchData();
       setIsEditing(false);
+      toast({ title: "Success", description: "Protocol updated successfully" });
     } catch (err) {
       console.error("Error updating protocol:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -343,17 +349,28 @@ export default function ProtocolPage() {
 
   if (initialLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">Loading protocol...</div>
+      <div className="min-h-screen bg-background">
+        <div className="max-w-4xl mx-auto p-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-muted rounded w-1/2 mb-8"></div>
+            <div className="space-y-4">
+              <div className="h-4 bg-muted rounded"></div>
+              <div className="h-4 bg-muted rounded w-5/6"></div>
+              <div className="h-4 bg-muted rounded w-4/6"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center text-red-500">
-          Error: {error}
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-destructive text-lg mb-2">Error loading protocol</div>
+          <div className="text-muted-foreground">{error}</div>
         </div>
       </div>
     );
@@ -361,151 +378,220 @@ export default function ProtocolPage() {
 
   if (!protocol) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">Protocol not found</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-muted-foreground text-lg">Protocol not found</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6 flex justify-between items-center">
-        <Link href="/dashboard/protocols">
-          <Button variant="ghost" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Protocols
-          </Button>
-        </Link>
+    <div className="min-h-screen bg-background">
+      {/* Document Header */}
+      <div className="bg-card border-b border-border sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard/protocols">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </Button>
+              </Link>
+              <div className="h-6 w-px bg-border"></div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">
+                  Protocol #{protocol.number}
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(protocol.due_date)} • {protocolMembers.length} members
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isSaving && (
+                <Badge variant="secondary" className="gap-1">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+                  Saving...
+                </Badge>
+              )}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setIsPdfModalOpen(true)}
+                      className="gap-2"
+                    >
+                      <FileText className="h-4 w-4" />
+                      View PDF
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>View as PDF</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push(`/dashboard/protocols/protocol-task-tracking?protocolId=${protocolId}&returnTo=protocol`)}
+                      className="gap-2"
+                    >
+                      <CheckSquare className="h-4 w-4" />
+                      Tasks
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Task Tracking</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setIsExportModalOpen(true)}
+                      className="gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Export
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Export</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-2xl">
-                {isEditing ? "Edit Protocol" : `Protocol #${protocol?.number}`}
-              </CardTitle>
-              {!isEditing && (
-                <div className="flex items-center gap-1">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={() => setIsPdfModalOpen(true)} className="h-8 w-8">
-                          <FileText className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>View as PDF</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => router.push(`/dashboard/protocols/protocol-task-tracking?protocolId=${protocolId}&returnTo=protocol`)}
-                          className="h-8 w-8"
-                        >
-                          <CheckSquare className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Task Tracking</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => setIsExportModalOpen(true)}
-                          className="h-8 w-8"
-                        >
-                          <Download className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Export</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
+      {/* Document Content */}
+      <div className="max-w-4xl mx-auto px-8 py-8">
+        <div className="bg-card rounded-lg shadow-sm border border-border">
+          {/* Document Tabs */}
+          <div className="border-b border-border">
             <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="content">Content</TabsTrigger>
-                <TabsTrigger value="members">Members</TabsTrigger>
-                <TabsTrigger value="attachments">Attachments</TabsTrigger>
-                <TabsTrigger value="messages">Messages</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-4 h-12 rounded-none border-b-0 bg-transparent">
+                <TabsTrigger value="content" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                  Document
+                </TabsTrigger>
+                <TabsTrigger value="members" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                  Members
+                </TabsTrigger>
+                <TabsTrigger value="attachments" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                  Attachments
+                </TabsTrigger>
+                <TabsTrigger value="messages" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                  Messages
+                </TabsTrigger>
               </TabsList>
-              <TabsContent value="content" className="mt-6">
-                <div className="grid gap-6">
-                  {isEditing ? (
-                    <ProtocolEditForm
-                      editFormData={editFormData}
-                      setEditFormData={setEditFormData}
-                      editDate={editDate}
-                      setEditDate={setEditDate}
-                      committees={committees}
-                      initialLoading={initialLoading}
-                      updateProtocol={updateProtocol}
-                      protocolId={protocolId}
-                      fetchData={fetchData}
-                      onCancel={() => setIsEditing(false)}
-                    />
-                  ) : (
-                    <>
-                      <div className="flex justify-end">
+              
+              <TabsContent value="content" className="mt-0 p-8">
+                <div className="space-y-8">
+                  {/* Protocol Details Section */}
+                  <section>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-semibold text-foreground">Protocol Details</h2>
+                      {!isEditing && (
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="sm"
                           onClick={handleEdit}
-                          className="h-8 w-8"
+                          className="gap-2 text-muted-foreground hover:text-foreground"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Edit3 className="h-4 w-4" />
+                          Edit
                         </Button>
-                      </div>
-                      <div className="grid gap-4">
+                      )}
+                    </div>
+                    
+                    {isEditing ? (
+                      <ProtocolEditForm
+                        editFormData={editFormData}
+                        setEditFormData={setEditFormData}
+                        editDate={editDate}
+                        setEditDate={setEditDate}
+                        committees={committees}
+                        initialLoading={initialLoading}
+                        updateProtocol={updateProtocol}
+                        protocolId={protocolId}
+                        fetchData={fetchData}
+                        onCancel={() => setIsEditing(false)}
+                      />
+                    ) : (
+                      <div className="bg-muted/50 rounded-lg p-6">
                         <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} company={company ?? undefined} />
                       </div>
-                    </>
-                  )}
+                    )}
+                  </section>
+
                   <Separator />
-                  <div className="grid gap-4">
-                    <h3 className="text-lg font-medium">Agenda</h3>
-                    <AgendaList
-                      agendaItems={agendaItems}
-                      newAgendaItem={agendaItemsHook.newAgendaItem}
-                      setNewAgendaItem={agendaItemsHook.setNewAgendaItem}
-                      handleKeyDown={agendaItemsHook.handleKeyDown}
-                      handleBlur={agendaItemsHook.handleBlur}
-                      handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
-                      handleCreateFromFutureTopic={handleCreateFromFutureTopic}
-                      handleDragEnd={agendaItemsHook.handleDragEnd}
-                      handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
-                      futureTopics={futureTopics}
-                      loadingFutureTopics={loadingFutureTopics}
-                    />
-                  </div>
+
+                  {/* Agenda Section */}
+                  <section>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-semibold text-foreground">Agenda</h2>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => agendaItemsHook.setNewAgendaItem({ title: "", isEditing: true })}
+                        className="gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Item
+                      </Button>
+                    </div>
+                    
+                    <div className="bg-card border border-border rounded-lg">
+                      <AgendaList
+                        agendaItems={agendaItems}
+                        newAgendaItem={agendaItemsHook.newAgendaItem}
+                        setNewAgendaItem={agendaItemsHook.setNewAgendaItem}
+                        handleKeyDown={agendaItemsHook.handleKeyDown}
+                        handleBlur={agendaItemsHook.handleBlur}
+                        handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
+                        handleCreateFromFutureTopic={handleCreateFromFutureTopic}
+                        handleDragEnd={agendaItemsHook.handleDragEnd}
+                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                        futureTopics={futureTopics}
+                        loadingFutureTopics={loadingFutureTopics}
+                      />
+                    </div>
+                  </section>
+
                   <Separator />
-                  <div className="grid gap-6">
-                    <h3 className="text-lg font-medium">Agenda Items Details</h3>
-                    <AgendaDetails
-                      agendaItems={agendaItems}
-                      editingAgendaItem={agendaItemsHook.editingAgendaItem}
-                      handleEditAgendaItem={agendaItemsHook.handleEditAgendaItem}
-                      handleCancelEditAgendaItem={agendaItemsHook.handleCancelEditAgendaItem}
-                      handleUpdateAgendaItem={agendaItemsHook.handleUpdateAgendaItem}
-                      setEditingAgendaItem={agendaItemsHook.setEditingAgendaItem}
-                      handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
-                      setDeletingAgendaItemId={agendaItemsHook.setDeletingAgendaItemId}
-                      initialLoading={initialLoading}
-                    />
-                  </div>
+
+                  {/* Agenda Details Section */}
+                  <section>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-semibold text-foreground">Agenda Details</h2>
+                      <div className="text-sm text-muted-foreground">
+                        {agendaItems.length} item{agendaItems.length !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-6">
+                      <AgendaDetails
+                        agendaItems={agendaItems}
+                        editingAgendaItem={agendaItemsHook.editingAgendaItem}
+                        handleEditAgendaItem={agendaItemsHook.handleEditAgendaItem}
+                        handleCancelEditAgendaItem={agendaItemsHook.handleCancelEditAgendaItem}
+                        handleUpdateAgendaItem={agendaItemsHook.handleUpdateAgendaItem}
+                        setEditingAgendaItem={agendaItemsHook.setEditingAgendaItem}
+                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                        setDeletingAgendaItemId={agendaItemsHook.setDeletingAgendaItemId}
+                        initialLoading={initialLoading}
+                      />
+                    </div>
+                  </section>
                 </div>
               </TabsContent>
-              <TabsContent value="members" className="mt-6">
+              
+              <TabsContent value="members" className="mt-0 p-8">
                 <ProtocolMembers
                   protocolMembers={protocolMembers}
                   setProtocolMembers={setProtocolMembers}
@@ -513,7 +599,8 @@ export default function ProtocolPage() {
                   protocolId={protocolId}
                 />
               </TabsContent>
-              <TabsContent value="attachments" className="mt-6">
+              
+              <TabsContent value="attachments" className="mt-0 p-8">
                 <ProtocolAttachments
                   protocolAttachments={protocolAttachments}
                   handleUploadAttachment={attachmentsHook.handleUploadAttachment}
@@ -521,7 +608,8 @@ export default function ProtocolPage() {
                   formatDate={formatDate}
                 />
               </TabsContent>
-              <TabsContent value="messages" className="mt-6">
+              
+              <TabsContent value="messages" className="mt-0 p-8">
                 <ProtocolMessages
                   protocolMessages={protocolMessages}
                   formatDate={formatDate}
@@ -531,10 +619,11 @@ export default function ProtocolPage() {
                 />
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
+      {/* Dialogs */}
       <ConfirmDeleteAgendaItemDialog
         open={!!agendaItemsHook.deletingAgendaItemId}
         onOpenChange={() => agendaItemsHook.setDeletingAgendaItemId(null)}
@@ -551,7 +640,6 @@ export default function ProtocolPage() {
             setProtocolMembers(prev => prev.filter(m => m.id !== deletingMemberId));
             setDeletingMemberId(null);
           }
-          // Optionally handle error (toast, etc.)
         }}
       />
 
@@ -584,15 +672,15 @@ export default function ProtocolPage() {
       />
 
       <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
-        <DialogContent className="max-w-5xl w-full max-h-[80vh] bg-white flex flex-col p-0" style={{ borderRadius: 0 }}>
-          <DialogHeader className="sticky top-0 z-10 bg-white text-black flex flex-row items-center justify-between p-6 border-b shadow">
+        <DialogContent className="max-w-5xl w-full max-h-[80vh] bg-card flex flex-col p-0" style={{ borderRadius: 0 }}>
+          <DialogHeader className="sticky top-0 z-10 bg-card text-foreground flex flex-row items-center justify-between p-6 border-b shadow">
             <div className="flex items-center gap-2">
               <DialogTitle>Protocol PDF View</DialogTitle>
               <Button variant="secondary" onClick={() => window.print()} className="ml-4 rounded-md border border-blue-600 bg-blue-600 text-white shadow-sm flex items-center gap-2 hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none">
                 <Printer className="h-4 w-4" />
                 Print
               </Button>
-              <Button variant="secondary" onClick={() => setIsPdfModalOpen(false)} className="ml-2 rounded-md border border-gray-300 shadow-sm flex items-center gap-2 hover:bg-gray-100 hover:border-gray-400 focus:ring-2 focus:ring-blue-400">
+              <Button variant="secondary" onClick={() => setIsPdfModalOpen(false)} className="ml-2 rounded-md border border-border shadow-sm flex items-center gap-2 hover:bg-muted hover:border-border focus:ring-2 focus:ring-ring">
                 <X className="h-4 w-4" />
                 Cancel
               </Button>
