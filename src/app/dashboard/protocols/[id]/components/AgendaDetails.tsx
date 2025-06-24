@@ -42,6 +42,32 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
               <div key={item.id} className="space-y-4">
                 {editingAgendaItem?.id === item.id ? (
                   <form onSubmit={handleUpdateAgendaItem} className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-medium">
+                        {item.display_order ? `${item.display_order}.` : '•'} {item.title}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleCancelEditAgendaItem}
+                          disabled={initialLoading}
+                          className="h-8 w-8"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          variant="ghost"
+                          size="icon"
+                          disabled={initialLoading}
+                          className="h-8 w-8"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor={`title-${item.id}`}>Title</Label>
                       <Input
@@ -57,7 +83,6 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
                         required
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor={`topic-${item.id}`}>Topic Content</Label>
                       <textarea
@@ -73,7 +98,6 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
                         placeholder="Enter topic content"
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor={`decision-${item.id}`}>Decision Content</Label>
                       <textarea
@@ -88,28 +112,6 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
                         className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right"
                         placeholder="Enter decision content"
                       />
-                    </div>
-
-                    <div className="flex justify-end gap-4">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleCancelEditAgendaItem}
-                        disabled={initialLoading}
-                        className="h-8 w-8"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        variant="ghost"
-                        size="icon"
-                        disabled={initialLoading}
-                        className="h-8 w-8"
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
                     </div>
                   </form>
                 ) : (
