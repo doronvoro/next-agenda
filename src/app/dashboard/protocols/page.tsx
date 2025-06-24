@@ -340,7 +340,7 @@ export default function ProtocolsPage() {
   };
 
   const handleTasksProtocol = (protocolId: string) => {
-    window.location.href = `/dashboard/protocols/protocol-task-tracking?protocolId=${protocolId}`;
+    window.location.href = `/dashboard/protocols/protocol-task-tracking?protocolId=${protocolId}&returnTo=protocols`;
   };
 
   const handleDeleteProtocol = (protocol: Protocol) => {

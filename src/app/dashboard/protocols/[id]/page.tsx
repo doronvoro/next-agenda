@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare } from "lucide-react";
+import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -55,6 +55,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ProtocolPdfView from "./components/ProtocolPdfView";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
+import ProtocolPdfModal from "../components/ProtocolPdfModal";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -109,6 +110,7 @@ export default function ProtocolPage() {
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [futureTopics, setFutureTopics] = useState<Database["public"]["Tables"]["future_topics"]["Row"][]>([]);
   const [loadingFutureTopics, setLoadingFutureTopics] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const router = useRouter();
 
   const agendaApi = {
@@ -410,6 +412,21 @@ export default function ProtocolPage() {
                       <TooltipContent>Task Tracking</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => setIsExportModalOpen(true)}
+                          className="h-8 w-8"
+                        >
+                          <Download className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Export</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               )}
             </div>
@@ -594,6 +611,16 @@ export default function ProtocolPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Export PDF Modal */}
+      {protocol && (
+        <ProtocolPdfModal
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          protocolId={protocolId}
+          protocolNumber={protocol.number.toString()}
+        />
+      )}
     </div>
   );
 } 
