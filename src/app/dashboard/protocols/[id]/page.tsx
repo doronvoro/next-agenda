@@ -93,10 +93,10 @@ export default function ProtocolPage() {
   } = useProtocolData(protocolId);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<{
-    number: number;
+    number: string;
     committee_id: string;
   }>({
-    number: 0,
+    number: "",
     committee_id: "",
   });
   const [editDate, setEditDate] = useState<Date>();
@@ -196,7 +196,7 @@ export default function ProtocolPage() {
   const handleEdit = () => {
     if (protocol) {
       setEditFormData({
-        number: protocol.number,
+        number: protocol.number.toString(),
         committee_id: protocol.committee_id || "",
       });
       setEditDate(new Date(protocol.due_date));
@@ -210,20 +210,42 @@ export default function ProtocolPage() {
     setIsSaving(true);
     try {
       // Validate required fields
-      if (!editFormData.number || !editDate) {
+      if (!editFormData.number.trim() || !editDate) {
         throw new Error("Please fill in all required fields");
       }
       if (!editFormData.committee_id) {
         setError("Please select a committee.");
         return;
       }
+
+      // Store original data for rollback in case of error
+      const originalProtocol = protocol;
+
+      // Optimistic update - update local state immediately
+      if (protocol) {
+        const updatedProtocol = {
+          ...protocol,
+          number: editFormData.number.trim(),
+          committee_id: editFormData.committee_id,
+          due_date: editDate.toISOString(),
+        };
+        setProtocol(updatedProtocol);
+      }
+
       const { error } = await updateProtocol(protocolId || '', {
-        number: editFormData.number,
+        number: editFormData.number.trim(),
         committee_id: editFormData.committee_id,
         due_date: editDate.toISOString(),
       });
-      if (error) throw error;
-      await fetchData();
+      
+      if (error) {
+        // Rollback on error
+        if (originalProtocol) {
+          setProtocol(originalProtocol);
+        }
+        throw error;
+      }
+      
       setIsEditing(false);
       toast({ title: "Success", description: "Protocol updated successfully" });
     } catch (err) {
@@ -569,8 +591,8 @@ export default function ProtocolPage() {
                         initialLoading={initialLoading}
                         updateProtocol={updateProtocol}
                         protocolId={protocolId}
-                        fetchData={fetchData}
                         onCancel={() => setIsEditing(false)}
+                        onUpdate={handleUpdate}
                       />
                     ) : (
                       <div className="bg-muted/50 rounded-lg p-6">
