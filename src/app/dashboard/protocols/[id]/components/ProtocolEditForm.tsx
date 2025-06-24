@@ -11,16 +11,16 @@ import { format } from "date-fns";
 import type { Committee } from "../types";
 
 interface ProtocolEditFormProps {
-  editFormData: { number: number; committee_id: string };
-  setEditFormData: React.Dispatch<React.SetStateAction<{ number: number; committee_id: string }>>;
+  editFormData: { number: string; committee_id: string };
+  setEditFormData: React.Dispatch<React.SetStateAction<{ number: string; committee_id: string }>>;
   editDate: Date | undefined;
   setEditDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
   committees: Committee[];
   initialLoading: boolean;
   updateProtocol: (id: string, data: any) => Promise<{ error: any }>;
   protocolId: string;
-  fetchData: () => Promise<void>;
   onCancel: () => void;
+  onUpdate: (e: React.FormEvent) => Promise<void>;
 }
 
 export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
@@ -32,8 +32,8 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
   initialLoading,
   updateProtocol,
   protocolId,
-  fetchData,
   onCancel,
+  onUpdate,
 }) => {
   const [error, setError] = useState<string | null>(null);
 
@@ -46,21 +46,15 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
     e.preventDefault();
     setError(null);
     try {
-      if (!editFormData.number || !editDate) {
+      if (!editFormData.number.trim() || !editDate) {
         throw new Error("Please fill in all required fields");
       }
       if (!editFormData.committee_id) {
         setError("Please select a committee.");
         return;
       }
-      const { error } = await updateProtocol(protocolId || '', {
-        number: editFormData.number,
-        committee_id: editFormData.committee_id,
-        due_date: editDate.toISOString(),
-      });
-      if (error) throw error;
-      await fetchData();
-      onCancel();
+      
+      await onUpdate(e);
     } catch (err) {
       console.error("Error updating protocol:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -74,10 +68,10 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
           <Label htmlFor="number">Protocol Number *</Label>
           <Input
             id="number"
-            type="number"
-            value={editFormData.number.toString()}
+            type="text"
+            value={editFormData.number}
             onChange={(e) =>
-              setEditFormData({ ...editFormData, number: parseInt(e.target.value) || 0 })
+              setEditFormData({ ...editFormData, number: e.target.value })
             }
             placeholder="Enter protocol number"
             required

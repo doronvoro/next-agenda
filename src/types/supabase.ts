@@ -186,7 +186,7 @@ export type Database = {
       protocols: {
         Row: {
           id: string;
-          number: number;
+          number: string;
           due_date: string;
           committee_id: string | null;
           created_at: string;
@@ -194,7 +194,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          number: number;
+          number: string;
           due_date: string;
           committee_id?: string | null;
           created_at?: string;
@@ -202,7 +202,7 @@ export type Database = {
         };
         Update: {
           id?: string;
-          number?: number;
+          number?: string;
           due_date?: string;
           committee_id?: string | null;
           created_at?: string;
