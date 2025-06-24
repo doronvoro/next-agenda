@@ -19,6 +19,52 @@ interface ProtocolAttachmentsProps {
   formatDate: (dateString: string) => string;
 }
 
+const getFileTypeDisplay = (mimeType: string): string => {
+  const mimeTypeMap: { [key: string]: string } = {
+    // Microsoft Office
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel Spreadsheet',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word Document',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint Presentation',
+    'application/vnd.ms-excel': 'Excel Spreadsheet',
+    'application/msword': 'Word Document',
+    'application/vnd.ms-powerpoint': 'PowerPoint Presentation',
+    
+    // PDF
+    'application/pdf': 'PDF Document',
+    
+    // Images
+    'image/jpeg': 'JPEG Image',
+    'image/jpg': 'JPEG Image',
+    'image/png': 'PNG Image',
+    'image/gif': 'GIF Image',
+    'image/webp': 'WebP Image',
+    'image/svg+xml': 'SVG Image',
+    
+    // Text
+    'text/plain': 'Text File',
+    'text/csv': 'CSV File',
+    'text/html': 'HTML File',
+    
+    // Archives
+    'application/zip': 'ZIP Archive',
+    'application/x-rar-compressed': 'RAR Archive',
+    'application/x-7z-compressed': '7-Zip Archive',
+    
+    // Audio
+    'audio/mpeg': 'MP3 Audio',
+    'audio/wav': 'WAV Audio',
+    'audio/ogg': 'OGG Audio',
+    
+    // Video
+    'video/mp4': 'MP4 Video',
+    'video/avi': 'AVI Video',
+    'video/mov': 'MOV Video',
+    'video/wmv': 'WMV Video',
+  };
+
+  return mimeTypeMap[mimeType] || mimeType.split('/')[1]?.toUpperCase() || 'Unknown File Type';
+};
+
 const ProtocolAttachments: React.FC<ProtocolAttachmentsProps> = ({
   protocolAttachments,
   handleUploadAttachment,
@@ -79,7 +125,7 @@ const ProtocolAttachments: React.FC<ProtocolAttachmentsProps> = ({
                     {(attachment.file_size / 1024 / 1024).toFixed(2)} MB
                   </TableCell>
                   <TableCell>
-                    {attachment.mime_type}
+                    {getFileTypeDisplay(attachment.mime_type)}
                   </TableCell>
                   <TableCell>
                     {formatDate(attachment.created_at)}
