@@ -548,17 +548,29 @@ export default function ProtocolPage() {
           <div className="border-b border-border">
             <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
               <TabsList className="grid w-full grid-cols-4 h-12 rounded-none border-b-0 bg-transparent">
-                <TabsTrigger value="content" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                <TabsTrigger value="content" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
                   Document
+                  {currentTab === "content" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
+                  )}
                 </TabsTrigger>
-                <TabsTrigger value="members" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                <TabsTrigger value="members" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
                   Members
+                  {currentTab === "members" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
+                  )}
                 </TabsTrigger>
-                <TabsTrigger value="attachments" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                <TabsTrigger value="attachments" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
                   Attachments
+                  {currentTab === "attachments" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
+                  )}
                 </TabsTrigger>
-                <TabsTrigger value="messages" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                <TabsTrigger value="messages" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
                   Messages
+                  {currentTab === "messages" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
+                  )}
                 </TabsTrigger>
               </TabsList>
               
