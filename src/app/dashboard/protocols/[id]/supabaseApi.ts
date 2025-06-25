@@ -633,4 +633,42 @@ export async function fetchFutureTopicsWithoutAgendaItem() {
     .select("*")
     .is("related_agenda_item_id", null)
     .order("created_at", { ascending: false });
+}
+
+export async function fetchAllProtocolsWithDueDates() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("protocols")
+    .select("id, number, due_date, committee:committees!committee_id(name)")
+    .order("due_date", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchAllProtocolsWithDueDatesAndMessageSent() {
+  const supabase = createClient();
+  // Fetch protocols with committee name and latest message sent time (if any)
+  const { data, error } = await supabase
+    .from("protocols")
+    .select(`
+      id,
+      number,
+      due_date,
+      committee:committees!committee_id(name),
+      protocol_messages:protocol_messages(created_at)
+    `)
+    .order("due_date", { ascending: true });
+  if (error) throw error;
+  // Map to include latest message sent time (if any)
+  return (data || []).map((protocol: any) => {
+    let sent_time = null;
+    if (protocol.protocol_messages && protocol.protocol_messages.length > 0) {
+      sent_time = protocol.protocol_messages.reduce((latest: string, msg: any) =>
+        !latest || msg.created_at > latest ? msg.created_at : latest, null);
+    }
+    return {
+      ...protocol,
+      sent_time,
+    };
+  });
 } 

@@ -49,6 +49,11 @@ const items = [
     icon: BookOpen,
   },
   {
+    title: "Calendar",
+    url: "/dashboard/protocol-calendar",
+    icon: LayoutDashboard,
+  },
+  {
     title: "AI Protocol",
     url: "/dashboard/protocols/ai",
     icon: Computer,
