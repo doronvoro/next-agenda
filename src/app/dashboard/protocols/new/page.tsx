@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { addCommitteeMembersToProtocol } from "../[id]/supabaseApi";
 
 type Committee = {
   id: string;
@@ -92,41 +93,9 @@ export default function NewProtocolPage() {
 
       if (protocolError) throw protocolError;
 
-      // If a committee is selected, fetch its members and add them to protocol_members
+      // If a committee is selected, add its members to protocol_members (default status is now 2)
       if (formData.committee_id && protocolData) {
-        try {
-          // Fetch committee members
-          const { data: committeeMembers, error: membersError } = await supabase
-            .from("committees_members")
-            .select("name")
-            .eq("committee_id", formData.committee_id);
-
-          if (membersError) {
-            console.error("Error fetching committee members:", membersError);
-            // Don't throw error here, just log it and continue
-          } else if (committeeMembers && committeeMembers.length > 0) {
-            // Create protocol members from committee members
-            const protocolMembersData = committeeMembers.map(member => ({
-              protocol_id: protocolData.id,
-              name: member.name,
-              type: 1, // Default type
-              status: 1, // Default status
-              source_type: 1, // Committee member source type
-            }));
-
-            const { error: insertMembersError } = await supabase
-              .from("protocol_members")
-              .insert(protocolMembersData);
-
-            if (insertMembersError) {
-              console.error("Error inserting protocol members:", insertMembersError);
-              // Don't throw error here, just log it and continue
-            }
-          }
-        } catch (err) {
-          console.error("Error processing committee members:", err);
-          // Don't throw error here, just log it and continue
-        }
+        await addCommitteeMembersToProtocol(formData.committee_id, protocolData.id);
       }
 
       router.push(`/dashboard/protocols/${protocolData.id}`);
