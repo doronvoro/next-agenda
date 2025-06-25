@@ -3,7 +3,7 @@ import type { EditingAgendaItem, NewAgendaItem, EditingMember, NewMember } from 
 import type { Task } from '@/components/KanbanBoard';
 import type { Protocol, AgendaItem } from './types';
 
-export async function updateProtocol(protocolId: string, updateData: { number: number; committee_id: string; due_date: string }) {
+export async function updateProtocol(protocolId: string, updateData: { number: string; committee_id: string; due_date: string }) {
   const supabase = createClient();
   return supabase
     .from("protocols")
