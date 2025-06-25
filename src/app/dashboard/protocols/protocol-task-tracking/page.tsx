@@ -20,7 +20,7 @@ import type { AgendaItem } from "../[id]/types";
 
 interface Protocol {
   id: string;
-  number: number;
+  number: string;
   due_date: string;
 }
 
