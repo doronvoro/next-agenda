@@ -56,12 +56,11 @@ export default function ProtocolCalendarPage() {
     setModalOpen(true);
   };
 
-  const handleProtocolCreated = async (id: string) => {
+  const handleProtocolCreated = async () => {
     setModalOpen(false);
     setSelectedDate(null);
     setLoading(true);
     setRefreshFlag(f => f + 1);
-    window.location.href = `/dashboard/protocols/${id}`;
   };
 
   return (
@@ -94,7 +93,7 @@ export default function ProtocolCalendarPage() {
         </div>
       </div>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md w-full">
           <ProtocolCreateForm 
             initialDate={selectedDate}
             onSuccess={handleProtocolCreated}

@@ -55,42 +55,43 @@ export default function ProtocolCreateForm({ initialDate, onSuccess, onCancel }:
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-2 text-sm">
       <div>
-        <Label htmlFor="protocol-number">Protocol Number *</Label>
-        <Input
-          id="protocol-number"
-          value={protocolNumber}
-          onChange={e => setProtocolNumber(e.target.value)}
-          placeholder="Enter protocol number"
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="committee">Committee *</Label>
+        <Label htmlFor="committee" className="mb-1">Committee *</Label>
         <Select value={committeeId} onValueChange={setCommitteeId} required>
-          <SelectTrigger>
+          <SelectTrigger className="h-8 text-sm w-full">
             <SelectValue placeholder="Select a committee" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="text-sm">
             {committees.map((committee: any) => (
-              <SelectItem key={committee.id} value={committee.id}>
+              <SelectItem key={committee.id} value={committee.id} className="text-sm">
                 {committee.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
+      <div>
+        <Label htmlFor="protocol-number" className="mb-1">Protocol Number *</Label>
+        <Input
+          id="protocol-number"
+          value={protocolNumber}
+          onChange={e => setProtocolNumber(e.target.value)}
+          placeholder="Enter protocol number"
+          required
+          className="h-8 px-2 text-sm w-full"
+        />
+      </div>
       {initialDate && (
         <div>
-          <Label>Date</Label>
-          <Input value={initialDate.substring(0, 10)} disabled />
+          <Label className="mb-1">Date</Label>
+          <Input value={initialDate.substring(0, 10)} disabled className="h-8 px-2 text-sm bg-muted" />
         </div>
       )}
-      {error && <div className="text-red-500 text-sm">{error}</div>}
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={creating}>Cancel</Button>
-        <Button type="submit" disabled={creating || !committeeId}>{creating ? "Creating..." : "Create Protocol"}</Button>
+      {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
+      <div className="flex justify-end gap-2 mt-2">
+        <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={creating}>Cancel</Button>
+        <Button type="submit" size="sm" disabled={creating || !committeeId}>{creating ? "Creating..." : "Create Protocol"}</Button>
       </div>
     </form>
   );
