@@ -8,11 +8,13 @@ import { createClient } from "@/lib/supabase/client";
 
 interface ProtocolCreateFormProps {
   initialDate?: string | null;
+  date?: Date | null;
+  setDate?: (date: Date | null) => void;
   onSuccess: (protocolId: string) => void;
   onCancel: () => void;
 }
 
-export default function ProtocolCreateForm({ initialDate, onSuccess, onCancel }: ProtocolCreateFormProps) {
+export default function ProtocolCreateForm({ initialDate, date, setDate, onSuccess, onCancel }: ProtocolCreateFormProps) {
   const [protocolNumber, setProtocolNumber] = useState("");
   const [committeeId, setCommitteeId] = useState("");
   const [committees, setCommittees] = useState<any[]>([]);
@@ -55,35 +57,51 @@ export default function ProtocolCreateForm({ initialDate, onSuccess, onCancel }:
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2 text-sm">
+    <form onSubmit={handleSubmit} className="space-y-4 text-sm">
       <div>
-        <Label htmlFor="committee" className="mb-1">Committee *</Label>
-        <Select value={committeeId} onValueChange={setCommitteeId} required>
-          <SelectTrigger className="h-8 text-sm w-full">
-            <SelectValue placeholder="Select a committee" />
-          </SelectTrigger>
-          <SelectContent className="text-sm">
-            {committees.map((committee: any) => (
-              <SelectItem key={committee.id} value={committee.id} className="text-sm">
-                {committee.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="mb-2">
+          <Label htmlFor="committee" className="mb-1">Committee *</Label>
+          <Select value={committeeId} onValueChange={setCommitteeId} required>
+            <SelectTrigger className="h-8 text-sm w-full">
+              <SelectValue placeholder="Select a committee" />
+            </SelectTrigger>
+            <SelectContent className="text-sm">
+              {committees.map((committee: any) => (
+                <SelectItem key={committee.id} value={committee.id} className="text-sm">
+                  {committee.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div>
-        <Label htmlFor="protocol-number" className="mb-1">Protocol Number *</Label>
-        <Input
-          id="protocol-number"
-          value={protocolNumber}
-          onChange={e => setProtocolNumber(e.target.value)}
-          placeholder="Enter protocol number"
-          required
-          className="h-8 px-2 text-sm w-full"
-        />
+        <div className="mb-2">
+          <Label htmlFor="protocol-number" className="mb-1">Protocol Number *</Label>
+          <Input
+            id="protocol-number"
+            value={protocolNumber}
+            onChange={e => setProtocolNumber(e.target.value)}
+            placeholder="Enter protocol number"
+            required
+            className="h-8 px-2 text-sm w-full"
+          />
+        </div>
       </div>
-      {initialDate && (
-        <div>
+      {setDate && (
+        <div className="mb-2">
+          <Label className="mb-1">Due Date *</Label>
+          <Input
+            type="date"
+            value={typeof date === 'object' && date ? date.toISOString().substring(0, 10) : ""}
+            onChange={e => setDate(e.target.value ? new Date(e.target.value) : null)}
+            className="h-8 px-2 text-sm w-full"
+            required
+          />
+        </div>
+      )}
+      {initialDate && !setDate && (
+        <div className="mb-2">
           <Label className="mb-1">Date</Label>
           <Input value={initialDate.substring(0, 10)} disabled className="h-8 px-2 text-sm bg-muted" />
         </div>
