@@ -6,10 +6,15 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useEffect, useState } from "react";
 import { fetchAllProtocolsWithDueDatesAndMessageSent } from "../protocols/[id]/supabaseApi";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import ProtocolCreateForm from "./ProtocolCreateForm";
 
 export default function ProtocolCalendarPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [refreshFlag, setRefreshFlag] = useState(0);
 
   useEffect(() => {
     const fetchProtocols = async () => {
@@ -44,7 +49,20 @@ export default function ProtocolCalendarPage() {
       }
     };
     fetchProtocols();
-  }, []);
+  }, [refreshFlag]);
+
+  const handleDateSelect = (info: any) => {
+    setSelectedDate(info.startStr);
+    setModalOpen(true);
+  };
+
+  const handleProtocolCreated = async (id: string) => {
+    setModalOpen(false);
+    setSelectedDate(null);
+    setLoading(true);
+    setRefreshFlag(f => f + 1);
+    window.location.href = `/dashboard/protocols/${id}`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800 py-10 px-4">
@@ -70,10 +88,20 @@ export default function ProtocolCalendarPage() {
               selectable={true}
               events={events}
               height="auto"
+              select={handleDateSelect}
             />
           )}
         </div>
       </div>
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <ProtocolCreateForm 
+            initialDate={selectedDate}
+            onSuccess={handleProtocolCreated}
+            onCancel={() => setModalOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
       <style jsx global>{`
         .dark .fc {
           background-color: #18181b !important;
