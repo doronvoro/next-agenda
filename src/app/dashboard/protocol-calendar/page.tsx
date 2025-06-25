@@ -4,8 +4,48 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { useEffect, useState } from "react";
+import { fetchAllProtocolsWithDueDatesAndMessageSent } from "../protocols/[id]/supabaseApi";
 
 export default function ProtocolCalendarPage() {
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProtocols = async () => {
+      setLoading(true);
+      try {
+        const protocols = await fetchAllProtocolsWithDueDatesAndMessageSent();
+        const mappedEvents: any[] = [];
+        (protocols || []).forEach((protocol: any) => {
+          mappedEvents.push({
+            id: protocol.id,
+            title: `#${protocol.number}${protocol.committee?.name ? ` - ${protocol.committee.name}` : ""}`,
+            start: protocol.due_date,
+            allDay: true,
+            url: `/dashboard/protocols/${protocol.id}`,
+          });
+          if (protocol.sent_time) {
+            mappedEvents.push({
+              id: `${protocol.id}-sent`,
+              title: `Protocol #${protocol.number} sent`,
+              start: protocol.sent_time,
+              allDay: false,
+              url: `/dashboard/protocols/${protocol.id}`,
+              color: '#22c55e', // green for sent
+            });
+          }
+        });
+        setEvents(mappedEvents);
+      } catch (err) {
+        // Optionally handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProtocols();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800 py-10 px-4">
       <div className="max-w-5xl mx-auto">
@@ -15,19 +55,23 @@ export default function ProtocolCalendarPage() {
           {/* <button className="bg-primary text-white px-4 py-2 rounded shadow hover:bg-primary-dark transition">Add Event</button> */}
         </div>
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg p-6">
-          <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            }}
-            editable={true}
-            selectable={true}
-            events={[]}
-            height="auto"
-          />
+          {loading ? (
+            <div className="text-center py-10 text-gray-500 dark:text-gray-400">Loading events...</div>
+          ) : (
+            <FullCalendar
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              headerToolbar={{
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+              }}
+              editable={true}
+              selectable={true}
+              events={events}
+              height="auto"
+            />
+          )}
         </div>
       </div>
       <style jsx global>{`
