@@ -30,20 +30,10 @@ export default function NewProtocolPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label>Due Date *</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={date ? date.toISOString().substring(0, 10) : ""}
-                  onChange={e => setDate(e.target.value ? new Date(e.target.value) : null)}
-                  className="border rounded px-3 py-2"
-                  required
-                />
-              </div>
-            </div>
             <ProtocolCreateForm
               initialDate={date ? date.toISOString() : undefined}
+              setDate={setDate}
+              date={date}
               onSuccess={id => router.push(`/dashboard/protocols/${id}`)}
               onCancel={() => router.push("/dashboard/protocols")}
             />
