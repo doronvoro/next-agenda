@@ -671,4 +671,21 @@ export async function fetchAllProtocolsWithDueDatesAndMessageSent() {
       sent_time,
     };
   });
+}
+
+export async function createProtocol({ number, due_date, committee_id }: { number: string; due_date: string; committee_id?: string | null }) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("protocols")
+    .insert([
+      {
+        number,
+        due_date,
+        committee_id: committee_id || null,
+      },
+    ])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 } 
