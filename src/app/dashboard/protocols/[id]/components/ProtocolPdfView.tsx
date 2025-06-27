@@ -1,7 +1,6 @@
 import React from "react";
 import type { Protocol, AgendaItem, ProtocolMember, ProtocolAttachment, ProtocolMessage } from "../types";
 import { ProtocolDetailsFields } from "./ProtocolDetailsFields";
-import { Separator } from "@/components/ui/separator";
 
 interface ProtocolPdfViewProps {
   protocol: Protocol;
@@ -65,7 +64,7 @@ const ProtocolPdfView: React.FC<ProtocolPdfViewProps> = ({
           </div>
         </div>
       </section>
-      <Separator className="mb-8" />
+      <hr className="mb-8 border-t border-border" />
       {/* Agenda Section */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -88,7 +87,7 @@ const ProtocolPdfView: React.FC<ProtocolPdfViewProps> = ({
           )}
         </div>
       </section>
-      <Separator className="mb-8" />
+      <hr className="mb-8 border-t border-border" />
       {/* Agenda Details Section */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -119,7 +118,7 @@ const ProtocolPdfView: React.FC<ProtocolPdfViewProps> = ({
                           {item.topic_content ? (
                             <div className="whitespace-pre-wrap">{item.topic_content}</div>
                           ) : (
-                            <div className="text-muted-foreground italic">No topic content</div>
+                            <div className="text-muted-foreground italic">אין תוכן נושא</div>
                           )}
                         </div>
                       </div>
