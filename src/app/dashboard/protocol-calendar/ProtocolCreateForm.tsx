@@ -10,7 +10,7 @@ interface ProtocolCreateFormProps {
   initialDate?: string | null;
   date?: Date | null;
   setDate?: (date: Date | null) => void;
-  onSuccess: (protocolId: string) => void;
+  onSuccess: (protocolId: string, number: string) => void;
   onCancel: () => void;
 }
 
@@ -48,7 +48,7 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
         due_date: initialDate,
         committee_id: committeeId,
       });
-      onSuccess(protocol.id);
+      onSuccess(protocol.id, protocol.number);
     } catch (err: any) {
       setError(err?.message || "Failed to create protocol");
     } finally {
