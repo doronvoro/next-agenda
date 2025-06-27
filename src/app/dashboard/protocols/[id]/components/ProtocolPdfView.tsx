@@ -40,7 +40,7 @@ const ProtocolPdfView: React.FC<ProtocolPdfViewProps> = ({
       {/* Protocol Details Section */}
       <section className="mb-8">
         <div className="bg-muted/50 rounded-lg p-6 mb-6">
-          <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} company={company} />
+          <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} company={company} protocolMembers={protocolMembers} />
           <div className="mt-6 pt-4 border-t border-border">
             <div className="flex flex-row items-center mb-2">
               <div className="flex items-center gap-2">
@@ -101,20 +101,42 @@ const ProtocolPdfView: React.FC<ProtocolPdfViewProps> = ({
           {agendaItems.length === 0 ? (
             <div className="text-muted-foreground">לא נמצאו נושאים</div>
           ) : (
-            <ul className="space-y-6">
+            <div className="space-y-8">
               {agendaItems
                 .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
                 .map((item, idx) => (
-                  <li key={item.id} className="ml-2 flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted text-lg font-bold text-primary border border-border mt-1">{idx + 1}</span>
-                    <div>
-                      <div className="font-semibold mb-1">{item.title}</div>
-                      <div className="ml-4 mb-1 text-sm"><span className="font-medium">נושא:</span> {item.topic_content || "-"}</div>
-                      <div className="ml-4 text-sm"><span className="font-medium">החלטה:</span> {item.decision_content || "-"}</div>
+                  <div key={item.id} className="border border-border rounded-lg p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center justify-center w-8 h-8 bg-muted text-muted-foreground rounded-full text-sm font-medium">
+                        {item.display_order || idx + 1}
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
                     </div>
-                  </li>
+                    <div className="space-y-4 pl-11">
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-foreground">תוכן נושא</div>
+                        <div className="min-h-[80px] w-full rounded-lg border border-border/50 bg-muted/30 px-4 py-3 text-sm text-foreground">
+                          {item.topic_content ? (
+                            <div className="whitespace-pre-wrap">{item.topic_content}</div>
+                          ) : (
+                            <div className="text-muted-foreground italic">No topic content</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-foreground">תוכן החלטה</div>
+                        <div className="min-h-[80px] w-full rounded-lg border border-border/50 bg-muted/30 px-4 py-3 text-sm text-foreground">
+                          {item.decision_content ? (
+                            <div className="whitespace-pre-wrap">{item.decision_content}</div>
+                          ) : (
+                            <div className="text-muted-foreground italic">אין תוכן החלטה</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-            </ul>
+            </div>
           )}
         </div>
       </section>
