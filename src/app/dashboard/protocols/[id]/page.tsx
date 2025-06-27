@@ -51,12 +51,13 @@ import { createClient } from "@/lib/supabase/client";
 import { useAgendaItems } from "./hooks/useAgendaItems";
 import { useTextImprovement } from "./hooks/useTextImprovement";
 import { useAttachments } from "./hooks/useAttachments";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import ProtocolPdfView from "./components/ProtocolPdfView";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
 import ProtocolPdfModal from "../components/ProtocolPdfModal";
 import { Badge } from "@/components/ui/badge";
+import { DialogPrimitive } from "@/components/ui/dialog";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -771,15 +772,15 @@ export default function ProtocolPage() {
           <DialogHeader className="sticky top-0 z-10 bg-card text-foreground flex flex-row items-center justify-between p-6 border-b shadow">
             <div className="flex items-center gap-2">
               <DialogTitle>Protocol PDF View</DialogTitle>
-              <Button variant="secondary" onClick={() => window.print()} className="ml-4 rounded-md border border-blue-600 bg-blue-600 text-white shadow-sm flex items-center gap-2 hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none">
-                <Printer className="h-4 w-4" />
-                Print
-              </Button>
-              <Button variant="secondary" onClick={() => setIsPdfModalOpen(false)} className="ml-2 rounded-md border border-border shadow-sm flex items-center gap-2 hover:bg-muted hover:border-border focus:ring-2 focus:ring-ring">
-                <X className="h-4 w-4" />
-                Cancel
-              </Button>
             </div>
+            <DialogClose
+              onClick={() => setIsPdfModalOpen(false)}
+              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              aria-label="Close PDF view"
+            >
+              <X />
+              <span className="sr-only">Close</span>
+            </DialogClose>
           </DialogHeader>
           <div className="overflow-auto p-12 pt-6" style={{ maxHeight: "calc(80vh - 80px)" }}>
             <ProtocolPdfView
