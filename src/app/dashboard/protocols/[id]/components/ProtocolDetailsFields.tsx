@@ -2,8 +2,8 @@ import React from "react";
 import type { Protocol } from "../types";
 import { Calendar, Users, Hash, ExternalLink } from "lucide-react";
 
-const Field = ({ label, value, icon }: { label: string; value: React.ReactNode; icon?: React.ReactNode }) => (
-  <div className="flex items-start gap-3">
+const Field = ({ label, value, icon, className }: { label: string; value: React.ReactNode; icon?: React.ReactNode; className?: string }) => (
+  <div className={`flex items-start gap-3 ${className || ''}`}>
     {icon && (
       <div className="flex items-center justify-center w-5 h-5 text-muted-foreground mt-0.5">
         {icon}
@@ -44,30 +44,34 @@ export const ProtocolDetailsFields: React.FC<ProtocolDetailsFieldsProps> = ({ pr
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Field 
-          label="Meeting Date" 
-          value={formatDate(protocol.due_date)}
-          icon={<Calendar className="h-4 w-4" />}
-        />
-        
-        <Field 
-          label="Committee" 
-          value={protocol.committee?.name || 'Not specified'}
-          icon={<Users className="h-4 w-4" />}
-        />
-        
-        <Field 
-          label="Protocol Number" 
-          value={`#${protocol.number}`}
-          icon={<Hash className="h-4 w-4" />}
-        />
-        
-        <Field
-          label="Members"
-          value={`Total: ${total}, Present: ${present}, Absent: ${absent}`}
-          icon={<Users className="h-4 w-4" />}
-        />
+      <div className="w-full flex justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl w-full justify-items-center" dir="rtl">
+          <Field 
+            label="תאריך ישיבה" 
+            value={formatDate(protocol.due_date)}
+            icon={<Calendar className="h-4 w-4" />}
+          />
+          <Field 
+            label="מספר פרוטוקול" 
+            value={`#${protocol.number}`}
+            icon={<Hash className="h-4 w-4" />}
+          />
+          <Field 
+            label="Committee" 
+            value={protocol.committee?.name || 'Not specified'}
+            icon={<Users className="h-4 w-4" />}
+          />
+          <Field
+            label="Members"
+            value={
+              <span className="truncate block max-w-[150px]" title={`Total: ${total}, Present: ${present}, Absent: ${absent}`}>
+                {`Total: ${total}, Present: ${present}, Absent: ${absent}`}
+              </span>
+            }
+            icon={<Users className="h-4 w-4" />}
+            className="justify-end text-right"
+          />
+        </div>
       </div>
     </div>
   ); 
