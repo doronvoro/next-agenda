@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error(`Failed to generate PDF for protocol ${protocolId}:`, error);
+    console.error(`Failed to generate PDF for protocol ${protocolId}:`, error, (error instanceof Error ? error.stack : undefined));
     return NextResponse.json(
       { error: "Failed to generate PDF" },
       { status: 500 }
