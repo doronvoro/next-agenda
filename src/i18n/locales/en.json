@@ -236,6 +236,13 @@
       "viewPdfButton": "View PDF",
       "tasksButton": "Tasks",
       "exportButton": "Export",
+      "meetingDate": "Meeting Date",
+      "protocolNumber": "Protocol Number",
+      "companyNumber": "Company Number",
+      "protocol": "Protocol",
+      "total": "Total",
+      "present": "Present",
+      "absent": "Absent",
       "tabs": {
         "document": "Document",
         "members": "Members",

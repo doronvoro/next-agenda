@@ -235,6 +235,12 @@
       "viewPdfButton": "צפה ב-PDF",
       "tasksButton": "משימות",
       "exportButton": "ייצוא",
+      "meetingDate": "תאריך ישיבה",
+      "companyNumber": "ח.פ",
+      "protocol": "פרוטוקול",
+      "total": "סה״כ",
+      "present": "נוכח",
+      "absent": "נעדר",
       "tabs": {
         "document": "מסמך",
         "members": "חברים",
