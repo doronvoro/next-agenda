@@ -198,6 +198,13 @@
       "searchProtocols": "Search protocols...",
       "clearFilters": "Clear Filters",
       "showingResults": "Showing {showing} of {total} protocols",
+      "breadcrumb": {
+        "dashboard": "Dashboard",
+        "protocols": "Protocols",
+        "protocolId": "Protocol ID",
+        "aiProtocol": "AI Protocol"
+      },
+      "showingResults": "Showing {showing} of {total} protocols",
       "paginationResults": "Showing {from} to {to} of {total} results",
       "noProtocolsFound": "No protocols found",
       "noProtocolsMessage": "Get started by creating your first protocol.",

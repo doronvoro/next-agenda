@@ -198,6 +198,12 @@
       "searchProtocols": "חפש פרוטוקולים...",
       "clearFilters": "נקה סינון",
       "showingResults": "מציג {showing} מתוך {total} פרוטוקולים",
+      "breadcrumb": {
+        "dashboard": "לוח בקרה",
+        "protocols": "פרוטוקולים",
+        "protocolId": "מזהה פרוטוקול",
+        "aiProtocol": "פרוטוקול AI"
+      },
       "paginationResults": "מציג {from} עד {to} מתוך {total} תוצאות",
       "noProtocolsFound": "לא נמצאו פרוטוקולים",
       "noProtocolsMessage": "התחל על ידי יצירת הפרוטוקול הראשון שלך",

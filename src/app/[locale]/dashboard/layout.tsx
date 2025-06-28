@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ThemeProvider } from "next-themes";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Toaster } from "@/components/ui/sonner";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -14,6 +15,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
 
 import { AppSidebar } from "./sidebar";
 
@@ -24,6 +26,9 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [protocolNumber, setProtocolNumber] = React.useState<string | undefined>(undefined);
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
+  const t = useTranslations("dashboard.protocols.breadcrumb");
 
   const pathSegments = pathname.split("/").filter(Boolean);
 
@@ -56,19 +61,19 @@ export default function DashboardLayout({
     if (protocolNumber) {
       displayText = protocolNumber;
     } else if (pathSegments[2]) {
-      // If no protocol number but we have the ID, show a generic message
-      displayText = "Protocol";
+      // If no protocol number but we have the ID, show translated "Protocol ID"
+      displayText = t("protocolId");
     }
     
     customBreadcrumb = (
-      <Breadcrumb>
-        <BreadcrumbList>
+      <Breadcrumb dir={isRTL ? "rtl" : "ltr"} className={isRTL ? "rtl" : ""}>
+        <BreadcrumbList className={isRTL ? "flex-row-reverse" : ""}>
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/${pathSegments[0]}/dashboard`}>Dashboard</BreadcrumbLink>
+            <BreadcrumbLink href={`/${pathSegments[0]}/dashboard`}>{t("dashboard")}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/${pathSegments[0]}/dashboard/protocols`}>Protocols</BreadcrumbLink>
+            <BreadcrumbLink href={`/${pathSegments[0]}/dashboard/protocols`}>{t("protocols")}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -88,18 +93,18 @@ export default function DashboardLayout({
     pathSegments[2] === "ai"
   ) {
     customBreadcrumb = (
-      <Breadcrumb>
-        <BreadcrumbList>
+      <Breadcrumb dir={isRTL ? "rtl" : "ltr"} className={isRTL ? "rtl" : ""}>
+        <BreadcrumbList className={isRTL ? "flex-row-reverse" : ""}>
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/${pathSegments[0]}/dashboard`}>Dashboard</BreadcrumbLink>
+            <BreadcrumbLink href={`/${pathSegments[0]}/dashboard`}>{t("dashboard")}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/${pathSegments[0]}/dashboard/protocols`}>Protocols</BreadcrumbLink>
+            <BreadcrumbLink href={`/${pathSegments[0]}/dashboard/protocols`}>{t("protocols")}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>AI Protocol</BreadcrumbPage>
+            <BreadcrumbPage>{t("aiProtocol")}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -115,46 +120,93 @@ export default function DashboardLayout({
     >
       <SidebarProvider>
         <div className="flex h-screen w-screen bg-background" suppressHydrationWarning>
-          <AppSidebar />
-          <div className="flex-1 w-full">
-            <div className="flex items-center gap-4 px-5 pt-5">
-              <SidebarTrigger />
-              {customBreadcrumb ?? (
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink href={`/${pathSegments[0]}/dashboard`}>Dashboard</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    {pathSegments.slice(1).map((segment, index) => (
-                      <React.Fragment key={segment}>
-                        <BreadcrumbSeparator />
+          {isRTL ? (
+            <>
+              <div className="flex-1 w-full">
+                <div className="flex items-center gap-4 px-5 pt-5">
+                  <SidebarTrigger />
+                  {customBreadcrumb ?? (
+                    <Breadcrumb dir={isRTL ? "rtl" : "ltr"} className={isRTL ? "rtl" : ""}>
+                      <BreadcrumbList className={isRTL ? "flex-row-reverse" : ""}>
                         <BreadcrumbItem>
-                          {index === pathSegments.slice(1).length - 1 ? (
-                            <BreadcrumbPage className="capitalize">
-                              {segment}
-                            </BreadcrumbPage>
-                          ) : (
-                            <BreadcrumbLink
-                              href={`/${pathSegments
-                                .slice(0, index + 2)
-                                .join("/")}`}
-                              className="capitalize"
-                            >
-                              {segment}
-                            </BreadcrumbLink>
-                          )}
+                          <BreadcrumbLink href={`/${pathSegments[0]}/dashboard`}>{t("dashboard")}</BreadcrumbLink>
                         </BreadcrumbItem>
-                      </React.Fragment>
-                    ))}
-                  </BreadcrumbList>
-                </Breadcrumb>
-              )}
-            </div>
+                        {pathSegments.slice(1).map((segment, index) => (
+                          <React.Fragment key={segment}>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                              {index === pathSegments.slice(1).length - 1 ? (
+                                <BreadcrumbPage className="capitalize">
+                                  {segment}
+                                </BreadcrumbPage>
+                              ) : (
+                                <BreadcrumbLink
+                                  href={`/${pathSegments
+                                    .slice(0, index + 2)
+                                    .join("/")}`}
+                                  className="capitalize"
+                                >
+                                  {segment}
+                                </BreadcrumbLink>
+                              )}
+                            </BreadcrumbItem>
+                          </React.Fragment>
+                        ))}
+                      </BreadcrumbList>
+                    </Breadcrumb>
+                  )}
+                </div>
 
-            <div className="container mx-auto overflow-auto px-6 py-4 space-y-5">
-              {children}
-            </div>
-          </div>
+                <div className="container mx-auto overflow-auto px-6 py-4 space-y-5">
+                  {children}
+                </div>
+              </div>
+              <AppSidebar />
+            </>
+          ) : (
+            <>
+              <AppSidebar />
+              <div className="flex-1 w-full">
+                <div className="flex items-center gap-4 px-5 pt-5">
+                  <SidebarTrigger />
+                  {customBreadcrumb ?? (
+                    <Breadcrumb dir={isRTL ? "rtl" : "ltr"} className={isRTL ? "rtl" : ""}>
+                      <BreadcrumbList className={isRTL ? "flex-row-reverse" : ""}>
+                        <BreadcrumbItem>
+                          <BreadcrumbLink href={`/${pathSegments[0]}/dashboard`}>{t("dashboard")}</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        {pathSegments.slice(1).map((segment, index) => (
+                          <React.Fragment key={segment}>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                              {index === pathSegments.slice(1).length - 1 ? (
+                                <BreadcrumbPage className="capitalize">
+                                  {segment}
+                                </BreadcrumbPage>
+                              ) : (
+                                <BreadcrumbLink
+                                  href={`/${pathSegments
+                                    .slice(0, index + 2)
+                                    .join("/")}`}
+                                  className="capitalize"
+                                >
+                                  {segment}
+                                </BreadcrumbLink>
+                              )}
+                            </BreadcrumbItem>
+                          </React.Fragment>
+                        ))}
+                      </BreadcrumbList>
+                    </Breadcrumb>
+                  )}
+                </div>
+
+                <div className="container mx-auto overflow-auto px-6 py-4 space-y-5">
+                  {children}
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <Toaster />
       </SidebarProvider>
