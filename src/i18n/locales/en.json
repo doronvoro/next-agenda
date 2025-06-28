@@ -140,7 +140,11 @@
         "addTopicsForFuture": "Add topics for future meetings",
         "alertsNotifications": "Alerts & Notifications",
         "allCaughtUp": "All caught up!",
-        "noUrgentAlerts": "No urgent alerts at the moment"
+        "noUrgentAlerts": "No urgent alerts at the moment",
+        "noAgendaItemsYet": "No agenda items yet",
+        "addAgendaItemsToSeeTheirDetailsHere": "Add agenda items to see their details here",
+        "addItemButton": "Add Item",
+        "fromFutureTopic": "From Future Topic"
       },
       "statuses": {
         "overdue": "Overdue",
@@ -309,6 +313,8 @@
         "enterTopicContent": "Enter topic content",
         "decisionContent": "Decision Content",
         "enterDecisionContent": "Enter decision content",
+        "noTopicContent": "No topic content",
+        "noDecisionContent": "No decision content",
         "topicInfo": "Enter the topic content for this agenda item. You can dictate or paste text.",
         "decisionInfo": "Enter the decision content for this agenda item. You can dictate or paste text.",
         "compareVersions": "Compare Versions",
@@ -379,6 +385,8 @@
     "agenda": {
       "title": "Agenda",
       "addItem": "Add agenda item",
+      "addItemButton": "Add Item",
+      "fromFutureTopic": "From Future Topic",
       "topicContent": "Topic Content",
       "decisionContent": "Decision Content",
       "enterTitle": "Enter agenda item title",
@@ -391,7 +399,9 @@
       "stopVoice": "Stop voice input",
       "startVoice": "Start voice input",
       "topicInfo": "Enter the topic content for this agenda item. You can dictate or paste text.",
-      "decisionInfo": "Enter the decision content for this agenda item. You can dictate or paste text."
+      "decisionInfo": "Enter the decision content for this agenda item. You can dictate or paste text.",
+      "noTopicContent": "No topic content",
+      "noDecisionContent": "No decision content"
     },
     "tasks": {
       "title": "Tasks",

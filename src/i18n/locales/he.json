@@ -140,7 +140,11 @@
         "addTopicsForFuture": "הוסף נושאים לפגישות עתידיות",
         "alertsNotifications": "התראות ועדכונים",
         "allCaughtUp": "הכל מעודכן!",
-        "noUrgentAlerts": "אין התראות דחופות כרגע"
+        "noUrgentAlerts": "אין התראות דחופות כרגע",
+        "noAgendaItemsYet": "אין פריטי סדר יום עדיין",
+        "addAgendaItemsToSeeTheirDetailsHere": "הוסף פריטי סדר יום כדי לראות את הפרטים שלהם כאן",
+        "addItemButton": "הוסף פריט",
+        "fromFutureTopic": "מנושא עתידי"
       },
       "statuses": {
         "overdue": "באיחור",
@@ -308,6 +312,8 @@
         "enterTopicContent": "הזן תוכן נושא",
         "decisionContent": "תוכן ההחלטה",
         "enterDecisionContent": "הזן תוכן החלטה",
+        "noTopicContent": "אין תוכן נושא",
+        "noDecisionContent": "אין תוכן החלטה",
         "topicInfo": "הזן את תוכן הנושא לפריט סדר יום זה. אתה יכול להקליד או להדביק טקסט.",
         "decisionInfo": "הזן את תוכן ההחלטה לפריט סדר יום זה. אתה יכול להקליד או להדביק טקסט.",
         "compareVersions": "השווה גרסאות",
@@ -490,6 +496,8 @@
     "agenda": {
       "title": "סדר יום",
       "addItem": "הוסף פריט לסדר יום",
+      "addItemButton": "הוסף פריט",
+      "fromFutureTopic": "מנושא עתידי",
       "topicContent": "תוכן הנושא",
       "decisionContent": "תוכן ההחלטה",
       "enterTitle": "הזן כותרת לפריט סדר יום",

@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslations } from "next-intl";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
 import AgendaList from "./components/AgendaList";
 import AgendaDetails from "./components/AgendaDetails";
 import ProtocolMembers from "./components/ProtocolMembers";
@@ -72,8 +73,11 @@ declare global {
 
 export default function ProtocolPage() {
   const params = useParams();
+  const pathname = usePathname();
   const { toast } = useToast();
   const t = useTranslations("dashboard.protocols");
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
   
   // Debug logs for locale and translation
   console.log("🔍 ProtocolPage Debug:");
@@ -615,8 +619,8 @@ export default function ProtocolPage() {
                 <div className="space-y-8">
                   {/* Protocol Details Section */}
                   <section>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">{t("sections.protocolDetails")}</h2>
+                    <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <h2 className={`text-xl font-semibold text-foreground ${isRTL ? 'text-right' : 'text-left'}`}>{t("sections.protocolDetails")}</h2>
                       {!isEditing && (
                         <Button
                           variant="ghost"
@@ -654,8 +658,8 @@ export default function ProtocolPage() {
 
                   {/* Agenda Section */}
                   <section>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">{t("sections.agenda")}</h2>
+                    <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <h2 className={`text-xl font-semibold text-foreground ${isRTL ? 'text-right' : 'text-left'}`}>{t("sections.agenda")}</h2>
                     </div>
                     <div className="bg-card border border-border rounded-lg">
                       <AgendaList
@@ -680,8 +684,8 @@ export default function ProtocolPage() {
 
                   {/* Agenda Details Section */}
                   <section>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">{t("sections.agendaDetails")}</h2>
+                    <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <h2 className={`text-xl font-semibold text-foreground ${isRTL ? 'text-right' : 'text-left'}`}>{t("sections.agendaDetails")}</h2>
                       <div className="text-sm text-muted-foreground">
                         {agendaItems.length} {agendaItems.length !== 1 ? t("items") : t("item")}
                       </div>

@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { usePathname } from "next/navigation";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
+import { useTranslations } from "next-intl";
 import SortableAgendaItem from "./SortableAgendaItem";
 import type { AgendaItem, NewAgendaItem } from "../types";
 import type { Database } from "@/types/supabase";
@@ -49,6 +52,11 @@ const AgendaList: React.FC<AgendaListProps> = ({
 
   const [selectedTopicId, setSelectedTopicId] = React.useState<string>("");
   const [isCreating, setIsCreating] = React.useState(false);
+
+  const pathname = usePathname();
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
+  const t = useTranslations("dashboard.main.sections");
 
   const handleTopicSelection = (topicId: string) => {
     setSelectedTopicId(topicId);
@@ -175,19 +183,19 @@ const AgendaList: React.FC<AgendaListProps> = ({
             </div>
           ) : (
             <div className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-500/20"
+                          className={`h-8 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-500/20 ${isRTL ? 'flex-row-reverse' : ''}`}
                           onClick={() => setNewAgendaItem({ title: "", isEditing: true })}
                         >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Item
+                          <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          {t("addItemButton")}
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -199,7 +207,7 @@ const AgendaList: React.FC<AgendaListProps> = ({
                   {futureTopics.length > 0 && (
                     <>
                       <div className="text-muted-foreground text-sm">or</div>
-                      <div className="flex items-center gap-2">
+                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -208,10 +216,10 @@ const AgendaList: React.FC<AgendaListProps> = ({
                                 onValueChange={handleTopicSelection} 
                                 disabled={loadingFutureTopics}
                               >
-                                <SelectTrigger className="h-8 px-3 w-auto min-w-[200px] border-blue-200 text-blue-600 hover:bg-blue-500/10 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-500/20">
-                                  <Sparkles className="h-4 w-4 mr-2 text-blue-500" />
-                                  <SelectValue placeholder={loadingFutureTopics ? "Loading..." : "From Future Topic"} />
-                                  <Badge variant="secondary" className="ml-2 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                <SelectTrigger className={`h-8 px-3 w-auto min-w-[200px] border-blue-200 text-blue-600 hover:bg-blue-500/10 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-500/20 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                  <Sparkles className={`h-4 w-4 text-blue-500 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                  <SelectValue placeholder={loadingFutureTopics ? "Loading..." : t("fromFutureTopic")} />
+                                  <Badge variant="secondary" className={`text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 ${isRTL ? 'mr-2' : 'ml-2'}`}>
                                     {futureTopics.length}
                                   </Badge>
                                 </SelectTrigger>

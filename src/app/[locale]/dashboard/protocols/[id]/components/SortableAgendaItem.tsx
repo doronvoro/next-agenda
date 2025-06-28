@@ -5,6 +5,8 @@ import { GripVertical, Eye, Edit3, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AgendaItem } from "../types";
+import { usePathname } from "next/navigation";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +31,9 @@ const SortableAgendaItem: React.FC<SortableAgendaItemProps> = ({
   onEditTitle,
   onDelete 
 }) => {
+  const pathname = usePathname();
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(item.title);
   const [isSaving, setIsSaving] = useState(false);
@@ -107,7 +112,7 @@ const SortableAgendaItem: React.FC<SortableAgendaItemProps> = ({
       <div
         ref={setNodeRef}
         style={style}
-        className="group flex items-center gap-3 py-3 px-4 hover:bg-muted/50 transition-colors"
+        className={`group flex items-center gap-3 py-3 px-4 hover:bg-muted/50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
       >
         <button
           className="cursor-grab touch-none p-1 hover:bg-muted rounded-md transition-colors opacity-0 group-hover:opacity-100"
@@ -122,17 +127,17 @@ const SortableAgendaItem: React.FC<SortableAgendaItemProps> = ({
         </div>
         
         {isEditing ? (
-          <div className="flex-1 flex items-center gap-2">
+          <div className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Input
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               onKeyDown={handleKeyDown}
               onBlur={handleSaveEdit}
               autoFocus
-              className="flex-1 h-8 text-sm border-0 border-b-2 border-primary focus:border-primary focus:ring-0 px-0 py-1 rounded-none bg-transparent"
+              className={`flex-1 h-8 text-sm border-0 border-b-2 border-primary focus:border-primary focus:ring-0 px-0 py-1 rounded-none bg-transparent ${isRTL ? 'text-right' : 'text-left'}`}
               disabled={isSaving}
             />
-            <div className="flex items-center gap-1">
+            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -155,14 +160,14 @@ const SortableAgendaItem: React.FC<SortableAgendaItemProps> = ({
           </div>
         ) : (
           <span 
-            className="flex-1 text-foreground cursor-pointer hover:text-primary transition-colors"
+            className={`flex-1 text-foreground cursor-pointer hover:text-primary transition-colors ${isRTL ? 'text-right' : 'text-left'}`}
             onClick={onViewClick ? () => onViewClick(item) : undefined}
           >
             {item.title}
           </span>
         )}
         
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${isRTL ? 'flex-row-reverse' : ''}`}>
           {!isEditing && onViewClick && (
             <Button
               variant="ghost"
