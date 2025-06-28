@@ -72,6 +72,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
 
 type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
   committee: Database["public"]["Tables"]["committees"]["Row"] | null;
@@ -106,6 +108,9 @@ const getStatusBadge = (dueDate: string, t: any) => {
 export default function ProtocolsPage() {
   const t = useTranslations('dashboard.protocols');
   const commonT = useTranslations('common');
+  const pathname = usePathname();
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
   const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [committees, setCommittees] = useState<Committee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -443,18 +448,21 @@ export default function ProtocolsPage() {
 
       {/* Filters and Search */}
       <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Filter className="h-5 w-5" />
             {t('filtersAndSearch')}
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <CardContent className="space-y-6">
+          {/* Filter Controls Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Search */}
-            <div className="space-y-2">
-              <Label htmlFor="search">{commonT('labels.search')}</Label>
-              <div className="relative">
+            <div className="space-y-3 w-full">
+              <Label htmlFor="search" className="text-sm font-medium">
+                {commonT('labels.search')}
+              </Label>
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
@@ -464,14 +472,16 @@ export default function ProtocolsPage() {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="pl-10"
+                  className="pl-10 h-10 w-full"
                 />
               </div>
             </div>
 
             {/* Committee Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="committee">{t('committee')}</Label>
+            <div className="space-y-3 w-full">
+              <Label htmlFor="committee" className="text-sm font-medium">
+                {t('committee')}
+              </Label>
               <Select
                 value={selectedCommittee}
                 onValueChange={(value) => {
@@ -479,13 +489,13 @@ export default function ProtocolsPage() {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10 w-full" dir={isRTL ? "rtl" : "ltr"}>
                   <SelectValue placeholder={t('allCommittees')} />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('allCommittees')}</SelectItem>
+                <SelectContent dir={isRTL ? "rtl" : "ltr"} className={isRTL ? "text-right" : "text-left"}>
+                  <SelectItem value="all" className={isRTL ? "text-right" : "text-left"}>{t('allCommittees')}</SelectItem>
                   {committees.map((committee) => (
-                    <SelectItem key={committee.id} value={committee.id}>
+                    <SelectItem key={committee.id} value={committee.id} className={isRTL ? "text-right" : "text-left"}>
                       {committee.name}
                     </SelectItem>
                   ))}
@@ -494,8 +504,10 @@ export default function ProtocolsPage() {
             </div>
 
             {/* Status Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="status">{t('status')}</Label>
+            <div className="space-y-3 w-full">
+              <Label htmlFor="status" className="text-sm font-medium">
+                {t('status')}
+              </Label>
               <Select
                 value={statusFilter}
                 onValueChange={(value) => {
@@ -503,27 +515,29 @@ export default function ProtocolsPage() {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10 w-full" dir={isRTL ? "rtl" : "ltr"}>
                   <SelectValue placeholder={t('allStatuses')} />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('allStatuses')}</SelectItem>
-                  <SelectItem value="overdue">{t('overdue')}</SelectItem>
-                  <SelectItem value="due-soon">{t('dueSoon')}</SelectItem>
-                  <SelectItem value="on-track">{t('onTrack')}</SelectItem>
+                <SelectContent dir={isRTL ? "rtl" : "ltr"} className={isRTL ? "text-right" : "text-left"}>
+                  <SelectItem value="all" className={isRTL ? "text-right" : "text-left"}>{t('allStatuses')}</SelectItem>
+                  <SelectItem value="overdue" className={isRTL ? "text-right" : "text-left"}>{t('overdue')}</SelectItem>
+                  <SelectItem value="due-soon" className={isRTL ? "text-right" : "text-left"}>{t('dueSoon')}</SelectItem>
+                  <SelectItem value="on-track" className={isRTL ? "text-right" : "text-left"}>{t('onTrack')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Date Range */}
-            <div className="space-y-2">
-              <Label>{t('dueDateRange')}</Label>
+            <div className="space-y-3 w-full">
+              <Label className="text-sm font-medium">
+                {t('dueDateRange')}
+              </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal h-10",
                       !dateRange?.from && !dateRange?.to && "text-muted-foreground"
                     )}
                   >
@@ -558,8 +572,8 @@ export default function ProtocolsPage() {
             </div>
           </div>
 
-          {/* Clear Filters */}
-          <div className="flex justify-between items-center mt-4 pt-4 border-t">
+          {/* Clear Filters and Results Summary */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t">
             <div className="text-sm text-muted-foreground">
               {t('showingResults', { showing: filteredAndSortedProtocols.length, total: protocols.length })}
             </div>
@@ -568,6 +582,7 @@ export default function ProtocolsPage() {
               size="sm"
               onClick={clearFilters}
               disabled={!searchTerm && selectedCommittee === "all" && !dateRange?.from && statusFilter === "all"}
+              className="px-4 py-2"
             >
               {t('clearFilters')}
             </Button>
@@ -601,26 +616,26 @@ export default function ProtocolsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>
+                    <TableHead className={isRTL ? "text-right" : "text-left"}>
                       <SortableHeader field="number">{t('protocolNumber')}</SortableHeader>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className={isRTL ? "text-right" : "text-left"}>
                       <SortableHeader field="committee_name">{t('committee')}</SortableHeader>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className={isRTL ? "text-right" : "text-left"}>
                       <SortableHeader field="due_date">{t('dueDate')}</SortableHeader>
                     </TableHead>
-                    <TableHead>{t('status')}</TableHead>
-                    <TableHead>
+                    <TableHead className={isRTL ? "text-right" : "text-left"}>{t('status')}</TableHead>
+                    <TableHead className={isRTL ? "text-right" : "text-left"}>
                       <SortableHeader field="created_at">{t('created')}</SortableHeader>
                     </TableHead>
-                    <TableHead className="w-[100px]">{t('actions')}</TableHead>
+                    <TableHead className={cn("w-[100px]", isRTL ? "text-right" : "text-left")}>{t('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedProtocols.map((protocol) => (
                     <TableRow key={protocol.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className={cn("font-medium", isRTL ? "text-right" : "text-left")}>
                         <Link 
                           href={`/dashboard/protocols/${protocol.id}`}
                           className="text-primary hover:underline"
@@ -628,15 +643,15 @@ export default function ProtocolsPage() {
                           #{protocol.number}
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={isRTL ? "text-right" : "text-left"}>
                         {protocol.committee?.name || (
                           <span className="text-muted-foreground">{t('noCommittee')}</span>
                         )}
                       </TableCell>
-                      <TableCell>{formatDate(protocol.due_date)}</TableCell>
-                      <TableCell>{getStatusBadge(protocol.due_date, t)}</TableCell>
-                      <TableCell>{formatDate(protocol.created_at)}</TableCell>
-                      <TableCell>
+                      <TableCell className={isRTL ? "text-right" : "text-left"}>{formatDate(protocol.due_date)}</TableCell>
+                      <TableCell className={isRTL ? "text-right" : "text-left"}>{getStatusBadge(protocol.due_date, t)}</TableCell>
+                      <TableCell className={isRTL ? "text-right" : "text-left"}>{formatDate(protocol.created_at)}</TableCell>
+                      <TableCell className={isRTL ? "text-right" : "text-left"}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
