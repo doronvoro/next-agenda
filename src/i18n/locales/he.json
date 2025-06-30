@@ -547,6 +547,19 @@
         },
         "status": "סטטוס",
         "priority": "עדיפות"
+      },
+      "createForm": {
+        "committee": "ועדה",
+        "selectCommittee": "בחר ועדה",
+        "protocolNumber": "מספר פרוטוקול",
+        "enterProtocolNumber": "הזן מספר פרוטוקול",
+        "dueDate": "תאריך יעד",
+        "date": "תאריך",
+        "cancel": "ביטול",
+        "creating": "יוצר...",
+        "createProtocol": "צור פרוטוקול",
+        "allFieldsRequired": "יש למלא את כל השדות",
+        "failedToCreate": "נכשל ביצירת פרוטוקול"
       }
     },
     "agenda": {

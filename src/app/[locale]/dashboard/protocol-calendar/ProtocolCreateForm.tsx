@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createProtocol } from "../protocols/[id]/supabaseApi";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
 
 interface ProtocolCreateFormProps {
   initialDate?: string | null;
@@ -20,6 +23,10 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
   const [committees, setCommittees] = useState<any[]>([]);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("dashboard.protocols.createForm");
+  const pathname = usePathname();
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
 
   useEffect(() => {
     const fetchCommittees = async () => {
@@ -57,13 +64,13 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+    <form onSubmit={handleSubmit} className={`space-y-4 text-sm${isRTL ? ' text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div>
         <div className="mb-2">
-          <Label htmlFor="committee" className="mb-1">Committee *</Label>
+          <Label htmlFor="committee" className="mb-1">{t("committee")} *</Label>
           <Select value={committeeId} onValueChange={setCommitteeId} required>
             <SelectTrigger className="h-8 text-sm w-full">
-              <SelectValue placeholder="Select a committee" />
+              <SelectValue placeholder={t("selectCommittee")}/>
             </SelectTrigger>
             <SelectContent className="text-sm">
               {committees.map((committee: any) => (
@@ -77,12 +84,12 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
       </div>
       <div>
         <div className="mb-2">
-          <Label htmlFor="protocol-number" className="mb-1">Protocol Number *</Label>
+          <Label htmlFor="protocol-number" className="mb-1">{t("protocolNumber")} *</Label>
           <Input
             id="protocol-number"
             value={protocolNumber}
             onChange={e => setProtocolNumber(e.target.value)}
-            placeholder="Enter protocol number"
+            placeholder={t("enterProtocolNumber")}
             required
             className="h-8 px-2 text-sm w-full"
           />
@@ -90,7 +97,7 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
       </div>
       {setDate && (
         <div className="mb-2">
-          <Label className="mb-1">Due Date *</Label>
+          <Label className="mb-1">{t("dueDate")} *</Label>
           <Input
             type="date"
             value={typeof date === 'object' && date ? date.toISOString().substring(0, 10) : ""}
@@ -102,14 +109,14 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
       )}
       {initialDate && !setDate && (
         <div className="mb-2">
-          <Label className="mb-1">Date</Label>
+          <Label className="mb-1">{t("date")}</Label>
           <Input value={initialDate.substring(0, 10)} disabled className="h-8 px-2 text-sm bg-muted" />
         </div>
       )}
-      {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
-      <div className="flex justify-end gap-2 mt-2">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={creating}>Cancel</Button>
-        <Button type="submit" size="sm" disabled={creating || !committeeId}>{creating ? "Creating..." : "Create Protocol"}</Button>
+      {error && <div className="text-red-500 text-xs mt-1">{t(error)}</div>}
+      <div className={`flex justify-end gap-2 mt-2${isRTL ? ' flex-row-reverse' : ''}`}>
+        <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={creating}>{t("cancel")}</Button>
+        <Button type="submit" size="sm" disabled={creating || !committeeId}>{creating ? t("creating") : t("createProtocol")}</Button>
       </div>
     </form>
   );

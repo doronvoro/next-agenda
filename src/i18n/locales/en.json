@@ -570,6 +570,19 @@
         "memberEmail": "Member Email",
         "role": "Role",
         "actions": "Actions"
+      },
+      "createForm": {
+        "committee": "Committee",
+        "selectCommittee": "Select a committee",
+        "protocolNumber": "Protocol Number",
+        "enterProtocolNumber": "Enter protocol number",
+        "dueDate": "Due Date",
+        "date": "Date",
+        "cancel": "Cancel",
+        "creating": "Creating...",
+        "createProtocol": "Create Protocol",
+        "allFieldsRequired": "All fields are required",
+        "failedToCreate": "Failed to create protocol"
       }
     },
     "agenda": {
