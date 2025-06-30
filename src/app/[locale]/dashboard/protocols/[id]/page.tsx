@@ -79,21 +79,6 @@ export default function ProtocolPage() {
   const currentLocale = getLocaleFromPathname(pathname);
   const isRTL = currentLocale === 'he';
   
-  // Debug logs for locale and translation
-  console.log("🔍 ProtocolPage Debug:");
-  console.log("Params:", params);
-  console.log("Locale from params:", params.locale);
-  console.log("Translation namespace:", "dashboard.protocols");
-  console.log("Translation function:", t);
-  
-  // Test basic translation
-  try {
-    const testTranslation = t("title");
-    console.log("✅ Protocol page translation test successful:", testTranslation);
-  } catch (error) {
-    console.error("❌ Protocol page translation test failed:", error);
-  }
-
   const protocolId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
   const {
     protocol,
@@ -288,7 +273,7 @@ export default function ProtocolPage() {
       }
       
       setIsEditing(false);
-      toast({ title: "Success", description: "Protocol updated successfully" });
+      toast({ title: t("toast.protocolUpdated"), description: t("toast.protocolUpdated") });
     } catch (err) {
       console.error("Error updating protocol:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -344,11 +329,11 @@ export default function ProtocolPage() {
       setSelectedAgendaItem(prev => prev && prev.id === popupEditingAgendaItem.id ? { ...prev, ...popupEditingAgendaItem } : prev);
       setIsPopupEditing(false);
       setIsAgendaItemDialogOpen(false);
-      toast({ title: "Success", description: "Agenda item updated successfully" });
+      toast({ title: t("toast.agendaItemUpdated"), description: t("toast.agendaItemUpdated") });
     } catch (err) {
       console.error("Error updating agenda item:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item" });
+      toast({ variant: "destructive", title: t("toast.agendaItemUpdateFailed"), description: t("toast.agendaItemUpdateFailed") });
     }
   };
 
@@ -383,7 +368,7 @@ export default function ProtocolPage() {
       );
 
       if (error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to create agenda item" });
+        toast({ variant: "destructive", title: t("toast.agendaItemCreateFailed"), description: t("toast.agendaItemCreateFailed") });
         return;
       }
 
@@ -398,11 +383,11 @@ export default function ProtocolPage() {
         setAgendaItems(prev => [...prev, newAgendaItem]);
         setFutureTopics(prev => prev.filter(topic => topic.id !== topicId));
 
-        toast({ title: "Success", description: "Agenda item created from future topic" });
+        toast({ title: t("toast.agendaItemCreatedFromTopic"), description: t("toast.agendaItemCreatedFromTopic") });
       }
     } catch (err) {
       console.error("Error creating agenda item from future topic:", err);
-      toast({ variant: "destructive", title: "Error", description: "Failed to create agenda item from future topic" });
+      toast({ variant: "destructive", title: t("toast.agendaItemCreateFromTopicFailed"), description: t("toast.agendaItemCreateFromTopicFailed") });
     }
   };
 
@@ -410,7 +395,7 @@ export default function ProtocolPage() {
     try {
       const item = agendaItems.find(item => item.id === itemId);
       if (!item) {
-        toast({ variant: "destructive", title: "Error", description: "Agenda item not found" });
+        toast({ variant: "destructive", title: t("toast.agendaItemNotFound"), description: t("toast.agendaItemNotFound") });
         return;
       }
 
@@ -421,7 +406,7 @@ export default function ProtocolPage() {
         decision_content: item.decision_content || ""
       });
       if (error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item title" });
+        toast({ variant: "destructive", title: t("toast.agendaItemTitleUpdateFailed"), description: t("toast.agendaItemTitleUpdateFailed") });
         return;
       }
 
@@ -430,11 +415,10 @@ export default function ProtocolPage() {
         item.id === itemId ? { ...item, title: newTitle } : item
       ));
 
-      toast({ title: "Success", description: "Agenda item title updated" });
+      toast({ title: t("toast.agendaItemTitleUpdated"), description: t("toast.agendaItemTitleUpdated") });
     } catch (err) {
       console.error("Error updating agenda item title:", err);
-      toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item title" });
-      throw err;
+      toast({ variant: "destructive", title: t("toast.agendaItemTitleUpdateFailed"), description: t("toast.agendaItemTitleUpdateFailed") });
     }
   };
 
@@ -442,17 +426,17 @@ export default function ProtocolPage() {
     try {
       const { error } = await apiDeleteAgendaItem(itemId);
       if (error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to delete agenda item" });
+        toast({ variant: "destructive", title: t("toast.agendaItemDeleteFailed"), description: t("toast.agendaItemDeleteFailed") });
         return;
       }
 
       // Update local state
       setAgendaItems(prev => prev.filter(item => item.id !== itemId));
 
-      toast({ title: "Success", description: "Agenda item deleted" });
+      toast({ title: t("toast.agendaItemDeleted"), description: t("toast.agendaItemDeleted") });
     } catch (err) {
       console.error("Error deleting agenda item:", err);
-      toast({ variant: "destructive", title: "Error", description: "Failed to delete agenda item" });
+      toast({ variant: "destructive", title: t("toast.agendaItemDeleteFailed"), description: t("toast.agendaItemDeleteFailed") });
     }
   };
 
