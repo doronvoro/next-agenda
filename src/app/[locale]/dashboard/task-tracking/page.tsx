@@ -463,14 +463,23 @@ export default function TaskTrackingPage() {
                 {getActiveFiltersCount()} {t("activeFilters")}
               </Badge>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              className="ml-auto"
+              disabled={getActiveFiltersCount() === 0}
+            >
+              <X className="h-4 w-4 mr-1" />
+              {t("clearAll")}
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* First row: Search, Status, Priority, Protocol */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder={t("searchTasks")}
                 value={searchTerm}
@@ -478,7 +487,7 @@ export default function TaskTrackingPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-10"
+                className="pl-10 h-12 w-full"
               />
             </div>
             {/* Status Filter */}
@@ -491,7 +500,7 @@ export default function TaskTrackingPage() {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-12 w-full">
                   <SelectValue placeholder={t("allStatuses")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -513,7 +522,7 @@ export default function TaskTrackingPage() {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-12 w-full">
                   <SelectValue placeholder={t("allPriorities")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -534,7 +543,7 @@ export default function TaskTrackingPage() {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-12 w-full">
                   <SelectValue placeholder={t("allProtocols")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -547,10 +556,6 @@ export default function TaskTrackingPage() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Second row: Date Range and Advanced Filter */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end mb-4">
             {/* Date Range */}
             <div>
               <Label className="mb-1 block">{t("dueDateRange")}</Label>
@@ -559,11 +564,11 @@ export default function TaskTrackingPage() {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full h-12 justify-start text-left font-normal",
                       !dateRange?.from && !dateRange?.to && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-5 w-5" />
                     {dateRange?.from ? (
                       dateRange?.to ? (
                         <>
@@ -593,100 +598,17 @@ export default function TaskTrackingPage() {
               </Popover>
             </div>
             {/* Advanced Filters Button */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-end">
               <Button
                 variant="secondary"
                 onClick={() => setCascadingFilterDialogOpen(true)}
-                className="flex items-center gap-2 w-full md:w-auto"
+                className="w-full h-12"
               >
-                <Filter className="h-4 w-4" />
+                <Filter className="h-4 w-4 mr-2" />
                 {t("advancedFilters")}
-                {(cascadingFilters.companyId || cascadingFilters.committeeId || cascadingFilters.protocolId) && (
-                  <Badge variant="secondary" className="ml-1">
-                    {(cascadingFilters.companyId ? 1 : 0) + (cascadingFilters.committeeId ? 1 : 0) + (cascadingFilters.protocolId ? 1 : 0)}
-                  </Badge>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className="text-muted-foreground hover:text-foreground ml-2"
-              >
-                {t("clearAll")}
               </Button>
             </div>
           </div>
-
-          {/* Active Filters Display */}
-          {getActiveFiltersCount() > 0 && (
-            <div className="mt-2 flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-muted-foreground">{t("activeFiltersLabel")}</span>
-              <div className="flex flex-wrap gap-2">
-                {searchTerm && (
-                  <Badge variant="outline" className="gap-1">
-                    {t("searchFilter", { term: searchTerm })}
-                    <button
-                      onClick={() => setSearchTerm("")}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                )}
-                {selectedStatus !== "all" && (
-                  <Badge variant="outline" className="gap-1">
-                    {t("statusFilter", { status: selectedStatus })}
-                    <button
-                      onClick={() => setSelectedStatus("all")}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                )}
-                {selectedPriority !== "all" && (
-                  <Badge variant="outline" className="gap-1">
-                    {t("priorityFilter", { priority: selectedPriority })}
-                    <button
-                      onClick={() => setSelectedPriority("all")}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                )}
-                {(dateRange?.from || dateRange?.to) && (
-                  <Badge variant="outline" className="gap-1">
-                    {t("dateFilter", { 
-                      from: dateRange.from ? format(dateRange.from, "dd/MM/yyyy") : common("labels.from"), 
-                      to: dateRange.to ? format(dateRange.to, "dd/MM/yyyy") : common("labels.to") 
-                    })}
-                    <button
-                      onClick={() => setDateRange(undefined)}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                )}
-                {cascadingFilters.companyId && (
-                  <Badge variant="outline" className="gap-1">
-                    {t("companyFilter")}
-                    <button
-                      onClick={() => {
-                        setCascadingFilters({ companyId: null, committeeId: null, protocolId: null });
-                        loadTasks();
-                      }}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 

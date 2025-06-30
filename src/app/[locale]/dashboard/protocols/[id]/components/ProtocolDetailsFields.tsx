@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import type { Protocol } from "../types";
 import { Calendar, Users, Hash, ExternalLink } from "lucide-react";

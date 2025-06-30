@@ -9,15 +9,18 @@ import { useState } from "react";
 import ProtocolCreateForm from "../../protocol-calendar/ProtocolCreateForm";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import { useTranslations } from "next-intl";
 
 export default function NewProtocolPage() {
   const router = useRouter();
   const [date, setDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(false);
+  const t = useTranslations("new");
+  const protocolT = useTranslations("dashboard.main.sections.protocols");
 
   const handleSuccess = (id: string, number: string) => {
     setLoading(true);
-    toast({ title: `Protocol #${number} created!`, description: "Redirecting to protocol page..." });
+    toast({ title: protocolT("toast.protocolCreated", { number }), description: t("redirectingToProtocol") });
     setTimeout(() => {
       router.push(`/dashboard/protocols/${id}`);
     }, 500);
@@ -29,14 +32,14 @@ export default function NewProtocolPage() {
         <Link href="/dashboard/protocols">
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back to Protocols
+            {t("backToProtocols")}
           </Button>
         </Link>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Create New Protocol</CardTitle>
+          <CardTitle>{t("createNewProtocol")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -57,7 +60,7 @@ export default function NewProtocolPage() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
             </svg>
-            <span className="text-lg">Redirecting to protocol...</span>
+            <span className="text-lg">{t("redirectingToProtocol")}</span>
           </div>
         </div>
       )}

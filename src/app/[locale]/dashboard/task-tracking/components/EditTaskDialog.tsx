@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { updateTask, type TaskWithDetails } from "../../protocols/[id]/supabaseApi";
 import { useToast } from "@/components/ui/use-toast";
 import type { TaskStatus } from "@/components/KanbanBoard";
+import { useTranslations } from "next-intl";
 
 interface EditTaskDialogProps {
   open: boolean;
@@ -37,6 +38,7 @@ export function EditTaskDialog({
 }: EditTaskDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const t = useTranslations("dashboard.taskTracking");
   
   const [formData, setFormData] = useState({
     title: "",
@@ -80,8 +82,8 @@ export function EditTaskDialog({
       
       if (success) {
         toast({
-          title: "Task Updated",
-          description: "Task has been updated successfully.",
+          title: t("toast.taskUpdated"),
+          description: t("toast.taskUpdateSuccess"),
         });
         onTaskUpdated();
         onOpenChange(false);
@@ -92,8 +94,8 @@ export function EditTaskDialog({
       console.error("Error updating task:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update task. Please try again.",
+        title: t("toast.taskUpdateFailed"),
+        description: t("toast.taskUpdateFailed"),
       });
     } finally {
       setLoading(false);
@@ -110,30 +112,30 @@ export function EditTaskDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit Task</DialogTitle>
+          <DialogTitle>{t("editDialog.editTask")}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">{t("editDialog.title")} *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter task title"
+              placeholder={t("editDialog.enterTaskTitle")}
               required
             />
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("editDialog.description")}</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Enter task description"
+              placeholder={t("editDialog.enterTaskDescription")}
               rows={3}
             />
           </div>
@@ -141,7 +143,7 @@ export function EditTaskDialog({
           {/* Status and Priority */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{t("editDialog.status")}</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as TaskStatus }))}
@@ -150,16 +152,16 @@ export function EditTaskDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Done</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
+                  <SelectItem value="pending">{t("editDialog.toDo")}</SelectItem>
+                  <SelectItem value="in_progress">{t("editDialog.inProgress")}</SelectItem>
+                  <SelectItem value="completed">{t("editDialog.done")}</SelectItem>
+                  <SelectItem value="overdue">{t("editDialog.overdue")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">{t("editDialog.priority")}</Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as 'low' | 'medium' | 'high' }))}
@@ -168,9 +170,9 @@ export function EditTaskDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="low">{t("editDialog.low")}</SelectItem>
+                  <SelectItem value="medium">{t("editDialog.medium")}</SelectItem>
+                  <SelectItem value="high">{t("editDialog.high")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -178,18 +180,18 @@ export function EditTaskDialog({
 
           {/* Assigned To */}
           <div className="space-y-2">
-            <Label htmlFor="assigned_to">Assigned To</Label>
+            <Label htmlFor="assigned_to">{t("editDialog.assignedTo")}</Label>
             <Input
               id="assigned_to"
               value={formData.assigned_to}
               onChange={(e) => setFormData(prev => ({ ...prev, assigned_to: e.target.value }))}
-              placeholder="Enter assignee name"
+              placeholder={t("editDialog.enterAssigneeName")}
             />
           </div>
 
           {/* Due Date */}
           <div className="space-y-2">
-            <Label>Due Date</Label>
+            <Label>{t("editDialog.dueDate")}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -203,7 +205,7 @@ export function EditTaskDialog({
                   {formData.due_date ? (
                     format(formData.due_date, "PPP")
                   ) : (
-                    "Select due date"
+                    t("editDialog.selectDueDate")
                   )}
                 </Button>
               </PopoverTrigger>
@@ -220,11 +222,11 @@ export function EditTaskDialog({
 
           {/* Task Info Display */}
           <div className="space-y-2 p-4 bg-muted rounded-lg">
-            <h4 className="font-medium text-sm">Task Information</h4>
+            <h4 className="font-medium text-sm">{t("editDialog.taskInformation")}</h4>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p><strong>Agenda Item:</strong> {task.agenda_item.title}</p>
-              <p><strong>Protocol:</strong> #{task.protocol?.number} - {task.protocol?.committee?.name}</p>
-              <p><strong>Created:</strong> {format(new Date(task.created_at), "PPP")}</p>
+              <p><strong>{t("editDialog.agendaItem")}:</strong> {task.agenda_item.title}</p>
+              <p><strong>{t("editDialog.protocol")}:</strong> #{task.protocol?.number} - {task.protocol?.committee?.name}</p>
+              <p><strong>{t("editDialog.created")}:</strong> {format(new Date(task.created_at), "PPP")}</p>
             </div>
           </div>
 
@@ -236,11 +238,11 @@ export function EditTaskDialog({
               onClick={handleCancel}
               disabled={loading}
             >
-              Cancel
+              {t("editDialog.cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Update Task
+              {t("editDialog.updateTask")}
             </Button>
           </div>
         </form>
