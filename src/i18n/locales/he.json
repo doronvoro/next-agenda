@@ -765,6 +765,34 @@
         "lastUpdated": "עודכן לאחרונה",
         "actions": "פעולות"
       }
+    },
+    "companies": {
+      "title": "חברות",
+      "addCompany": "הוסף חברה",
+      "totalCompanies": "סך הכל: {count} חברות",
+      "filtersAndSearch": "סינון וחיפוש",
+      "search": "חיפוש",
+      "searchPlaceholder": "חפש חברות...",
+      "clearFilters": "נקה סינון",
+      "showingCompanies": "מציג {shown} מתוך {total} חברות",
+      "companyName": "שם החברה",
+      "enterCompanyName": "הזן שם חברה",
+      "address": "כתובת",
+      "enterCompanyAddress": "הזן כתובת חברה",
+      "number": "מספר",
+      "enterCompanyNumber": "הזן מספר חברה",
+      "noCompaniesFound": "לא נמצאו חברות",
+      "getStartedCreateCompany": "התחל ביצירת החברה הראשונה שלך.",
+      "noCompaniesMatch": "לא נמצאו חברות התואמות לסינון",
+      "tryAdjustingSearch": "נסה לשנות את החיפוש או נקה את הסינון.",
+      "notAvailable": "לא זמין",
+      "tableHeaders": {
+        "name": "שם",
+        "address": "כתובת",
+        "number": "מספר",
+        "createdAt": "נוצר בתאריך",
+        "actions": "פעולות"
+      }
     }
   },
   "navigation": {

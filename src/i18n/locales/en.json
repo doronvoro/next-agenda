@@ -730,6 +730,34 @@
         "lastUpdated": "Last Updated",
         "actions": "Actions"
       }
+    },
+    "companies": {
+      "title": "Companies",
+      "addCompany": "Add Company",
+      "totalCompanies": "Total: {count} companies",
+      "filtersAndSearch": "Filters & Search",
+      "search": "Search",
+      "searchPlaceholder": "Search companies...",
+      "clearFilters": "Clear Filters",
+      "showingCompanies": "Showing {shown} of {total} companies",
+      "companyName": "Company Name",
+      "enterCompanyName": "Enter company name",
+      "address": "Address",
+      "enterCompanyAddress": "Enter company address",
+      "number": "Number",
+      "enterCompanyNumber": "Enter company number",
+      "noCompaniesFound": "No companies found",
+      "getStartedCreateCompany": "Get started by creating your first company.",
+      "noCompaniesMatch": "No companies match your filters",
+      "tryAdjustingSearch": "Try adjusting your search criteria or clear the filters.",
+      "notAvailable": "N/A",
+      "tableHeaders": {
+        "name": "Name",
+        "address": "Address",
+        "number": "Number",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      }
     }
   },
   "navigation": {

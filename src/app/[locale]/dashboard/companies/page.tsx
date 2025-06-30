@@ -29,6 +29,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
 
 type Company = Database["public"]["Tables"]["companies"]["Row"];
 
@@ -43,6 +46,10 @@ const formatDate = (dateString: string | null) => {
 
 export default function CompaniesPage() {
   const { toast } = useToast();
+  const t = useTranslations("dashboard.companies");
+  const pathname = usePathname();
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -331,16 +338,16 @@ export default function CompaniesPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Companies</h1>
+      <div className={`flex justify-between items-center mb-6${isRTL ? ' text-right' : ''}`}>
+        <h1 className={`text-3xl font-bold ${isRTL ? 'text-right' : ''}`}>{t("title")}</h1>
         <div className="flex items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            Total: {companies.length} companies
+            {t("totalCompanies", { count: companies.length })}
           </div>
           {!isAdding && (
             <Button onClick={() => setIsAdding(true)} className="gap-2">
               <Plus className="h-4 w-4" />
-              Add Company
+              {t("addCompany")}
             </Button>
           )}
         </div>
@@ -351,19 +358,19 @@ export default function CompaniesPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Filters & Search
+            {t("filtersAndSearch")}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4${isRTL ? ' text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Search */}
             <div className="space-y-2">
-              <Label htmlFor="search">Search</Label>
+              <Label htmlFor="search">{t("search")}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search companies..."
+                  placeholder={t("searchPlaceholder")}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -375,9 +382,9 @@ export default function CompaniesPage() {
             </div>
           </div>
           {/* Clear Filters */}
-          <div className="flex justify-between items-center mt-4 pt-4 border-t">
+          <div className={`flex justify-between items-center mt-4 pt-4 border-t${isRTL ? ' flex-row-reverse' : ''}` }>
             <div className="text-sm text-muted-foreground">
-              Showing {filteredAndSortedCompanies.length} of {companies.length} companies
+              {t("showingCompanies", { shown: filteredAndSortedCompanies.length, total: companies.length })}
             </div>
             <Button
               variant="outline"
@@ -385,7 +392,7 @@ export default function CompaniesPage() {
               onClick={clearFilters}
               disabled={!searchTerm}
             >
-              Clear Filters
+              {t("clearFilters")}
             </Button>
           </div>
         </CardContent>
@@ -397,15 +404,15 @@ export default function CompaniesPage() {
             <div className="mb-6 p-4 border rounded-lg">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new-name">Company Name *</Label>
-                  <div className="flex gap-2">
+                  <Label htmlFor="new-name">{t("companyName")} *</Label>
+                  <div className={`flex gap-2${isRTL ? ' flex-row-reverse' : ''}` }>
                     <Input
                       id="new-name"
                       value={newCompany.name}
                       onChange={(e) =>
                         setNewCompany({ ...newCompany, name: e.target.value })
                       }
-                      placeholder="Enter company name"
+                      placeholder={t("enterCompanyName")}
                       className="flex-1"
                     />
                     <Button
@@ -428,26 +435,26 @@ export default function CompaniesPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new-address">Address</Label>
+                  <Label htmlFor="new-address">{t("address")}</Label>
                   <Input
                     id="new-address"
                     value={newCompany.address}
                     onChange={(e) =>
                       setNewCompany({ ...newCompany, address: e.target.value })
                     }
-                    placeholder="Enter company address"
+                    placeholder={t("enterCompanyAddress")}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new-number">Number</Label>
+                  <Label htmlFor="new-number">{t("number")}</Label>
                   <Input
                     id="new-number"
                     value={newCompany.number}
                     onChange={(e) =>
                       setNewCompany({ ...newCompany, number: e.target.value })
                     }
-                    placeholder="Enter company number"
+                    placeholder={t("enterCompanyNumber")}
                   />
                 </div>
               </div>
@@ -458,42 +465,42 @@ export default function CompaniesPage() {
             <div className="text-center text-muted-foreground py-8">
               {companies.length === 0 ? (
                 <>
-                  <p className="text-lg font-medium mb-2">No companies found</p>
-                  <p>Get started by creating your first company.</p>
+                  <p className="text-lg font-medium mb-2">{t("noCompaniesFound")}</p>
+                  <p>{t("getStartedCreateCompany")}</p>
                 </>
               ) : (
                 <>
-                  <p className="text-lg font-medium mb-2">No companies match your filters</p>
-                  <p>Try adjusting your search criteria or clear the filters.</p>
+                  <p className="text-lg font-medium mb-2">{t("noCompaniesMatch")}</p>
+                  <p>{t("tryAdjustingSearch")}</p>
                 </>
               )}
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border" dir={isRTL ? 'rtl' : 'ltr'}>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>
-                      <SortableHeader field="name">Name</SortableHeader>
+                    <TableHead className={isRTL ? 'text-right' : ''}>
+                      <SortableHeader field="name">{t("tableHeaders.name")}</SortableHeader>
                     </TableHead>
-                    <TableHead>
-                      <SortableHeader field="address">Address</SortableHeader>
+                    <TableHead className={isRTL ? 'text-right' : ''}>
+                      <SortableHeader field="address">{t("tableHeaders.address")}</SortableHeader>
                     </TableHead>
-                    <TableHead>
-                      <SortableHeader field="number">Number</SortableHeader>
+                    <TableHead className={isRTL ? 'text-right' : ''}>
+                      <SortableHeader field="number">{t("tableHeaders.number")}</SortableHeader>
                     </TableHead>
-                    <TableHead>
-                      <SortableHeader field="created_at">Created At</SortableHeader>
+                    <TableHead className={isRTL ? 'text-right' : ''}>
+                      <SortableHeader field="created_at">{t("tableHeaders.createdAt")}</SortableHeader>
                     </TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className={`w-[100px]${isRTL ? ' text-right' : ''}`}>{t("tableHeaders.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedCompanies.map((company: Company) => (
                     <TableRow key={company.id}>
-                      <TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
                         {editingCompany && editingCompany.id === company.id ? (
-                          <div className="flex gap-2">
+                          <div className={`flex gap-2${isRTL ? ' flex-row-reverse' : ''}` }>
                             <Input
                               value={editingCompany.name}
                               onChange={(e) =>
@@ -503,6 +510,7 @@ export default function CompaniesPage() {
                                 } as Company)
                               }
                               className="flex-1"
+                              placeholder={t("enterCompanyName")}
                             />
                             <Button
                               variant="ghost"
@@ -525,7 +533,7 @@ export default function CompaniesPage() {
                           company.name
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
                         {editingCompany && editingCompany.id === company.id ? (
                           <Input
                             value={editingCompany.address || ""}
@@ -535,13 +543,13 @@ export default function CompaniesPage() {
                                 address: e.target.value,
                               } as Company)
                             }
-                            placeholder="Enter address"
+                            placeholder={t("enterCompanyAddress")}
                           />
                         ) : (
-                          company.address || "N/A"
+                          company.address || t("notAvailable")
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
                         {editingCompany && editingCompany.id === company.id ? (
                           <Input
                             value={editingCompany.number || ""}
@@ -551,14 +559,14 @@ export default function CompaniesPage() {
                                 number: e.target.value,
                               } as Company)
                             }
-                            placeholder="Enter number"
+                            placeholder={t("enterCompanyNumber")}
                           />
                         ) : (
-                          company.number || "N/A"
+                          company.number || t("notAvailable")
                         )}
                       </TableCell>
-                      <TableCell>{formatDate(company.created_at)}</TableCell>
-                      <TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>{formatDate(company.created_at)}</TableCell>
+                      <TableCell className={`w-[100px]${isRTL ? ' text-right' : ''}`}>
                         <div className="flex gap-2">
                           {editingCompany && editingCompany.id === company.id ? (
                             <>
