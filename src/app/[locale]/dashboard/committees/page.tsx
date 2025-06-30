@@ -44,6 +44,9 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
 
 type Committee = Database["public"]["Tables"]["committees"]["Row"];
 type CommitteeMember = Database["public"]["Tables"]["committees_members"]["Row"];
@@ -90,6 +93,11 @@ export default function CommitteesPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+  const t = useTranslations("dashboard.committees");
+  const pathname = usePathname();
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
 
   useEffect(() => {
     fetchCommittees();
@@ -513,16 +521,16 @@ export default function CommitteesPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Committees</h1>
+      <div className={`flex justify-between items-center mb-6${isRTL ? ' text-right' : ''}`}>
+        <h1 className={`text-3xl font-bold ${isRTL ? 'text-right' : ''}`}>{t("title")}</h1>
         <div className="flex items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            Total: {committees.length} committees
+            {t("totalCommittees", { count: committees.length })}
           </div>
           {!isAdding && (
             <Button onClick={() => setIsAdding(true)} className="gap-2">
               <Plus className="h-4 w-4" />
-              Add Committee
+              {t("addCommittee")}
             </Button>
           )}
         </div>
@@ -533,19 +541,19 @@ export default function CommitteesPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Filters & Search
+            {t("filtersAndSearch")}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4${isRTL ? ' text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Search */}
             <div className="space-y-2">
-              <Label htmlFor="search">Search</Label>
+              <Label htmlFor="search">{t("search")}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search committees..."
+                  placeholder={t("searchPlaceholder")}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -557,7 +565,7 @@ export default function CommitteesPage() {
             </div>
             {/* Company Filter */}
             <div className="space-y-2">
-              <Label htmlFor="company">Company</Label>
+              <Label htmlFor="company">{t("company")}</Label>
               <Select
                 value={selectedCompany}
                 onValueChange={(value) => {
@@ -566,10 +574,10 @@ export default function CommitteesPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All companies" />
+                  <SelectValue placeholder={t("allCompanies")}/>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All companies</SelectItem>
+                  <SelectItem value="all">{t("allCompanies")}</SelectItem>
                   {companies.map((company) => (
                     <SelectItem key={company.id} value={company.id}>
                       {company.name}
@@ -580,9 +588,9 @@ export default function CommitteesPage() {
             </div>
           </div>
           {/* Clear Filters */}
-          <div className="flex justify-between items-center mt-4 pt-4 border-t">
+          <div className={`flex justify-between items-center mt-4 pt-4 border-t${isRTL ? ' flex-row-reverse' : ''}` }>
             <div className="text-sm text-muted-foreground">
-              Showing {filteredAndSortedCommittees.length} of {committees.length} committees
+              {t("showingCommittees", { shown: filteredAndSortedCommittees.length, total: committees.length })}
             </div>
             <Button
               variant="outline"
@@ -590,7 +598,7 @@ export default function CommitteesPage() {
               onClick={clearFilters}
               disabled={!searchTerm && selectedCompany === "all"}
             >
-              Clear Filters
+              {t("clearFilters")}
             </Button>
           </div>
         </CardContent>
@@ -602,13 +610,13 @@ export default function CommitteesPage() {
             <div className="mb-6 p-4 border rounded-lg">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new-committee">Committee Name</Label>
-                  <div className="flex gap-2">
+                  <Label htmlFor="new-committee">{t("committeeName")}</Label>
+                  <div className={`flex gap-2${isRTL ? ' flex-row-reverse' : ''}` }>
                     <Input
                       id="new-committee"
                       value={newCommitteeName}
                       onChange={(e) => setNewCommitteeName(e.target.value)}
-                      placeholder="Enter committee name"
+                      placeholder={t("enterCommitteeName")}
                       className="flex-1"
                     />
                     <Button
@@ -630,13 +638,13 @@ export default function CommitteesPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="new-company">Company</Label>
+                  <Label htmlFor="new-company">{t("company")}</Label>
                   <Select
                     value={newCompanyId}
                     onValueChange={setNewCompanyId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a company" />
+                      <SelectValue placeholder={t("selectCompany")}/>
                     </SelectTrigger>
                     <SelectContent>
                       {companies.map((company) => (
@@ -655,41 +663,41 @@ export default function CommitteesPage() {
             <div className="text-center text-muted-foreground py-8">
               {committees.length === 0 ? (
                 <>
-                  <p className="text-lg font-medium mb-2">No committees found</p>
-                  <p>Get started by creating your first committee.</p>
+                  <p className="text-lg font-medium mb-2">{t("noCommitteesFound")}</p>
+                  <p>{t("getStartedCreateCommittee")}</p>
                 </>
               ) : (
                 <>
-                  <p className="text-lg font-medium mb-2">No committees match your filters</p>
-                  <p>Try adjusting your search criteria or clear the filters.</p>
+                  <p className="text-lg font-medium mb-2">{t("noCommitteesMatch")}</p>
+                  <p>{t("tryAdjustingSearch")}</p>
                 </>
               )}
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border" dir={isRTL ? 'rtl' : 'ltr'}>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>
-                      <SortableHeader field="name">Name</SortableHeader>
+                    <TableHead className={isRTL ? 'text-right' : ''}>
+                      <SortableHeader field="name">{t("tableHeaders.name")}</SortableHeader>
                     </TableHead>
-                    <TableHead>
-                      <SortableHeader field="company">Company</SortableHeader>
+                    <TableHead className={isRTL ? 'text-right' : ''}>
+                      <SortableHeader field="company">{t("tableHeaders.company")}</SortableHeader>
                     </TableHead>
-                    <TableHead>Members</TableHead>
-                    <TableHead>
-                      <SortableHeader field="created_at">Created At</SortableHeader>
+                    <TableHead className={isRTL ? 'text-right' : ''}>{t("tableHeaders.members")}</TableHead>
+                    <TableHead className={isRTL ? 'text-right' : ''}>
+                      <SortableHeader field="created_at">{t("tableHeaders.createdAt")}</SortableHeader>
                     </TableHead>
-                    <TableHead>
-                      <SortableHeader field="updated_at">Last Updated</SortableHeader>
+                    <TableHead className={isRTL ? 'text-right' : ''}>
+                      <SortableHeader field="updated_at">{t("tableHeaders.lastUpdated")}</SortableHeader>
                     </TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className={`w-[100px]${isRTL ? ' text-right' : ''}`}>{t("tableHeaders.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedCommittees.map((committee) => (
                     <TableRow key={committee.id}>
-                      <TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
                         {editingCommittee?.id === committee.id ? (
                           <Input
                             value={editingCommittee.name}
@@ -699,182 +707,25 @@ export default function CommitteesPage() {
                                 name: e.target.value,
                               })
                             }
-                            className="flex-1"
+                            placeholder={t("enterCommitteeName")}
                           />
                         ) : (
                           committee.name
                         )}
                       </TableCell>
-                      <TableCell>
-                        {editingCommittee?.id === committee.id ? (
-                          <Select
-                            value={editingCommittee.company_id || ""}
-                            onValueChange={(value) =>
-                              setEditingCommittee({
-                                ...editingCommittee,
-                                company_id: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a company" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {companies.map((company) => (
-                                <SelectItem key={company.id} value={company.id}>
-                                  {company.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          companies.find(c => c.id === committee.company_id)?.name || "N/A"
-                        )}
+                      <TableCell className={isRTL ? 'text-right' : ''}>
+                        {companies.find((c) => c.id === committee.company_id)?.name || "-"}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">
-                            {committeeMembers[committee.id]?.length || 0} members
-                          </Badge>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSelectedCommittee(committee)}
-                                className="h-6 px-2"
-                              >
-                                <Users className="h-3 w-3" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md">
-                              <DialogHeader>
-                                <DialogTitle>Manage Members - {committee.name}</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium">Members</span>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setIsAddingMember(true)}
-                                    className="h-8"
-                                  >
-                                    <UserPlus className="h-3 w-3 mr-1" />
-                                    Add Member
-                                  </Button>
-                                </div>
-                                
-                                {isAddingMember && (
-                                  <div className="p-3 border rounded-lg">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="new-member">Member Name</Label>
-                                      <div className="flex gap-2">
-                                        <Input
-                                          id="new-member"
-                                          value={newMemberName}
-                                          onChange={(e) => setNewMemberName(e.target.value)}
-                                          placeholder="Enter member name"
-                                          className="flex-1"
-                                        />
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => setIsAddingMember(false)}
-                                          className="h-8 w-8"
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => handleAddMember(committee.id)}
-                                          className="h-8 w-8"
-                                        >
-                                          <Check className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="space-y-2">
-                                  {committeeMembers[committee.id]?.length === 0 ? (
-                                    <div className="text-center text-muted-foreground py-4">
-                                      No members yet
-                                    </div>
-                                  ) : (
-                                    committeeMembers[committee.id]?.map((member) => (
-                                      <div
-                                        key={member.id}
-                                        className="flex items-center justify-between p-2 border rounded"
-                                      >
-                                        {editingMember?.id === member.id ? (
-                                          <div className="flex items-center gap-2 flex-1">
-                                            <Input
-                                              value={editingMemberName}
-                                              onChange={(e) => setEditingMemberName(e.target.value)}
-                                              className="flex-1 h-8"
-                                              placeholder="Enter member name"
-                                            />
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() => {
-                                                setEditingMember(null);
-                                                setEditingMemberName("");
-                                              }}
-                                              className="h-6 w-6 p-0"
-                                            >
-                                              <X className="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={handleUpdateMember}
-                                              className="h-6 w-6 p-0"
-                                            >
-                                              <Check className="h-3 w-3" />
-                                            </Button>
-                                          </div>
-                                        ) : (
-                                          <>
-                                            <span className="text-sm">{member.name}</span>
-                                            <div className="flex gap-1">
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => {
-                                                  setEditingMember(member);
-                                                  setEditingMemberName(member.name);
-                                                }}
-                                                className="h-6 w-6 p-0"
-                                              >
-                                                <Pencil className="h-3 w-3" />
-                                              </Button>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setDeletingMemberId(member.id)}
-                                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                                              >
-                                                <Trash2 className="h-3 w-3" />
-                                              </Button>
-                                            </div>
-                                          </>
-                                        )}
-                                      </div>
-                                    ))
-                                  )}
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
+                        {(committeeMembers[committee.id]?.length || 0)}
                       </TableCell>
-                      <TableCell>{formatDate(committee.created_at)}</TableCell>
-                      <TableCell>{formatDate(committee.updated_at)}</TableCell>
-                      <TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
+                        {formatDate(committee.created_at)}
+                      </TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
+                        {formatDate(committee.updated_at)}
+                      </TableCell>
+                      <TableCell className={`w-[100px]${isRTL ? ' text-right' : ''}`}>
                         <div className="flex gap-2">
                           {editingCommittee?.id === committee.id ? (
                             <>

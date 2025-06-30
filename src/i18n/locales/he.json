@@ -144,7 +144,8 @@
         "noAgendaItemsYet": "אין פריטי סדר יום עדיין",
         "addAgendaItemsToSeeTheirDetailsHere": "הוסף פריטי סדר יום כדי לראות את הפרטים שלהם כאן",
         "addItemButton": "הוסף פריט",
-        "fromFutureTopic": "מנושא עתידי"
+        "fromFutureTopic": "מנושא עתידי",
+        "protocols": "פרוטוקולים"
       },
       "statuses": {
         "overdue": "באיחור",
@@ -241,6 +242,22 @@
       "total": "סה״כ",
       "present": "נוכח",
       "absent": "נעדר",
+      "toast": {
+        "protocolUpdated": "הפרוטוקול עודכן בהצלחה",
+        "agendaItemUpdated": "פריט סדר היום עודכן בהצלחה",
+        "agendaItemUpdateFailed": "שגיאה בעדכון פריט סדר היום",
+        "agendaItemCreated": "פריט סדר היום נוצר בהצלחה",
+        "agendaItemCreateFailed": "שגיאה ביצירת פריט סדר היום",
+        "agendaItemCreatedFromTopic": "פריט סדר היום נוצר מנושא עתידי",
+        "agendaItemCreateFromTopicFailed": "שגיאה ביצירת פריט סדר היום מנושא עתידי",
+        "agendaItemNotFound": "פריט סדר היום לא נמצא",
+        "agendaItemTitleUpdateFailed": "שגיאה בעדכון כותרת פריט סדר היום",
+        "agendaItemTitleUpdated": "כותרת פריט סדר היום עודכנה",
+        "agendaItemDeleteFailed": "שגיאה במחיקת פריט סדר היום",
+        "agendaItemDeleted": "פריט סדר היום נמחק",
+        "protocolCreated": "פרוטוקול #{number} נוצר!",
+        "redirectingToProtocol": "מעביר לדף הפרוטוקול..."
+      },
       "tabs": {
         "document": "מסמך",
         "members": "חברים",
@@ -496,7 +513,40 @@
           "high": "גבוהה",
           "medium": "בינונית",
           "low": "נמוכה"
-        }
+        },
+        "toast": {
+          "taskUpdated": "המשימה עודכנה",
+          "taskUpdateSuccess": "המשימה עודכנה בהצלחה.",
+          "taskUpdateFailed": "שגיאה בעדכון המשימה. אנא נסה שוב."
+        },
+        "editDialog": {
+          "editTask": "ערוך משימה",
+          "title": "כותרת",
+          "enterTaskTitle": "הכנס כותרת משימה",
+          "description": "תיאור",
+          "enterTaskDescription": "הכנס תיאור משימה",
+          "status": "סטטוס",
+          "priority": "עדיפות",
+          "assignedTo": "מוקצה ל",
+          "enterAssigneeName": "הכנס שם אחראי",
+          "dueDate": "תאריך יעד",
+          "selectDueDate": "בחר תאריך יעד",
+          "taskInformation": "מידע על המשימה",
+          "agendaItem": "פריט סדר היום",
+          "protocol": "פרוטוקול",
+          "created": "נוצר",
+          "cancel": "ביטול",
+          "updateTask": "עדכן משימה",
+          "toDo": "לעשות",
+          "inProgress": "בתהליך",
+          "done": "הושלם",
+          "overdue": "באיחור",
+          "low": "נמוך",
+          "medium": "בינוני",
+          "high": "גבוה"
+        },
+        "status": "סטטוס",
+        "priority": "עדיפות"
       }
     },
     "agenda": {
@@ -644,6 +694,76 @@
         "high": "גבוהה",
         "medium": "בינונית",
         "low": "נמוכה"
+      },
+      "toast": {
+        "taskUpdated": "המשימה עודכנה",
+        "taskUpdateSuccess": "המשימה עודכנה בהצלחה.",
+        "taskUpdateFailed": "שגיאה בעדכון המשימה. אנא נסה שוב."
+      },
+      "editDialog": {
+        "editTask": "ערוך משימה",
+        "title": "כותרת",
+        "enterTaskTitle": "הכנס כותרת משימה",
+        "description": "תיאור",
+        "enterTaskDescription": "הכנס תיאור משימה",
+        "status": "סטטוס",
+        "priority": "עדיפות",
+        "assignedTo": "מוקצה ל",
+        "enterAssigneeName": "הכנס שם אחראי",
+        "dueDate": "תאריך יעד",
+        "selectDueDate": "בחר תאריך יעד",
+        "taskInformation": "מידע על המשימה",
+        "agendaItem": "פריט סדר היום",
+        "protocol": "פרוטוקול",
+        "created": "נוצר",
+        "cancel": "ביטול",
+        "updateTask": "עדכן משימה",
+        "toDo": "לעשות",
+        "inProgress": "בתהליך",
+        "done": "הושלם",
+        "overdue": "באיחור",
+        "low": "נמוך",
+        "medium": "בינוני",
+        "high": "גבוה"
+      },
+      "status": "סטטוס",
+      "priority": "עדיפות"
+    },
+    "protocolCalendar": {
+      "title": "לוח שנה",
+      "loadingEvents": "טוען אירועים...",
+      "createNewProtocol": "צור פרוטוקול חדש",
+      "day": "יום",
+      "week": "שבוע",
+      "month": "חודש",
+      "today": "היום",
+      "calendarTitle": "{month} {year}"
+    },
+    "committees": {
+      "title": "ועדות",
+      "addCommittee": "הוסף ועדה",
+      "totalCommittees": "סך הכל: {count} ועדות",
+      "filtersAndSearch": "סינון וחיפוש",
+      "search": "חיפוש",
+      "searchPlaceholder": "חפש ועדות...",
+      "company": "חברה",
+      "allCompanies": "כל החברות",
+      "clearFilters": "נקה סינון",
+      "showingCommittees": "מציג {shown} מתוך {total} ועדות",
+      "committeeName": "שם הוועדה",
+      "enterCommitteeName": "הזן שם ועדה",
+      "selectCompany": "בחר חברה",
+      "noCommitteesFound": "לא נמצאו ועדות",
+      "getStartedCreateCommittee": "התחל ביצירת הוועדה הראשונה שלך.",
+      "noCommitteesMatch": "לא נמצאו ועדות התואמות לסינון",
+      "tryAdjustingSearch": "נסה לשנות את החיפוש או נקה את הסינון.",
+      "tableHeaders": {
+        "name": "שם",
+        "company": "חברה",
+        "members": "חברים",
+        "createdAt": "נוצר בתאריך",
+        "lastUpdated": "עודכן לאחרונה",
+        "actions": "פעולות"
       }
     }
   },
@@ -677,10 +797,68 @@
     "updated": "עודכן בהצלחה",
     "deleted": "נמחק בהצלחה",
     "uploaded": "הועלה בהצלחה",
-    "messageSent": "ההודעה נשלחה בהצלחה"
+    "messageSent": "ההודעה נשלחה בהצלחה",
+    "success": "הצלחה",
+    "error": "שגיאה"
   },
   "brand": {
     "name": "Next Agenda",
     "description": "עורך פרוטוקולים לשיפור סדר היום שלך"
+  },
+  "new": {
+    "backToProtocols": "חזרה לפרוטוקולים",
+    "createNewProtocol": "צור פרוטוקול חדש",
+    "redirectingToProtocol": "מעביר לפרוטוקול..."
+  },
+  "committees": {
+    "title": "ועדות",
+    "addCommittee": "הוסף ועדה",
+    "editCommittee": "ערוך ועדה",
+    "deleteCommittee": "מחק ועדה",
+    "committeeName": "שם הוועדה",
+    "company": "חברה",
+    "members": "חברים",
+    "createdAt": "נוצר בתאריך",
+    "updatedAt": "עודכן לאחרונה",
+    "actions": "פעולות",
+    "search": "חיפוש",
+    "searchPlaceholder": "חפש ועדות...",
+    "filters": "סינון וחיפוש",
+    "allCompanies": "כל החברות",
+    "clearFilters": "נקה סינון",
+    "showingResults": "מציג {showing} מתוך {total} ועדות",
+    "noCommitteesFound": "לא נמצאו ועדות",
+    "noCommitteesMessage": "התחל על ידי יצירת הוועדה הראשונה שלך.",
+    "noMatchingCommittees": "אין ועדות תואמות לסינון שלך",
+    "noMatchingMessage": "נסה לשנות את קריטריוני החיפוש או לנקות את הסינון.",
+    "addMember": "הוסף חבר",
+    "editMember": "ערוך חבר",
+    "deleteMember": "הסר חבר",
+    "memberName": "שם החבר",
+    "membersCount": "{count} חברים",
+    "manageMembers": "ניהול חברים - {committee}",
+    "noMembersYet": "אין חברים עדיין",
+    "created": "נוצר",
+    "lastUpdated": "עודכן לאחרונה",
+    "cancel": "ביטול",
+    "save": "שמור",
+    "confirmDeleteCommittee": "האם אתה בטוח? פעולה זו אינה ניתנת לביטול ותמחק את הוועדה לצמיתות.",
+    "confirmDeleteMember": "האם אתה בטוח שברצונך להסיר את החבר מהוועדה? פעולה זו אינה ניתנת לביטול.",
+    "success": {
+      "committeeAdded": "הוועדה נוספה בהצלחה",
+      "committeeUpdated": "הוועדה עודכנה בהצלחה",
+      "committeeDeleted": "הוועדה נמחקה בהצלחה",
+      "memberAdded": "החבר נוסף בהצלחה",
+      "memberUpdated": "שם החבר עודכן בהצלחה",
+      "memberDeleted": "החבר הוסר בהצלחה"
+    },
+    "error": {
+      "committeeAddFailed": "שגיאה בהוספת ועדה",
+      "committeeUpdateFailed": "שגיאה בעדכון ועדה",
+      "committeeDeleteFailed": "שגיאה במחיקת ועדה",
+      "memberAddFailed": "שגיאה בהוספת חבר",
+      "memberUpdateFailed": "שגיאה בעדכון שם החבר",
+      "memberDeleteFailed": "שגיאה בהסרת חבר"
+    }
   }
 } 

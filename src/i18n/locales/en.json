@@ -144,7 +144,8 @@
         "noAgendaItemsYet": "No agenda items yet",
         "addAgendaItemsToSeeTheirDetailsHere": "Add agenda items to see their details here",
         "addItemButton": "Add Item",
-        "fromFutureTopic": "From Future Topic"
+        "fromFutureTopic": "From Future Topic",
+        "protocols": "Protocols"
       },
       "statuses": {
         "overdue": "Overdue",
@@ -166,6 +167,172 @@
         "prepareForDeadlines": "Prepare for upcoming protocol deadlines",
         "pendingTasks": "{count} pending task{count, plural, one {} other {s}}",
         "reviewPendingTasks": "Review and complete pending tasks"
+      },
+      "toast": {
+        "protocolUpdated": "Protocol updated successfully",
+        "agendaItemUpdated": "Agenda item updated successfully",
+        "agendaItemUpdateFailed": "Failed to update agenda item",
+        "agendaItemCreated": "Agenda item created successfully",
+        "agendaItemCreateFailed": "Failed to create agenda item",
+        "agendaItemCreatedFromTopic": "Agenda item created from future topic",
+        "agendaItemCreateFromTopicFailed": "Failed to create agenda item from future topic",
+        "agendaItemNotFound": "Agenda item not found",
+        "agendaItemTitleUpdateFailed": "Failed to update agenda item title",
+        "agendaItemTitleUpdated": "Agenda item title updated",
+        "agendaItemDeleteFailed": "Failed to delete agenda item",
+        "agendaItemDeleted": "Agenda item deleted",
+        "protocolCreated": "Protocol #{number} created!",
+        "redirectingToProtocol": "Redirecting to protocol page..."
+      },
+      "new": {
+        "backToProtocols": "Back to Protocols",
+        "createNewProtocol": "Create New Protocol",
+        "redirectingToProtocol": "Redirecting to protocol..."
+      },
+      "tabs": {
+        "document": "Document",
+        "members": "Members",
+        "attachments": "Attachments",
+        "messages": "Messages"
+      },
+      "sections": {
+        "protocolDetails": "Protocol Details",
+        "agenda": "Agenda",
+        "agendaDetails": "Agenda Details"
+      },
+      "editButton": "Edit",
+      "protocolPdfView": "Protocol PDF View",
+      "membersSection": {
+        "title": "Protocol Members",
+        "addMember": "Add Member",
+        "addNewMember": "Add New Member",
+        "name": "Name",
+        "nameRequired": "Name *",
+        "enterMemberName": "Enter member name",
+        "type": "Type",
+        "status": "Status",
+        "voteStatus": "Vote Status",
+        "noVote": "No vote",
+        "clear": "Clear",
+        "cancel": "Cancel",
+        "addMemberButton": "Add Member",
+        "noMembersFound": "No members found for this protocol",
+        "nameColumn": "Name",
+        "typeColumn": "Type",
+        "statusColumn": "Status",
+        "voteStatusColumn": "Vote Status",
+        "actionsColumn": "Actions",
+        "unnamed": "Unnamed",
+        "memberTypes": {
+          "committeeMember": "Committee Member",
+          "external": "External"
+        },
+        "statuses": {
+          "absent": "Absent",
+          "present": "Present"
+        },
+        "voteStatuses": {
+          "for": "For",
+          "against": "Against",
+          "abstain": "Abstain",
+          "noVote": "No vote"
+        },
+        "success": {
+          "memberAdded": "Member added successfully",
+          "memberUpdated": "Member updated successfully"
+        },
+        "error": {
+          "failedToAdd": "Failed to add member",
+          "failedToUpdate": "Failed to update member"
+        }
+      },
+      "editForm": {
+        "protocolNumber": "Protocol Number *",
+        "enterProtocolNumber": "Enter protocol number",
+        "committee": "Committee",
+        "selectCommittee": "Select a committee",
+        "dueDate": "Due Date *",
+        "pickDate": "Pick a date",
+        "fillRequiredFields": "Please fill in all required fields",
+        "selectCommitteeError": "Please select a committee.",
+        "errorOccurred": "An error occurred"
+      },
+      "agendaItemDialog": {
+        "viewAndEdit": "View and edit agenda item details",
+        "editAgendaItem": "Edit Agenda Item",
+        "title": "Title",
+        "enterTitle": "Enter agenda item title",
+        "topicContent": "Topic Content",
+        "enterTopicContent": "Enter topic content",
+        "decisionContent": "Decision Content",
+        "enterDecisionContent": "Enter decision content",
+        "noTopicContent": "No topic content",
+        "noDecisionContent": "No decision content",
+        "topicInfo": "Enter the topic content for this agenda item. You can dictate or paste text.",
+        "decisionInfo": "Enter the decision content for this agenda item. You can dictate or paste text.",
+        "compareVersions": "Compare Versions",
+        "original": "Original",
+        "improvedSuggestion": "Improved Suggestion",
+        "accept": "Accept",
+        "revert": "Revert",
+        "saveChanges": "Save Changes",
+        "close": "Close"
+      },
+      "attachments": {
+        "title": "Protocol Attachments",
+        "uploadAttachment": "Upload Attachment",
+        "noAttachmentsFound": "No attachments found",
+        "uploadFilesToShare": "Upload files to share with protocol members",
+        "fileName": "File Name",
+        "size": "Size",
+        "type": "Type",
+        "uploaded": "Uploaded",
+        "actions": "Actions",
+        "download": "Download"
+      },
+      "messages": {
+        "title": "Messages",
+        "noMessagesFound": "No messages found for this protocol",
+        "typeYourMessage": "Type your message...",
+        "selectRecipients": "Select Recipients",
+        "selected": "selected",
+        "chooseTemplate": "Choose template",
+        "selectTemplate": "Select template",
+        "preMeetingMaterials": "Pre-meeting materials",
+        "protocolApproval": "Protocol approval",
+        "generalMessage": "General message",
+        "clear": "Clear",
+        "sendMessage": "Send Message",
+        "sending": "Sending...",
+        "mustBeLoggedIn": "You must be logged in to send messages.",
+        "messageSentSuccessfully": "Message sent successfully!",
+        "messageSentButEmailFailed": "Message sent successfully, but email notification failed:",
+        "messageSentButEmailNetworkError": "Message sent successfully, but email notification failed due to network error",
+        "failedToSendMessage": "Failed to send message",
+        "templates": {
+          "preMeetingMaterialsText": "Pre-meeting materials are now available for review.",
+          "protocolApprovalText": "Protocol approval is required. Please review and approve."
+        }
+      },
+      "recipientsDialog": {
+        "title": "Select Message Recipients",
+        "description": "Choose which protocol members should receive this message",
+        "ofSelected": "of",
+        "selected": "selected",
+        "selectAll": "Select All",
+        "clearAll": "Clear All",
+        "noProtocolMembersFound": "No protocol members found",
+        "member": "Member",
+        "cancel": "Cancel",
+        "confirmSelection": "Confirm Selection"
+      },
+      "members": {
+        "title": "Members",
+        "addMember": "Add Member",
+        "memberName": "Member Name",
+        "memberEmail": "Member Email",
+        "role": "Role",
+        "actions": "Actions"
       }
     },
     "protocols": {
@@ -243,6 +410,22 @@
       "total": "Total",
       "present": "Present",
       "absent": "Absent",
+      "toast": {
+        "protocolUpdated": "Protocol updated successfully",
+        "agendaItemUpdated": "Agenda item updated successfully",
+        "agendaItemUpdateFailed": "Failed to update agenda item",
+        "agendaItemCreated": "Agenda item created successfully",
+        "agendaItemCreateFailed": "Failed to create agenda item",
+        "agendaItemCreatedFromTopic": "Agenda item created from future topic",
+        "agendaItemCreateFromTopicFailed": "Failed to create agenda item from future topic",
+        "agendaItemNotFound": "Agenda item not found",
+        "agendaItemTitleUpdateFailed": "Failed to update agenda item title",
+        "agendaItemTitleUpdated": "Agenda item title updated",
+        "agendaItemDeleteFailed": "Failed to delete agenda item",
+        "agendaItemDeleted": "Agenda item deleted",
+        "protocolCreated": "Protocol #{number} created!",
+        "redirectingToProtocol": "Redirecting to protocol page..."
+      },
       "tabs": {
         "document": "Document",
         "members": "Members",
@@ -476,6 +659,76 @@
         "high": "High",
         "medium": "Medium",
         "low": "Low"
+      },
+      "toast": {
+        "taskUpdated": "Task Updated",
+        "taskUpdateSuccess": "Task has been updated successfully.",
+        "taskUpdateFailed": "Failed to update task. Please try again."
+      },
+      "editDialog": {
+        "editTask": "Edit Task",
+        "title": "Title",
+        "enterTaskTitle": "Enter task title",
+        "description": "Description",
+        "enterTaskDescription": "Enter task description",
+        "status": "Status",
+        "priority": "Priority",
+        "assignedTo": "Assigned To",
+        "enterAssigneeName": "Enter assignee name",
+        "dueDate": "Due Date",
+        "selectDueDate": "Select due date",
+        "taskInformation": "Task Information",
+        "agendaItem": "Agenda Item",
+        "protocol": "Protocol",
+        "created": "Created",
+        "cancel": "Cancel",
+        "updateTask": "Update Task",
+        "toDo": "To Do",
+        "inProgress": "In Progress",
+        "done": "Done",
+        "overdue": "Overdue",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "status": "Status",
+      "priority": "Priority"
+    },
+    "protocolCalendar": {
+      "title": "Calendar",
+      "loadingEvents": "Loading events...",
+      "createNewProtocol": "Create New Protocol",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "today": "Today",
+      "calendarTitle": "{month} {year}"
+    },
+    "committees": {
+      "title": "Committees",
+      "addCommittee": "Add Committee",
+      "totalCommittees": "Total: {count} committees",
+      "filtersAndSearch": "Filters & Search",
+      "search": "Search",
+      "searchPlaceholder": "Search committees...",
+      "company": "Company",
+      "allCompanies": "All companies",
+      "clearFilters": "Clear Filters",
+      "showingCommittees": "Showing {shown} of {total} committees",
+      "committeeName": "Committee Name",
+      "enterCommitteeName": "Enter committee name",
+      "selectCompany": "Select a company",
+      "noCommitteesFound": "No committees found",
+      "getStartedCreateCommittee": "Get started by creating your first committee.",
+      "noCommitteesMatch": "No committees match your filters",
+      "tryAdjustingSearch": "Try adjusting your search criteria or clear the filters.",
+      "tableHeaders": {
+        "name": "Name",
+        "company": "Company",
+        "members": "Members",
+        "createdAt": "Created At",
+        "lastUpdated": "Last Updated",
+        "actions": "Actions"
       }
     }
   },
@@ -509,10 +762,68 @@
     "updated": "Updated successfully",
     "deleted": "Deleted successfully",
     "uploaded": "Uploaded successfully",
-    "messageSent": "Message sent successfully"
+    "messageSent": "Message sent successfully",
+    "success": "Success",
+    "error": "Error"
   },
   "brand": {
     "name": "Next Agenda",
     "description": "A protocol editor to boost your next agendas"
+  },
+  "new": {
+    "backToProtocols": "Back to Protocols",
+    "createNewProtocol": "Create New Protocol",
+    "redirectingToProtocol": "Redirecting to protocol..."
+  },
+  "committees": {
+    "title": "Committees",
+    "addCommittee": "Add Committee",
+    "editCommittee": "Edit Committee",
+    "deleteCommittee": "Delete Committee",
+    "committeeName": "Committee Name",
+    "company": "Company",
+    "members": "Members",
+    "createdAt": "Created At",
+    "updatedAt": "Last Updated",
+    "actions": "Actions",
+    "search": "Search",
+    "searchPlaceholder": "Search committees...",
+    "filters": "Filters & Search",
+    "allCompanies": "All companies",
+    "clearFilters": "Clear Filters",
+    "showingResults": "Showing {showing} of {total} committees",
+    "noCommitteesFound": "No committees found",
+    "noCommitteesMessage": "Get started by creating your first committee.",
+    "noMatchingCommittees": "No committees match your filters",
+    "noMatchingMessage": "Try adjusting your search criteria or clear the filters.",
+    "addMember": "Add Member",
+    "editMember": "Edit Member",
+    "deleteMember": "Remove Member",
+    "memberName": "Member Name",
+    "membersCount": "{count} members",
+    "manageMembers": "Manage Members - {committee}",
+    "noMembersYet": "No members yet",
+    "created": "Created",
+    "lastUpdated": "Last Updated",
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirmDeleteCommittee": "Are you sure? This action cannot be undone. This will permanently delete the committee.",
+    "confirmDeleteMember": "Are you sure you want to remove this member from the committee? This action cannot be undone.",
+    "success": {
+      "committeeAdded": "Committee added successfully",
+      "committeeUpdated": "Committee updated successfully",
+      "committeeDeleted": "Committee deleted successfully",
+      "memberAdded": "Member added successfully",
+      "memberUpdated": "Member name updated successfully",
+      "memberDeleted": "Member removed successfully"
+    },
+    "error": {
+      "committeeAddFailed": "Failed to add committee",
+      "committeeUpdateFailed": "Failed to update committee",
+      "committeeDeleteFailed": "Failed to delete committee",
+      "memberAddFailed": "Failed to add member",
+      "memberUpdateFailed": "Failed to update member name",
+      "memberDeleteFailed": "Failed to remove member"
+    }
   }
 } 
