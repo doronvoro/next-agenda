@@ -18,9 +18,14 @@ import { VoiceMagicTextarea } from "@/app/[locale]/dashboard/protocols/[id]/comp
 import { useToast } from "@/components/ui/use-toast";
 import { useSpeechToText } from "@/lib/hooks/useSpeechToText";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
 
 export default function FutureTopicsPage() {
   const t = useTranslations("dashboard.futureTopics");
+  const pathname = usePathname();
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
   const [topics, setTopics] = useState<Database["public"]["Tables"]["future_topics"]["Row"][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -277,7 +282,8 @@ export default function FutureTopicsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4${isRTL ? ' text-right' : ''}`}
+            dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Search */}
             <div className="space-y-2">
               <Label htmlFor="search">{t("search")}</Label>
@@ -315,36 +321,36 @@ export default function FutureTopicsPage() {
       </Card>
       <Card>
         <CardContent className="p-0">
-          <div className="rounded-md border">
+          <div className="rounded-md border" dir={isRTL ? 'rtl' : 'ltr'}>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead><SortableHeader field="title">{t("tableHeaders.title")}</SortableHeader></TableHead>
-                  <TableHead><SortableHeader field="priority">{t("tableHeaders.priority")}</SortableHeader></TableHead>
-                  <TableHead>{t("tableHeaders.status")}</TableHead>
-                  <TableHead><SortableHeader field="created_at">{t("tableHeaders.created")}</SortableHeader></TableHead>
-                  <TableHead>{t("tableHeaders.actions")}</TableHead>
+                  <TableHead className={isRTL ? 'text-right' : ''}><SortableHeader field="title">{t("tableHeaders.title")}</SortableHeader></TableHead>
+                  <TableHead className={isRTL ? 'text-right' : ''}><SortableHeader field="priority">{t("tableHeaders.priority")}</SortableHeader></TableHead>
+                  <TableHead className={isRTL ? 'text-right' : ''}>{t("tableHeaders.status")}</TableHead>
+                  <TableHead className={isRTL ? 'text-right' : ''}><SortableHeader field="created_at">{t("tableHeaders.created")}</SortableHeader></TableHead>
+                  <TableHead className={isRTL ? 'text-right' : ''}>{t("tableHeaders.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTopics.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={6} className={`text-center text-muted-foreground${isRTL ? ' text-right' : ''}`}>
                       {t("noTopicsFound")}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredTopics.map((topic) => (
                     <TableRow key={topic.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className={`font-medium${isRTL ? ' text-right' : ''}`}>
                         <Link href={`/dashboard/future-topics/${topic.id}`} className="text-primary hover:underline">
                           {topic.title}
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
                         {getPriorityBadge(topic.priority as "low" | "medium" | "high")}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
                         {topic.related_agenda_item_id ? (
                           <Badge variant="secondary" className="bg-green-100 text-green-800">
                             {t("statuses.linkedToAgenda")}
@@ -355,8 +361,8 @@ export default function FutureTopicsPage() {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>{new Date(topic.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>{new Date(topic.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className={isRTL ? 'text-right' : ''}>
                         <Button variant="ghost" size="sm" onClick={() => handleEditTopic(topic)}>
                           {t("dialog.editTitle")}
                         </Button>
