@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { getLocaleFromPathname } from "@/lib/i18n/client";
+import CommitteeDropdown from "@/app/[locale]/dashboard/protocols/components/CommitteeDropdown";
+import { RtlProvider } from "@/context/RtlContext";
 
 interface ProtocolCreateFormProps {
   initialDate?: string | null;
@@ -64,60 +66,56 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-4 text-sm${isRTL ? ' text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <div>
-        <div className="mb-2">
-          <Label htmlFor="committee" className="mb-1">{t("committee")} *</Label>
-          <Select value={committeeId} onValueChange={setCommitteeId} required>
-            <SelectTrigger className="h-8 text-sm w-full">
-              <SelectValue placeholder={t("selectCommittee")}/>
-            </SelectTrigger>
-            <SelectContent className="text-sm">
-              {committees.map((committee: any) => (
-                <SelectItem key={committee.id} value={committee.id} className="text-sm">
-                  {committee.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <RtlProvider isRTL={isRTL}>
+      <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+        <div>
+          <div className="mb-2">
+            {/* <Label htmlFor="committee" className="mb-1">{t("committee")} *</Label> */}
+            <CommitteeDropdown
+              committees={committees}
+              selectedCommittee={committeeId}
+              setSelectedCommittee={setCommitteeId}
+              t={t}
+            />
+          </div>
         </div>
-      </div>
-      <div>
-        <div className="mb-2">
-          <Label htmlFor="protocol-number" className="mb-1">{t("protocolNumber")} *</Label>
-          <Input
-            id="protocol-number"
-            value={protocolNumber}
-            onChange={e => setProtocolNumber(e.target.value)}
-            placeholder={t("enterProtocolNumber")}
-            required
-            className="h-8 px-2 text-sm w-full"
-          />
+        <div>
+          <div className="mb-2">
+            <Label htmlFor="protocol-number" className="mb-1">{t("protocolNumber")} *</Label>
+            <Input
+              id="protocol-number"
+              value={protocolNumber}
+              onChange={e => setProtocolNumber(e.target.value)}
+              placeholder={t("enterProtocolNumber")}
+              required
+              className="h-8 px-2 text-sm w-full"
+            />
+          </div>
         </div>
-      </div>
-      {setDate && (
-        <div className="mb-2">
-          <Label className="mb-1">{t("dueDate")} *</Label>
-          <Input
-            type="date"
-            value={typeof date === 'object' && date ? date.toISOString().substring(0, 10) : ""}
-            onChange={e => setDate(e.target.value ? new Date(e.target.value) : null)}
-            className="h-8 px-2 text-sm w-full"
-            required
-          />
+        {setDate && (
+          <div className="mb-2">
+            <Label className="mb-1">{t("dueDate")} *</Label>
+            <Input
+              type="date"
+              value={typeof date === 'object' && date ? date.toISOString().substring(0, 10) : ""}
+              onChange={e => setDate(e.target.value ? new Date(e.target.value) : null)}
+              className="h-8 px-2 text-sm w-full"
+              required
+            />
+          </div>
+        )}
+        {initialDate && !setDate && (
+          <div className="mb-2">
+            <Label className="mb-1">{t("date")}</Label>
+            <Input value={initialDate.substring(0, 10)} disabled className="h-8 px-2 text-sm bg-muted" />
+          </div>
+        )}
+        {error && <div className="text-red-500 text-xs mt-1">{t(error)}</div>}
+        <div className={`flex justify-end gap-2 mt-2${isRTL ? ' flex-row-reverse' : ''}`}>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={creating}>{t("cancel")}</Button>
+          <Button type="submit" size="sm" disabled={creating || !committeeId}>{creating ? t("creating") : t("createProtocol")}</Button>
         </div>
-      )}
-      {initialDate && !setDate && (
-        <div className="mb-2">
-          <Label className="mb-1">{t("date")}</Label>
-          <Input value={initialDate.substring(0, 10)} disabled className="h-8 px-2 text-sm bg-muted" />
-        </div>
-      )}
-      {error && <div className="text-red-500 text-xs mt-1">{t(error)}</div>}
-      <div className={`flex justify-end gap-2 mt-2${isRTL ? ' flex-row-reverse' : ''}`}>
-        <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={creating}>{t("cancel")}</Button>
-        <Button type="submit" size="sm" disabled={creating || !committeeId}>{creating ? t("creating") : t("createProtocol")}</Button>
-      </div>
-    </form>
+      </form>
+    </RtlProvider>
   );
 } 

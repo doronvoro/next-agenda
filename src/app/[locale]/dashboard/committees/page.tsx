@@ -47,6 +47,8 @@ import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { getLocaleFromPathname } from "@/lib/i18n/client";
+import AppDropdown from "@/components/AppDropdown";
+import { RtlProvider } from "@/context/RtlContext";
 
 type Committee = Database["public"]["Tables"]["committees"]["Row"];
 type CommitteeMember = Database["public"]["Tables"]["committees_members"]["Row"];
@@ -520,344 +522,330 @@ export default function CommitteesPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className={`flex justify-between items-center mb-6${isRTL ? ' text-right' : ''}`}>
-        <h1 className={`text-3xl font-bold ${isRTL ? 'text-right' : ''}`}>{t("title")}</h1>
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-muted-foreground">
-            {t("totalCommittees", { count: committees.length })}
+    <RtlProvider isRTL={isRTL}>
+      <div className="container mx-auto p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`flex justify-between items-center mb-6${isRTL ? ' text-right' : ''}`}>
+          <h1 className={`text-3xl font-bold ${isRTL ? 'text-right' : ''}`}>{t("title")}</h1>
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-muted-foreground">
+              {t("totalCommittees", { count: committees.length })}
+            </div>
+            {!isAdding && (
+              <Button onClick={() => setIsAdding(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                {t("addCommittee")}
+              </Button>
+            )}
           </div>
-          {!isAdding && (
-            <Button onClick={() => setIsAdding(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              {t("addCommittee")}
-            </Button>
-          )}
         </div>
-      </div>
 
-      {/* Filters and Search */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            {t("filtersAndSearch")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4${isRTL ? ' text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
-            {/* Search */}
-            <div className="space-y-2">
-              <Label htmlFor="search">{t("search")}</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder={t("searchPlaceholder")}
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
+        {/* Filters and Search */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              {t("filtersAndSearch")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4${isRTL ? ' text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+              {/* Search */}
+              <div className="space-y-2">
+                <Label htmlFor="search">{t("search")}</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder={t("searchPlaceholder")}
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              {/* Company Filter */}
+              <div className="space-y-2">
+                <AppDropdown
+                  label={t("company")}
+                  value={selectedCompany}
+                  onChange={(value) => {
+                    setSelectedCompany(value);
                     setCurrentPage(1);
                   }}
-                  className="pl-10"
+                  options={[
+                    { value: "all", label: t("allCompanies") },
+                    ...companies.map((company) => ({ value: company.id, label: company.name }))
+                  ]}
+                  placeholder={t("allCompanies")}
                 />
               </div>
             </div>
-            {/* Company Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="company">{t("company")}</Label>
-              <Select
-                value={selectedCompany}
-                onValueChange={(value) => {
-                  setSelectedCompany(value);
-                  setCurrentPage(1);
-                }}
+            {/* Clear Filters */}
+            <div className={`flex justify-between items-center mt-4 pt-4 border-t${isRTL ? ' flex-row-reverse' : ''}` }>
+              <div className="text-sm text-muted-foreground">
+                {t("showingCommittees", { shown: filteredAndSortedCommittees.length, total: committees.length })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                disabled={!searchTerm && selectedCompany === "all"}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("allCompanies")}/>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allCompanies")}</SelectItem>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {t("clearFilters")}
+              </Button>
             </div>
-          </div>
-          {/* Clear Filters */}
-          <div className={`flex justify-between items-center mt-4 pt-4 border-t${isRTL ? ' flex-row-reverse' : ''}` }>
-            <div className="text-sm text-muted-foreground">
-              {t("showingCommittees", { shown: filteredAndSortedCommittees.length, total: committees.length })}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearFilters}
-              disabled={!searchTerm && selectedCompany === "all"}
-            >
-              {t("clearFilters")}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardContent className="pt-6">
-          {isAdding && (
-            <div className="mb-6 p-4 border rounded-lg">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-committee">{t("committeeName")}</Label>
-                  <div className={`flex gap-2${isRTL ? ' flex-row-reverse' : ''}` }>
-                    <Input
-                      id="new-committee"
-                      value={newCommitteeName}
-                      onChange={(e) => setNewCommitteeName(e.target.value)}
-                      placeholder={t("enterCommitteeName")}
-                      className="flex-1"
+        <Card>
+          <CardContent className="pt-6">
+            {isAdding && (
+              <div className="mb-6 p-4 border rounded-lg">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-committee">{t("committeeName")}</Label>
+                    <div className={`flex gap-2${isRTL ? ' flex-row-reverse' : ''}` }>
+                      <Input
+                        id="new-committee"
+                        value={newCommitteeName}
+                        onChange={(e) => setNewCommitteeName(e.target.value)}
+                        placeholder={t("enterCommitteeName")}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsAdding(false)}
+                        className="h-10 w-10"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleAddCommittee}
+                        className="h-10 w-10"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <AppDropdown
+                      label={t("company")}
+                      value={newCompanyId}
+                      onChange={setNewCompanyId}
+                      options={companies.map(company => ({ value: company.id, label: company.name }))}
+                      placeholder={t("selectCompany")}
                     />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsAdding(false)}
-                      className="h-10 w-10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleAddCommittee}
-                      className="h-10 w-10"
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-company">{t("company")}</Label>
-                  <Select
-                    value={newCompanyId}
-                    onValueChange={setNewCompanyId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("selectCompany")}/>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {filteredAndSortedCommittees.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              {committees.length === 0 ? (
-                <>
-                  <p className="text-lg font-medium mb-2">{t("noCommitteesFound")}</p>
-                  <p>{t("getStartedCreateCommittee")}</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-lg font-medium mb-2">{t("noCommitteesMatch")}</p>
-                  <p>{t("tryAdjustingSearch")}</p>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="rounded-md border" dir={isRTL ? 'rtl' : 'ltr'}>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className={isRTL ? 'text-right' : ''}>
-                      <SortableHeader field="name">{t("tableHeaders.name")}</SortableHeader>
-                    </TableHead>
-                    <TableHead className={isRTL ? 'text-right' : ''}>
-                      <SortableHeader field="company">{t("tableHeaders.company")}</SortableHeader>
-                    </TableHead>
-                    <TableHead className={isRTL ? 'text-right' : ''}>{t("tableHeaders.members")}</TableHead>
-                    <TableHead className={isRTL ? 'text-right' : ''}>
-                      <SortableHeader field="created_at">{t("tableHeaders.createdAt")}</SortableHeader>
-                    </TableHead>
-                    <TableHead className={isRTL ? 'text-right' : ''}>
-                      <SortableHeader field="updated_at">{t("tableHeaders.lastUpdated")}</SortableHeader>
-                    </TableHead>
-                    <TableHead className={`w-[100px]${isRTL ? ' text-right' : ''}`}>{t("tableHeaders.actions")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedCommittees.map((committee) => (
-                    <TableRow key={committee.id}>
-                      <TableCell className={isRTL ? 'text-right' : ''}>
-                        {editingCommittee?.id === committee.id ? (
-                          <Input
-                            value={editingCommittee.name}
-                            onChange={(e) =>
-                              setEditingCommittee({
-                                ...editingCommittee,
-                                name: e.target.value,
-                              })
-                            }
-                            placeholder={t("enterCommitteeName")}
-                          />
-                        ) : (
-                          committee.name
-                        )}
-                      </TableCell>
-                      <TableCell className={isRTL ? 'text-right' : ''}>
-                        {companies.find((c) => c.id === committee.company_id)?.name || "-"}
-                      </TableCell>
-                      <TableCell className={isRTL ? 'text-right' : ''}>
-                        {(committeeMembers[committee.id]?.length || 0)}
-                      </TableCell>
-                      <TableCell className={isRTL ? 'text-right' : ''}>
-                        {formatDate(committee.created_at)}
-                      </TableCell>
-                      <TableCell className={isRTL ? 'text-right' : ''}>
-                        {formatDate(committee.updated_at)}
-                      </TableCell>
-                      <TableCell className={`w-[100px]${isRTL ? ' text-right' : ''}`}>
-                        <div className="flex gap-2">
-                          {editingCommittee?.id === committee.id ? (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setEditingCommittee(null)}
-                                className="h-8 w-8"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={handleUpdateCommittee}
-                                className="h-8 w-8"
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setEditingCommittee(committee)}
-                                className="h-8 w-8"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeletingCommitteeId(committee.id)}
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
+            {filteredAndSortedCommittees.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                {committees.length === 0 ? (
+                  <>
+                    <p className="text-lg font-medium mb-2">{t("noCommitteesFound")}</p>
+                    <p>{t("getStartedCreateCommittee")}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-medium mb-2">{t("noCommitteesMatch")}</p>
+                    <p>{t("tryAdjustingSearch")}</p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-md border" dir={isRTL ? 'rtl' : 'ltr'}>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className={isRTL ? 'text-right' : ''}>
+                        <SortableHeader field="name">{t("tableHeaders.name")}</SortableHeader>
+                      </TableHead>
+                      <TableHead className={isRTL ? 'text-right' : ''}>
+                        <SortableHeader field="company">{t("tableHeaders.company")}</SortableHeader>
+                      </TableHead>
+                      <TableHead className={isRTL ? 'text-right' : ''}>{t("tableHeaders.members")}</TableHead>
+                      <TableHead className={isRTL ? 'text-right' : ''}>
+                        <SortableHeader field="created_at">{t("tableHeaders.createdAt")}</SortableHeader>
+                      </TableHead>
+                      <TableHead className={isRTL ? 'text-right' : ''}>
+                        <SortableHeader field="updated_at">{t("tableHeaders.lastUpdated")}</SortableHeader>
+                      </TableHead>
+                      <TableHead className={`w-[100px]${isRTL ? ' text-right' : ''}`}>{t("tableHeaders.actions")}</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && filteredAndSortedCommittees.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t">
-              <div className="text-sm text-muted-foreground">
-                Showing {((currentPage - 1) * itemsPerPage) + 1} to{" "}
-                {Math.min(currentPage * itemsPerPage, filteredAndSortedCommittees.length)} of{" "}
-                {filteredAndSortedCommittees.length} results
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedCommittees.map((committee) => (
+                      <TableRow key={committee.id}>
+                        <TableCell className={isRTL ? 'text-right' : ''}>
+                          {editingCommittee?.id === committee.id ? (
+                            <Input
+                              value={editingCommittee.name}
+                              onChange={(e) =>
+                                setEditingCommittee({
+                                  ...editingCommittee,
+                                  name: e.target.value,
+                                })
+                              }
+                              placeholder={t("enterCommitteeName")}
+                            />
+                          ) : (
+                            committee.name
+                          )}
+                        </TableCell>
+                        <TableCell className={isRTL ? 'text-right' : ''}>
+                          {companies.find((c) => c.id === committee.company_id)?.name || "-"}
+                        </TableCell>
+                        <TableCell className={isRTL ? 'text-right' : ''}>
+                          {(committeeMembers[committee.id]?.length || 0)}
+                        </TableCell>
+                        <TableCell className={isRTL ? 'text-right' : ''}>
+                          {formatDate(committee.created_at)}
+                        </TableCell>
+                        <TableCell className={isRTL ? 'text-right' : ''}>
+                          {formatDate(committee.updated_at)}
+                        </TableCell>
+                        <TableCell className={`w-[100px]${isRTL ? ' text-right' : ''}`}>
+                          <div className="flex gap-2">
+                            {editingCommittee?.id === committee.id ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setEditingCommittee(null)}
+                                  className="h-8 w-8"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={handleUpdateCommittee}
+                                  className="h-8 w-8"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setEditingCommittee(committee)}
+                                  className="h-8 w-8"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDeletingCommitteeId(committee.id)}
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <Button
-                      key={page}
-                      variant={currentPage === page ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(page)}
-                      className="w-8 h-8 p-0"
-                    >
-                      {page}
-                    </Button>
-                  ))}
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && filteredAndSortedCommittees.length > 0 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to{" "}
+                  {Math.min(currentPage * itemsPerPage, filteredAndSortedCommittees.length)} of{" "}
+                  {filteredAndSortedCommittees.length} results
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
 
-      <AlertDialog open={!!deletingCommitteeId} onOpenChange={() => setDeletingCommitteeId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the committee.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteCommittee}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog open={!!deletingCommitteeId} onOpenChange={() => setDeletingCommitteeId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the committee.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteCommittee}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      <AlertDialog open={!!deletingMemberId} onOpenChange={() => setDeletingMemberId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Member</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove this member from the committee? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteMember}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        <AlertDialog open={!!deletingMemberId} onOpenChange={() => setDeletingMemberId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Member</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove this member from the committee? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteMember}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </RtlProvider>
   );
 } 

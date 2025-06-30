@@ -24,6 +24,7 @@ import { useTranslations } from "next-intl";
 import type { ProtocolMember, EditingMember, NewMember } from "../types";
 import { createMember, updateMember } from "../supabaseApi";
 import { useToast } from "@/components/ui/use-toast";
+import AppDropdown from "@/components/AppDropdown";
 
 interface ProtocolMembersProps {
   protocolMembers: ProtocolMember[];
@@ -114,56 +115,47 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="member-type">{t("type")}</Label>
-                  <Select
+                  <AppDropdown
+                    label={t("type")}
                     value={newMember.type.toString()}
-                    onValueChange={(value) => setNewMember(prev => ({ ...prev, type: parseInt(value) }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">{t("memberTypes.committeeMember")}</SelectItem>
-                      <SelectItem value="2">{t("memberTypes.external")}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onChange={value => setNewMember(prev => ({ ...prev, type: parseInt(value) }))}
+                    options={[
+                      { value: "1", label: t("memberTypes.committeeMember") },
+                      { value: "2", label: t("memberTypes.external") },
+                    ]}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="member-status">{t("status")}</Label>
-                  <Select
+                  <AppDropdown
+                    label={t("status")}
                     value={newMember.status.toString()}
-                    onValueChange={(value) => setNewMember(prev => ({ ...prev, status: parseInt(value) }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">{t("statuses.absent")}</SelectItem>
-                      <SelectItem value="2">{t("statuses.present")}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onChange={value => setNewMember(prev => ({ ...prev, status: parseInt(value) }))}
+                    options={[
+                      { value: "1", label: t("statuses.absent") },
+                      { value: "2", label: t("statuses.present") },
+                    ]}
+                  />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="member-vote-status">{t("voteStatus")}</Label>
                 <div className="flex gap-2">
-                  <Select
+                  <AppDropdown
+                    label={t("voteStatus")}
                     value={newMember.vote_status?.toString() || ""}
-                    onValueChange={(value) => setNewMember(prev => ({ 
+                    onChange={value => setNewMember(prev => ({ 
                       ...prev, 
                       vote_status: parseInt(value) 
                     }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("noVote")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">{t("voteStatuses.for")}</SelectItem>
-                      <SelectItem value="2">{t("voteStatuses.against")}</SelectItem>
-                      <SelectItem value="3">{t("voteStatuses.abstain")}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    options={[
+                      { value: "1", label: t("voteStatuses.for") },
+                      { value: "2", label: t("voteStatuses.against") },
+                      { value: "3", label: t("voteStatuses.abstain") },
+                    ]}
+                  />
                   {newMember.vote_status && (
                     <Button
                       variant="ghost"
@@ -223,48 +215,39 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                         />
                       </TableCell>
                       <TableCell>
-                        <Select
+                        <AppDropdown
+                          label={t("type")}
                           value={editingMember.type.toString()}
-                          onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, type: parseInt(value) } : null)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">{t("memberTypes.committeeMember")}</SelectItem>
-                            <SelectItem value="2">{t("memberTypes.external")}</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          onChange={value => setEditingMember(prev => prev ? { ...prev, type: parseInt(value) } : null)}
+                          options={[
+                            { value: "1", label: t("memberTypes.committeeMember") },
+                            { value: "2", label: t("memberTypes.external") },
+                          ]}
+                        />
                       </TableCell>
                       <TableCell>
-                        <Select
+                        <AppDropdown
+                          label={t("status")}
                           value={editingMember.status.toString()}
-                          onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, status: parseInt(value) } : null)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">{t("statuses.absent")}</SelectItem>
-                            <SelectItem value="2">{t("statuses.present")}</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          onChange={value => setEditingMember(prev => prev ? { ...prev, status: parseInt(value) } : null)}
+                          options={[
+                            { value: "1", label: t("statuses.absent") },
+                            { value: "2", label: t("statuses.present") },
+                          ]}
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Select
+                          <AppDropdown
+                            label={t("voteStatus")}
                             value={editingMember.vote_status?.toString() || ""}
-                            onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, vote_status: parseInt(value) } : null)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("noVote")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1">{t("voteStatuses.for")}</SelectItem>
-                              <SelectItem value="2">{t("voteStatuses.against")}</SelectItem>
-                              <SelectItem value="3">{t("voteStatuses.abstain")}</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            onChange={value => setEditingMember(prev => prev ? { ...prev, vote_status: parseInt(value) } : null)}
+                            options={[
+                              { value: "1", label: t("voteStatuses.for") },
+                              { value: "2", label: t("voteStatuses.against") },
+                              { value: "3", label: t("voteStatuses.abstain") },
+                            ]}
+                          />
                           {editingMember.vote_status && (
                             <Button
                               variant="ghost"

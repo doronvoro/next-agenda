@@ -70,10 +70,13 @@ import {
   fetchTasksWithCascadingFilters,
   type TaskWithDetails 
 } from "../protocols/[id]/supabaseApi";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { CascadingFilterDialog } from "./components/CascadingFilterDialog";
 import { EditTaskDialog } from "./components/EditTaskDialog";
 import { useTranslations } from "next-intl";
+import AppDropdown from "@/components/AppDropdown";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
+import { RtlProvider } from "@/context/RtlContext";
 
 type SortField = "title" | "status" | "priority" | "due_date" | "created_at" | "protocol_number" | "agenda_item_title";
 type SortOrder = "asc" | "desc";
@@ -87,6 +90,9 @@ export default function TaskTrackingPage() {
   const router = useRouter();
   const t = useTranslations("dashboard.taskTracking");
   const common = useTranslations("common");
+  const pathname = usePathname();
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
   const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -427,396 +433,392 @@ export default function TaskTrackingPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">Loading tasks...</div>
-      </div>
+      <RtlProvider isRTL={isRTL}>
+        <div className="container mx-auto p-6">
+          <div className="text-center">Loading tasks...</div>
+        </div>
+      </RtlProvider>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center text-red-500">
-          Error: {error}
+      <RtlProvider isRTL={isRTL}>
+        <div className="container mx-auto p-6">
+          <div className="text-center text-red-500">
+            Error: {error}
+          </div>
         </div>
-      </div>
+      </RtlProvider>
     );
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">{t("title")}</h1>
-        <Button onClick={() => router.push("/dashboard")}>
-          {t("backToDashboard")}
-        </Button>
-      </div>
+    <RtlProvider isRTL={isRTL}>
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
+          <Button onClick={() => router.push("/dashboard")}>
+            {t("backToDashboard")}
+          </Button>
+        </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            {t("filters")}
-            {getActiveFiltersCount() > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {getActiveFiltersCount()} {t("activeFilters")}
-              </Badge>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAllFilters}
-              className="ml-auto"
-              disabled={getActiveFiltersCount() === 0}
-            >
-              <X className="h-4 w-4 mr-1" />
-              {t("clearAll")}
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder={t("searchTasks")}
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="pl-10 h-12 w-full"
-              />
-            </div>
-            {/* Status Filter */}
-            <div>
-              <Label htmlFor="status" className="mb-1 block">{t("status")}</Label>
-              <Select
-                value={selectedStatus}
-                onValueChange={(value) => {
-                  setSelectedStatus(value);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="h-12 w-full">
-                  <SelectValue placeholder={t("allStatuses")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allStatuses")}</SelectItem>
-                  <SelectItem value="pending">{t("statusLabels.pending")}</SelectItem>
-                  <SelectItem value="in_progress">{t("statusLabels.in_progress")}</SelectItem>
-                  <SelectItem value="completed">{t("statusLabels.completed")}</SelectItem>
-                  <SelectItem value="overdue">{t("statusLabels.overdue")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Priority Filter */}
-            <div>
-              <Label htmlFor="priority" className="mb-1 block">{t("priority")}</Label>
-              <Select
-                value={selectedPriority}
-                onValueChange={(value) => {
-                  setSelectedPriority(value);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="h-12 w-full">
-                  <SelectValue placeholder={t("allPriorities")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allPriorities")}</SelectItem>
-                  <SelectItem value="high">{t("priorityLabels.high")}</SelectItem>
-                  <SelectItem value="medium">{t("priorityLabels.medium")}</SelectItem>
-                  <SelectItem value="low">{t("priorityLabels.low")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Protocol Filter */}
-            <div>
-              <Label htmlFor="protocol" className="mb-1 block">{t("protocol")}</Label>
-              <Select
-                value={selectedProtocol}
-                onValueChange={(value) => {
-                  setSelectedProtocol(value);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="h-12 w-full">
-                  <SelectValue placeholder={t("allProtocols")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allProtocols")}</SelectItem>
-                  {uniqueProtocols.map((protocol) => (
-                    <SelectItem key={protocol.id} value={protocol.id}>
-                      #{protocol.number} - {protocol.committee}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Date Range */}
-            <div>
-              <Label className="mb-1 block">{t("dueDateRange")}</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full h-12 justify-start text-left font-normal",
-                      !dateRange?.from && !dateRange?.to && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-5 w-5" />
-                    {dateRange?.from ? (
-                      dateRange?.to ? (
-                        <>
-                          {format(dateRange.from, "dd/MM/yyyy")} - {format(dateRange.to, "dd/MM/yyyy")}
-                        </>
-                      ) : (
-                        format(dateRange.from, "dd/MM/yyyy")
-                      )
-                    ) : (
-                      t("selectDateRange")
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    initialFocus
-                    mode="range"
-                    defaultMonth={dateRange?.from}
-                    selected={dateRange}
-                    onSelect={(range) => {
-                      setDateRange(range);
-                      setCurrentPage(1);
-                    }}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            {/* Advanced Filters Button */}
-            <div className="flex items-end">
-              <Button
-                variant="secondary"
-                onClick={() => setCascadingFilterDialogOpen(true)}
-                className="w-full h-12"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                {t("advancedFilters")}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tasks Table */}
-      {filteredAndSortedTasks.length === 0 ? (
+        {/* Filters */}
         <Card>
-          <CardContent className="text-center py-12">
-            <div className="text-muted-foreground">
-              {tasks.length === 0 ? (
-                <>
-                  <p className="text-lg font-medium mb-2">{t("noTasksFound")}</p>
-                  <p>{t("noTasksMessage")}</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-lg font-medium mb-2">{t("noMatchingTasks")}</p>
-                  <p>{t("noMatchingMessage")}</p>
-                </>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              {t("filters")}
+              {getActiveFiltersCount() > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {getActiveFiltersCount()} {t("activeFilters")}
+                </Badge>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <SortableHeader field="title">{t("taskTitle")}</SortableHeader>
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader field="agenda_item_title">{t("agendaItem")}</SortableHeader>
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader field="protocol_number">{t("protocol")}</SortableHeader>
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader field="status">{t("status")}</SortableHeader>
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader field="priority">{t("priority")}</SortableHeader>
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader field="due_date">{t("dueDate")}</SortableHeader>
-                    </TableHead>
-                    <TableHead>{t("assignedTo")}</TableHead>
-                    <TableHead>
-                      <SortableHeader field="created_at">{t("created")}</SortableHeader>
-                    </TableHead>
-                    <TableHead className="w-[100px]">{t("actions")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedTasks.map((task) => (
-                    <TableRow key={task.id}>
-                      <TableCell className="font-medium max-w-[200px]">
-                        <div className="truncate" title={task.title}>
-                          {task.title}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-[200px]">
-                        <div className="truncate" title={task.agenda_item.title}>
-                          {task.agenda_item.title}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {task.protocol ? (
-                          <Link 
-                            href={`/dashboard/protocols/${task.protocol.id}`}
-                            className="text-primary hover:underline"
-                          >
-                            #{task.protocol.number}
-                          </Link>
-                        ) : (
-                          <span className="text-muted-foreground">{t("noProtocol")}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(task.status)}</TableCell>
-                      <TableCell>{getPriorityBadge(task.priority)}</TableCell>
-                      <TableCell>
-                        {task.due_date ? formatDate(task.due_date) : (
-                          <span className="text-muted-foreground">{t("noDueDate")}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {task.assigned_to || (
-                          <span className="text-muted-foreground">{t("unassigned")}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{formatDate(task.created_at)}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewTask(task)}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              {t("viewInBoard")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              {t("editTask")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleDeleteTask(task)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              {t("deleteTask")}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t">
-                <div className="text-sm text-muted-foreground">
-                  {t("showingResults", {
-                    from: ((currentPage - 1) * itemsPerPage) + 1,
-                    to: Math.min(currentPage * itemsPerPage, filteredAndSortedTasks.length),
-                    total: filteredAndSortedTasks.length
-                  })}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    {t("previous")}
-                  </Button>
-                  <div className="flex items-center space-x-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    {t("next")}
-                  </Button>
-                </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="ml-auto"
+                disabled={getActiveFiltersCount() === 0}
+              >
+                <X className="h-4 w-4 mr-1" />
+                {t("clearAll")}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  placeholder={t("searchTasks")}
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="pl-10 h-12 w-full"
+                />
               </div>
-            )}
+              {/* Status Filter */}
+              <div>
+                <AppDropdown
+                  label={t("status")}
+                  value={selectedStatus}
+                  onChange={(value) => {
+                    setSelectedStatus(value);
+                    setCurrentPage(1);
+                  }}
+                  options={[
+                    { value: "all", label: t("allStatuses") },
+                    { value: "pending", label: t("statusLabels.pending") },
+                    { value: "in_progress", label: t("statusLabels.in_progress") },
+                    { value: "completed", label: t("statusLabels.completed") },
+                    { value: "overdue", label: t("statusLabels.overdue") },
+                  ]}
+                  placeholder={t("allStatuses")}
+                />
+              </div>
+              {/* Priority Filter */}
+              <div>
+                <AppDropdown
+                  label={t("priority")}
+                  value={selectedPriority}
+                  onChange={(value) => {
+                    setSelectedPriority(value);
+                    setCurrentPage(1);
+                  }}
+                  options={[
+                    { value: "all", label: t("allPriorities") },
+                    { value: "high", label: t("priorityLabels.high") },
+                    { value: "medium", label: t("priorityLabels.medium") },
+                    { value: "low", label: t("priorityLabels.low") },
+                  ]}
+                  placeholder={t("allPriorities")}
+                />
+              </div>
+              {/* Protocol Filter */}
+              <div>
+                <AppDropdown
+                  label={t("protocol")}
+                  value={selectedProtocol}
+                  onChange={(value) => {
+                    setSelectedProtocol(value);
+                    setCurrentPage(1);
+                  }}
+                  options={[
+                    { value: "all", label: t("allProtocols") },
+                    ...uniqueProtocols.map(protocol => ({
+                      value: protocol.id,
+                      label: `#${protocol.number} - ${protocol.committee}`
+                    }))
+                  ]}
+                  placeholder={t("allProtocols")}
+                />
+              </div>
+              {/* Date Range */}
+              <div>
+                <Label className="mb-1 block">{t("dueDateRange")}</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full h-12 justify-start text-left font-normal",
+                        !dateRange?.from && !dateRange?.to && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-5 w-5" />
+                      {dateRange?.from ? (
+                        dateRange?.to ? (
+                          <>
+                            {format(dateRange.from, "dd/MM/yyyy")} - {format(dateRange.to, "dd/MM/yyyy")}
+                          </>
+                        ) : (
+                          format(dateRange.from, "dd/MM/yyyy")
+                        )
+                      ) : (
+                        t("selectDateRange")
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      initialFocus
+                      mode="range"
+                      defaultMonth={dateRange?.from}
+                      selected={dateRange}
+                      onSelect={(range) => {
+                        setDateRange(range);
+                        setCurrentPage(1);
+                      }}
+                      numberOfMonths={2}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              {/* Advanced Filters Button */}
+              <div className="flex items-end">
+                <Button
+                  variant="secondary"
+                  onClick={() => setCascadingFilterDialogOpen(true)}
+                  className="w-full h-12"
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  {t("advancedFilters")}
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
-      )}
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("deleteConfirmMessage", { title: deletingTask?.title || "" })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDelete}>{common("buttons.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? t("deleting") : t("deleteTask")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Tasks Table */}
+        {filteredAndSortedTasks.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-12">
+              <div className="text-muted-foreground">
+                {tasks.length === 0 ? (
+                  <>
+                    <p className="text-lg font-medium mb-2">{t("noTasksFound")}</p>
+                    <p>{t("noTasksMessage")}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-medium mb-2">{t("noMatchingTasks")}</p>
+                    <p>{t("noMatchingMessage")}</p>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <SortableHeader field="title">{t("taskTitle")}</SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader field="agenda_item_title">{t("agendaItem")}</SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader field="protocol_number">{t("protocol")}</SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader field="status">{t("status")}</SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader field="priority">{t("priority")}</SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader field="due_date">{t("dueDate")}</SortableHeader>
+                      </TableHead>
+                      <TableHead>{t("assignedTo")}</TableHead>
+                      <TableHead>
+                        <SortableHeader field="created_at">{t("created")}</SortableHeader>
+                      </TableHead>
+                      <TableHead className="w-[100px]">{t("actions")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedTasks.map((task) => (
+                      <TableRow key={task.id}>
+                        <TableCell className="font-medium max-w-[200px]">
+                          <div className="truncate" title={task.title}>
+                            {task.title}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-[200px]">
+                          <div className="truncate" title={task.agenda_item.title}>
+                            {task.agenda_item.title}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {task.protocol ? (
+                            <Link 
+                              href={`/dashboard/protocols/${task.protocol.id}`}
+                              className="text-primary hover:underline"
+                            >
+                              #{task.protocol.number}
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">{t("noProtocol")}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(task.status)}</TableCell>
+                        <TableCell>{getPriorityBadge(task.priority)}</TableCell>
+                        <TableCell>
+                          {task.due_date ? formatDate(task.due_date) : (
+                            <span className="text-muted-foreground">{t("noDueDate")}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {task.assigned_to || (
+                            <span className="text-muted-foreground">{t("unassigned")}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{formatDate(task.created_at)}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewTask(task)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                {t("viewInBoard")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditTask(task)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                {t("editTask")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteTask(task)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                {t("deleteTask")}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
-      {/* Cascading Filter Dialog */}
-      <CascadingFilterDialog
-        open={cascadingFilterDialogOpen}
-        onOpenChange={setCascadingFilterDialogOpen}
-        onApplyFilters={handleCascadingFiltersApply}
-        currentFilters={cascadingFilters}
-      />
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    {t("showingResults", {
+                      from: ((currentPage - 1) * itemsPerPage) + 1,
+                      to: Math.min(currentPage * itemsPerPage, filteredAndSortedTasks.length),
+                      total: filteredAndSortedTasks.length
+                    })}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      {t("previous")}
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      {t("next")}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Edit Task Dialog */}
-      <EditTaskDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        task={editingTask}
-        onTaskUpdated={loadTasks}
-      />
-    </div>
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("deleteConfirmMessage", { title: deletingTask?.title || "" })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={cancelDelete}>{common("buttons.cancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? t("deleting") : t("deleteTask")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Cascading Filter Dialog */}
+        <CascadingFilterDialog
+          open={cascadingFilterDialogOpen}
+          onOpenChange={setCascadingFilterDialogOpen}
+          onApplyFilters={handleCascadingFiltersApply}
+          currentFilters={cascadingFilters}
+        />
+
+        {/* Edit Task Dialog */}
+        <EditTaskDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          task={editingTask}
+          onTaskUpdated={loadTasks}
+        />
+      </div>
+    </RtlProvider>
   );
 } 

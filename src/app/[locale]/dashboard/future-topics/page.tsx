@@ -20,6 +20,8 @@ import { useSpeechToText } from "@/lib/hooks/useSpeechToText";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { getLocaleFromPathname } from "@/lib/i18n/client";
+import AppDropdown from "@/components/AppDropdown";
+import { RtlProvider } from "@/context/RtlContext";
 
 export default function FutureTopicsPage() {
   const t = useTranslations("dashboard.futureTopics");
@@ -263,206 +265,202 @@ export default function FutureTopicsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">{t("title")}</h1>
-          <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
+    <RtlProvider isRTL={isRTL}>
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">{t("title")}</h1>
+            <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
+          </div>
+          <Button className="gap-2" onClick={handleDialogOpen}>
+            <Plus className="h-4 w-4" />
+            {t("createTopic")}
+          </Button>
         </div>
-        <Button className="gap-2" onClick={handleDialogOpen}>
-          <Plus className="h-4 w-4" />
-          {t("createTopic")}
-        </Button>
-      </div>
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            {t("filtersAndSearch")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4${isRTL ? ' text-right' : ''}`}
-            dir={isRTL ? 'rtl' : 'ltr'}>
-            {/* Search */}
-            <div className="space-y-2">
-              <Label htmlFor="search">{t("search")}</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder={t("searchPlaceholder")}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              {t("filtersAndSearch")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4${isRTL ? ' text-right' : ''}`}
+              dir={isRTL ? 'rtl' : 'ltr'}>
+              {/* Search */}
+              <div className="space-y-2">
+                <Label htmlFor="search">{t("search")}</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder={t("searchPlaceholder")}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              {/* Priority Filter */}
+              <div className="space-y-2">
+                <AppDropdown
+                  label={t("priority")}
+                  value={priorityFilter}
+                  onChange={setPriorityFilter}
+                  options={[
+                    { value: "all", label: t("allPriorities") },
+                    { value: "low", label: t("priorities.low") },
+                    { value: "medium", label: t("priorities.medium") },
+                    { value: "high", label: t("priorities.high") },
+                  ]}
+                  placeholder={t("allPriorities")}
                 />
               </div>
             </div>
-            {/* Priority Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="priority-filter">{t("priority")}</Label>
-              <Select
-                value={priorityFilter}
-                onValueChange={setPriorityFilter}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("allPriorities")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allPriorities")}</SelectItem>
-                  <SelectItem value="low">{t("priorities.low")}</SelectItem>
-                  <SelectItem value="medium">{t("priorities.medium")}</SelectItem>
-                  <SelectItem value="high">{t("priorities.high")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-0">
-          <div className="rounded-md border" dir={isRTL ? 'rtl' : 'ltr'}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className={isRTL ? 'text-right' : ''}><SortableHeader field="title">{t("tableHeaders.title")}</SortableHeader></TableHead>
-                  <TableHead className={isRTL ? 'text-right' : ''}><SortableHeader field="priority">{t("tableHeaders.priority")}</SortableHeader></TableHead>
-                  <TableHead className={isRTL ? 'text-right' : ''}>{t("tableHeaders.status")}</TableHead>
-                  <TableHead className={isRTL ? 'text-right' : ''}><SortableHeader field="created_at">{t("tableHeaders.created")}</SortableHeader></TableHead>
-                  <TableHead className={isRTL ? 'text-right' : ''}>{t("tableHeaders.actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTopics.length === 0 ? (
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-0">
+            <div className="rounded-md border" dir={isRTL ? 'rtl' : 'ltr'}>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className={`text-center text-muted-foreground${isRTL ? ' text-right' : ''}`}>
-                      {t("noTopicsFound")}
-                    </TableCell>
+                    <TableHead className={isRTL ? 'text-right' : ''}><SortableHeader field="title">{t("tableHeaders.title")}</SortableHeader></TableHead>
+                    <TableHead className={isRTL ? 'text-right' : ''}><SortableHeader field="priority">{t("tableHeaders.priority")}</SortableHeader></TableHead>
+                    <TableHead className={isRTL ? 'text-right' : ''}>{t("tableHeaders.status")}</TableHead>
+                    <TableHead className={isRTL ? 'text-right' : ''}><SortableHeader field="created_at">{t("tableHeaders.created")}</SortableHeader></TableHead>
+                    <TableHead className={isRTL ? 'text-right' : ''}>{t("tableHeaders.actions")}</TableHead>
                   </TableRow>
-                ) : (
-                  filteredTopics.map((topic) => (
-                    <TableRow key={topic.id}>
-                      <TableCell className={`font-medium${isRTL ? ' text-right' : ''}`}>
-                        <Link href={`/dashboard/future-topics/${topic.id}`} className="text-primary hover:underline">
-                          {topic.title}
-                        </Link>
-                      </TableCell>
-                      <TableCell className={isRTL ? 'text-right' : ''}>
-                        {getPriorityBadge(topic.priority as "low" | "medium" | "high")}
-                      </TableCell>
-                      <TableCell className={isRTL ? 'text-right' : ''}>
-                        {topic.related_agenda_item_id ? (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            {t("statuses.linkedToAgenda")}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-muted-foreground">
-                            {t("statuses.available")}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className={isRTL ? 'text-right' : ''}>{new Date(topic.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className={isRTL ? 'text-right' : ''}>
-                        <Button variant="ghost" size="sm" onClick={() => handleEditTopic(topic)}>
-                          {t("dialog.editTitle")}
-                        </Button>
+                </TableHeader>
+                <TableBody>
+                  {filteredTopics.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className={`text-center text-muted-foreground${isRTL ? ' text-right' : ''}`}>
+                        {t("noTopicsFound")}
                       </TableCell>
                     </TableRow>
-                  ))
+                  ) : (
+                    filteredTopics.map((topic) => (
+                      <TableRow key={topic.id}>
+                        <TableCell className={`font-medium${isRTL ? ' text-right' : ''}`}>
+                          <Link href={`/dashboard/future-topics/${topic.id}`} className="text-primary hover:underline">
+                            {topic.title}
+                          </Link>
+                        </TableCell>
+                        <TableCell className={isRTL ? 'text-right' : ''}>
+                          {getPriorityBadge(topic.priority as "low" | "medium" | "high")}
+                        </TableCell>
+                        <TableCell className={isRTL ? 'text-right' : ''}>
+                          {topic.related_agenda_item_id ? (
+                            <Badge variant="secondary" className="bg-green-100 text-green-800">
+                              {t("statuses.linkedToAgenda")}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground">
+                              {t("statuses.available")}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className={isRTL ? 'text-right' : ''}>{new Date(topic.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className={isRTL ? 'text-right' : ''}>
+                          <Button variant="ghost" size="sm" onClick={() => handleEditTopic(topic)}>
+                            {t("dialog.editTitle")}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-3xl w-full max-h-[95vh] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
+                {isEditing ? t("dialog.editTitle") : t("dialog.createTitle")}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="title">{t("dialog.title")}</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleFormChange("title", e.target.value)}
+                  placeholder={t("dialog.titlePlaceholder")}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="content">{t("dialog.content")}</Label>
+                <VoiceMagicTextarea
+                  value={formData.content}
+                  onChange={e => handleFormChange("content", e.target.value)}
+                  onImprove={handleImproveContent}
+                  onMic={() => {
+                    if (dictatingContent && listening) {
+                      stopListening();
+                      setDictatingContent(false);
+                    } else {
+                      setDictatingContent(true);
+                      startListening();
+                    }
+                  }}
+                  isImproving={isImprovingContent}
+                  isSupported={isSupported}
+                  dictating={dictatingContent}
+                  listening={listening}
+                  disabled={!!contentImproved}
+                  placeholder={t("dialog.contentPlaceholder")}
+                  ariaLabel={t("dialog.content")}
+                />
+                {contentImproved && (
+                  <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
+                    <div className="font-bold mb-2 text-primary">{t("compareVersions.title")}</div>
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground mb-1">{t("compareVersions.original")}</div>
+                        <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{contentOriginal}</div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground mb-1">{t("compareVersions.improvedSuggestion")}</div>
+                        <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{contentImproved}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-4 justify-end">
+                      <Button size="lg" className="px-6" onClick={handleAcceptImprovedContent}>{t("compareVersions.accept")}</Button>
+                      <Button size="lg" variant="outline" className="px-6" onClick={handleRevertImprovedContent}>{t("compareVersions.revert")}</Button>
+                    </div>
+                  </div>
                 )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl w-full max-h-[95vh] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
-              {isEditing ? t("dialog.editTitle") : t("dialog.createTitle")}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="title">{t("dialog.title")}</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleFormChange("title", e.target.value)}
-                placeholder={t("dialog.titlePlaceholder")}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="content">{t("dialog.content")}</Label>
-              <VoiceMagicTextarea
-                value={formData.content}
-                onChange={e => handleFormChange("content", e.target.value)}
-                onImprove={handleImproveContent}
-                onMic={() => {
-                  if (dictatingContent && listening) {
-                    stopListening();
-                    setDictatingContent(false);
-                  } else {
-                    setDictatingContent(true);
-                    startListening();
-                  }
-                }}
-                isImproving={isImprovingContent}
-                isSupported={isSupported}
-                dictating={dictatingContent}
-                listening={listening}
-                disabled={!!contentImproved}
-                placeholder={t("dialog.contentPlaceholder")}
-                ariaLabel={t("dialog.content")}
-              />
-              {contentImproved && (
-                <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
-                  <div className="font-bold mb-2 text-primary">{t("compareVersions.title")}</div>
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1">
-                      <div className="text-xs text-muted-foreground mb-1">{t("compareVersions.original")}</div>
-                      <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{contentOriginal}</div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xs text-muted-foreground mb-1">{t("compareVersions.improvedSuggestion")}</div>
-                      <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{contentImproved}</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-4 justify-end">
-                    <Button size="lg" className="px-6" onClick={handleAcceptImprovedContent}>{t("compareVersions.accept")}</Button>
-                    <Button size="lg" variant="outline" className="px-6" onClick={handleRevertImprovedContent}>{t("compareVersions.revert")}</Button>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="priority">{t("dialog.priority")}</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value) => handleFormChange("priority", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("dialog.priorityPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">{t("priorities.low")}</SelectItem>
-                  <SelectItem value="medium">{t("priorities.medium")}</SelectItem>
-                  <SelectItem value="high">{t("priorities.high")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter className="flex gap-2 justify-end mt-8">
-              <Button type="button" variant="outline" onClick={handleDialogClose} disabled={isSubmitting}>
-                {t("dialog.cancel")}
-              </Button>
-              <Button type="submit" disabled={isSubmitting || !formData.title.trim()}>
-                {isSubmitting ? (isEditing ? t("dialog.updating") : t("dialog.creating")) : (isEditing ? t("dialog.update") : t("dialog.create"))}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+              </div>
+              <div className="space-y-2">
+                <AppDropdown
+                  label={t("dialog.priority")}
+                  value={formData.priority}
+                  onChange={(value) => handleFormChange("priority", value)}
+                  options={[
+                    { value: "low", label: t("priorities.low") },
+                    { value: "medium", label: t("priorities.medium") },
+                    { value: "high", label: t("priorities.high") },
+                  ]}
+                  placeholder={t("dialog.priorityPlaceholder")}
+                />
+              </div>
+              <DialogFooter className="flex gap-2 justify-end mt-8">
+                <Button type="button" variant="outline" onClick={handleDialogClose} disabled={isSubmitting}>
+                  {t("dialog.cancel")}
+                </Button>
+                <Button type="submit" disabled={isSubmitting || !formData.title.trim()}>
+                  {isSubmitting ? (isEditing ? t("dialog.updating") : t("dialog.creating")) : (isEditing ? t("dialog.update") : t("dialog.create"))}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </RtlProvider>
   );
 } 

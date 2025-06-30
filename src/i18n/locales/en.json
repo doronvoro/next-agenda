@@ -582,7 +582,8 @@
         "creating": "Creating...",
         "createProtocol": "Create Protocol",
         "allFieldsRequired": "All fields are required",
-        "failedToCreate": "Failed to create protocol"
+        "failedToCreate": "Failed to create protocol",
+        "allCommittees": "All Committees"
       }
     },
     "agenda": {

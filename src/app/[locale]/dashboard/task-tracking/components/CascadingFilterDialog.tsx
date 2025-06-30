@@ -4,13 +4,6 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { X, Filter } from "lucide-react";
 import { 
@@ -21,6 +14,7 @@ import {
   type Committee,
   type ProtocolForFilter
 } from "../../protocols/[id]/supabaseApi";
+import AppDropdown from "@/components/AppDropdown";
 
 interface CascadingFilterDialogProps {
   open: boolean;
@@ -168,67 +162,44 @@ export function CascadingFilterDialog({
         <div className="space-y-6">
           {/* Company Filter */}
           <div className="space-y-2">
-            <Label htmlFor="company">Company</Label>
-            <Select
+            <AppDropdown
+              label="Company"
               value={selectedCompany || "all"}
-              onValueChange={(value) => setSelectedCompany(value === "all" ? null : value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a company" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All companies</SelectItem>
-                {companies.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(value) => setSelectedCompany(value === "all" ? null : value)}
+              options={[
+                { value: "all", label: "All companies" },
+                ...companies.map((company) => ({ value: company.id, label: company.name }))
+              ]}
+              placeholder="Select a company"
+            />
           </div>
 
           {/* Committee Filter */}
           <div className="space-y-2">
-            <Label htmlFor="committee">Committee</Label>
-            <Select
+            <AppDropdown
+              label="Committee"
               value={selectedCommittee || "all"}
-              onValueChange={(value) => setSelectedCommittee(value === "all" ? null : value)}
-              disabled={!selectedCompany}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={selectedCompany ? "Select a committee" : "Select a company first"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All committees</SelectItem>
-                {committees.map((committee) => (
-                  <SelectItem key={committee.id} value={committee.id}>
-                    {committee.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(value) => setSelectedCommittee(value === "all" ? null : value)}
+              options={[
+                { value: "all", label: "All committees" },
+                ...committees.map((committee) => ({ value: committee.id, label: committee.name }))
+              ]}
+              placeholder={selectedCompany ? "Select a committee" : "Select a company first"}
+            />
           </div>
 
           {/* Protocol Filter */}
           <div className="space-y-2">
-            <Label htmlFor="protocol">Protocol</Label>
-            <Select
+            <AppDropdown
+              label="Protocol"
               value={selectedProtocol || "all"}
-              onValueChange={(value) => setSelectedProtocol(value === "all" ? null : value)}
-              disabled={!selectedCommittee}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={selectedCommittee ? "Select a protocol" : "Select a committee first"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All protocols</SelectItem>
-                {protocols.map((protocol) => (
-                  <SelectItem key={protocol.id} value={protocol.id}>
-                    #{protocol.number}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(value) => setSelectedProtocol(value === "all" ? null : value)}
+              options={[
+                { value: "all", label: "All protocols" },
+                ...protocols.map((protocol) => ({ value: protocol.id, label: `#${protocol.number}` }))
+              ]}
+              placeholder={selectedCommittee ? "Select a protocol" : "Select a committee first"}
+            />
           </div>
 
           {/* Current Filters Display */}
