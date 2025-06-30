@@ -8,6 +8,10 @@ import { useEffect, useState } from "react";
 import { fetchAllProtocolsWithDueDatesAndMessageSent } from "../protocols/[id]/supabaseApi";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import ProtocolCreateForm from "./ProtocolCreateForm";
+import { usePathname } from "next/navigation";
+import { getLocaleFromPathname } from "@/lib/i18n/client";
+import { useTranslations } from "next-intl";
+import heLocale from '@fullcalendar/core/locales/he';
 
 export default function ProtocolCalendarPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -15,6 +19,24 @@ export default function ProtocolCalendarPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [refreshFlag, setRefreshFlag] = useState(0);
+
+  const pathname = usePathname();
+  const currentLocale = getLocaleFromPathname(pathname);
+  const isRTL = currentLocale === 'he';
+  const t = useTranslations('dashboard.protocolCalendar');
+
+  const dayLabel = t('day');
+  const weekLabel = t('week');
+  const monthLabel = t('month');
+  const todayLabel = t('today');
+  // Custom title formatter for FullCalendar
+  function calendarTitleFormat(arg: any) {
+    // arg.date is a Date object, but FullCalendar expects a string or object
+    // We'll use toLocaleString to get the month name in the current locale
+    const month = arg.date.toLocaleString(currentLocale, { month: 'long' });
+    const year = arg.date.getFullYear();
+    return t('calendarTitle', { month, year });
+  }
 
   useEffect(() => {
     const fetchProtocols = async () => {
@@ -64,37 +86,46 @@ export default function ProtocolCalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800 py-10 px-4">
+    <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800 py-10 px-4${isRTL ? ' text-right' : ''}`}
+         dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Calendar</h1>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">{t('title')}</h1>
           {/* Example action button */}
           {/* <button className="bg-primary text-white px-4 py-2 rounded shadow hover:bg-primary-dark transition">Add Event</button> */}
         </div>
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg p-6">
           {loading ? (
-            <div className="text-center py-10 text-gray-500 dark:text-gray-400">Loading events...</div>
+            <div className="text-center py-10 text-gray-500 dark:text-gray-400">{t('loadingEvents')}</div>
           ) : (
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
               headerToolbar={{
-                left: 'prev,next today',
+                left: `prev,next today`,
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
               }}
+              buttonText={{
+                today: todayLabel,
+                month: monthLabel,
+                week: weekLabel,
+                day: dayLabel
+              }}
+              locale={currentLocale === 'he' ? heLocale : 'en'}
               editable={true}
               selectable={true}
               events={events}
               height="auto"
               select={handleDateSelect}
+              direction={isRTL ? 'rtl' : 'ltr'}
             />
           )}
         </div>
       </div>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-md w-full">
-          <DialogTitle>Create New Protocol</DialogTitle>
+          <DialogTitle>{t('createNewProtocol')}</DialogTitle>
           <ProtocolCreateForm 
             initialDate={selectedDate}
             onSuccess={handleProtocolCreated}
