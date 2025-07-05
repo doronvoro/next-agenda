@@ -5,7 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { usePathname } from "next/navigation";
 
 import { Toaster } from "@/components/ui/sonner";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -90,7 +90,8 @@ export default function DashboardLayout({
     >
       <SidebarProvider>
         <div className="flex h-screen w-screen bg-background rtl">
-          <div className="flex-1 w-full rtl">
+          <AppSidebar />
+          <SidebarInset className="flex flex-col">
             <div className="flex items-center gap-4 px-5 pt-5 rtl">
               <SidebarTrigger />
               {customBreadcrumb ?? (
@@ -125,11 +126,10 @@ export default function DashboardLayout({
               )}
             </div>
 
-            <div className="container mx-auto overflow-auto px-6 py-4 space-y-5 rtl">
+            <div className="container mx-auto overflow-auto px-6 py-4 space-y-5 rtl flex-1">
               {children}
             </div>
-          </div>
-          <AppSidebar />
+          </SidebarInset>
         </div>
         <Toaster />
       </SidebarProvider>
