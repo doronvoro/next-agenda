@@ -61,7 +61,7 @@ export default function DashboardLayout({
     }
     
     customBreadcrumb = (
-      <Breadcrumb>
+      <Breadcrumb className="rtl">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
@@ -89,13 +89,13 @@ export default function DashboardLayout({
       disableTransitionOnChange
     >
       <SidebarProvider>
-        <div className="flex h-screen w-screen bg-background">
+        <div className="flex h-screen w-screen bg-background rtl">
           <AppSidebar />
-          <div className="flex-1 w-full">
-            <div className="flex items-center gap-4 px-5 pt-5">
+          <div className="flex-1 w-full rtl">
+            <div className="flex items-center gap-4 px-5 pt-5 rtl">
               <SidebarTrigger />
               {customBreadcrumb ?? (
-                <Breadcrumb>
+                <Breadcrumb className="rtl">
                   <BreadcrumbList>
                     <BreadcrumbItem>
                       <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
@@ -126,7 +126,7 @@ export default function DashboardLayout({
               )}
             </div>
 
-            <div className="container mx-auto overflow-auto px-6 py-4 space-y-5">
+            <div className="container mx-auto overflow-auto px-6 py-4 space-y-5 rtl">
               {children}
             </div>
           </div>

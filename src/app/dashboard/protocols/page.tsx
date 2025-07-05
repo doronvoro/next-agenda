@@ -447,12 +447,12 @@ export default function ProtocolsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 rtl">
             {/* Search */}
             <div className="space-y-2">
               <Label htmlFor="search">חיפוש</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground rtl" />
                 <Input
                   id="search"
                   placeholder="חפש פרוטוקולים..."
@@ -461,7 +461,7 @@ export default function ProtocolsPage() {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="pl-10"
+                  className="pr-10 rtl"
                 />
               </div>
             </div>
@@ -520,11 +520,11 @@ export default function ProtocolsPage() {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-right font-normal rtl",
                       !dateRange?.from && !dateRange?.to && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="ml-2 h-4 w-4 rtl" />
                     {dateRange?.from ? (
                       dateRange?.to ? (
                         <>

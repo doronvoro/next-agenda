@@ -564,28 +564,28 @@ export default function ProtocolPage() {
       <div className="max-w-6xl mx-auto px-8 py-8">
         <div className="bg-card rounded-lg shadow-sm border border-border">
           {/* Document Tabs */}
-          <div className="border-b border-border">
-            <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
-              <TabsList className="grid w-full grid-cols-4 h-12 rounded-none border-b-0 bg-transparent">
-                <TabsTrigger value="content" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
+          <div className="border-b border-border rtl">
+            <Tabs defaultValue="content" className="w-full rtl" value={currentTab} onValueChange={setCurrentTab}>
+              <TabsList className="grid w-full grid-cols-4 h-12 rounded-none border-b-0 bg-transparent rtl">
+                <TabsTrigger value="content" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
                   מסמך
                   {currentTab === "content" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="members" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
+                <TabsTrigger value="members" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
                   חברים
                   {currentTab === "members" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="attachments" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
+                <TabsTrigger value="attachments" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
                   קבצים מצורפים
                   {currentTab === "attachments" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="messages" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
+                <TabsTrigger value="messages" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
                   הודעות
                   {currentTab === "messages" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>

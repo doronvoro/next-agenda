@@ -119,6 +119,8 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-rubik), "Segoe UI", "Noto Sans Hebrew", "Arial Hebrew", system-ui, sans-serif;
+    direction: rtl;
+    text-align: right;
   }
   :lang(he) {
     font-family: var(--font-rubik), "Noto Sans Hebrew", "Arial Hebrew", "Segoe UI", system-ui, sans-serif;
@@ -133,5 +135,678 @@
     direction: rtl !important;
     text-align: right !important;
     font-size: 1rem !important;
+  }
+}
+
+/* RTL Layout Support */
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+/* RTL Grid Layouts */
+.rtl .grid {
+  direction: rtl;
+}
+
+/* RTL Flexbox Layouts */
+.rtl .flex {
+  direction: rtl;
+}
+
+/* RTL Sidebar */
+.rtl [data-radix-sidebar] {
+  direction: rtl;
+}
+
+/* RTL Dropdowns */
+.rtl [data-radix-popper-content-wrapper] {
+  direction: rtl;
+}
+
+/* RTL Tabs */
+.rtl [data-radix-tabs-list] {
+  direction: rtl;
+}
+
+/* RTL Input fields */
+.rtl input,
+.rtl textarea,
+.rtl select {
+  direction: rtl;
+  text-align: right;
+}
+
+/* RTL Search icons positioning */
+.rtl .relative .absolute.left-3 {
+  left: auto;
+  right: 0.75rem;
+}
+
+.rtl .pl-10 {
+  padding-left: 0;
+  padding-right: 2.5rem;
+}
+
+/* RTL Button icons */
+.rtl .mr-2 {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+.rtl .ml-2 {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+/* RTL Badge positioning */
+.rtl .ml-1 {
+  margin-left: 0;
+  margin-right: 0.25rem;
+}
+
+/* RTL Table alignment */
+.rtl table {
+  direction: rtl;
+}
+
+.rtl th,
+.rtl td {
+  text-align: right;
+}
+
+/* RTL Card content */
+.rtl .card {
+  direction: rtl;
+}
+
+/* RTL Navigation */
+.rtl nav {
+  direction: rtl;
+}
+
+/* RTL Breadcrumb */
+.rtl .breadcrumb {
+  direction: rtl;
+}
+
+/* RTL Calendar */
+.rtl .calendar {
+  direction: rtl;
+}
+
+/* RTL Popover positioning */
+.rtl [data-radix-popper-content-wrapper] {
+  direction: rtl;
+}
+
+/* RTL Dialog */
+.rtl [data-radix-dialog-content] {
+  direction: rtl;
+}
+
+/* RTL Select dropdown */
+.rtl [data-radix-select-content] {
+  direction: rtl;
+}
+
+/* RTL Tooltip */
+.rtl [data-radix-tooltip-content] {
+  direction: rtl;
+}
+
+/* RTL Menu */
+.rtl [data-radix-menu-content] {
+  direction: rtl;
+}
+
+/* RTL Context menu */
+.rtl [data-radix-context-menu-content] {
+  direction: rtl;
+}
+
+/* RTL Hover card */
+.rtl [data-radix-hover-card-content] {
+  direction: rtl;
+}
+
+/* RTL Sheet */
+.rtl [data-radix-sheet-content] {
+  direction: rtl;
+}
+
+/* RTL Drawer */
+.rtl [data-radix-drawer-content] {
+  direction: rtl;
+}
+
+/* RTL Accordion */
+.rtl [data-radix-accordion-content] {
+  direction: rtl;
+}
+
+/* RTL Collapsible */
+.rtl [data-radix-collapsible-content] {
+  direction: rtl;
+}
+
+/* RTL Command */
+.rtl [data-radix-command-list] {
+  direction: rtl;
+}
+
+/* RTL Resizable */
+.rtl [data-radix-resizable-handle] {
+  direction: rtl;
+}
+
+/* RTL Carousel */
+.rtl [data-radix-carousel-viewport] {
+  direction: rtl;
+}
+
+/* RTL Pagination */
+.rtl [data-radix-pagination-list] {
+  direction: rtl;
+}
+
+/* RTL Progress */
+.rtl [data-radix-progress-indicator] {
+  direction: rtl;
+}
+
+/* RTL Slider */
+.rtl [data-radix-slider-track] {
+  direction: rtl;
+}
+
+/* RTL Switch */
+.rtl [data-radix-switch-thumb] {
+  direction: rtl;
+}
+
+/* RTL Toggle */
+.rtl [data-radix-toggle] {
+  direction: rtl;
+}
+
+/* RTL Toggle group */
+.rtl [data-radix-toggle-group] {
+  direction: rtl;
+}
+
+/* RTL Separator */
+.rtl [data-radix-separator] {
+  direction: rtl;
+}
+
+/* RTL Scroll area */
+.rtl [data-radix-scroll-area-viewport] {
+  direction: rtl;
+}
+
+/* RTL Aspect ratio */
+.rtl [data-radix-aspect-ratio] {
+  direction: rtl;
+}
+
+/* RTL Avatar */
+.rtl [data-radix-avatar-image] {
+  direction: rtl;
+}
+
+/* RTL Label */
+.rtl [data-radix-label] {
+  direction: rtl;
+}
+
+/* RTL Form */
+.rtl [data-radix-form] {
+  direction: rtl;
+}
+
+/* RTL Input OTP */
+.rtl [data-radix-input-otp-input] {
+  direction: rtl;
+}
+
+/* RTL Menubar */
+.rtl [data-radix-menubar-menu] {
+  direction: rtl;
+}
+
+/* RTL Navigation menu */
+.rtl [data-radix-navigation-menu-list] {
+  direction: rtl;
+}
+
+/* RTL Skeleton */
+.rtl [data-radix-skeleton] {
+  direction: rtl;
+}
+
+/* RTL Sonner toast */
+.rtl [data-radix-sonner-toast] {
+  direction: rtl;
+}
+
+/* RTL Toaster */
+.rtl [data-radix-toaster] {
+  direction: rtl;
+}
+
+/* RTL Toast */
+.rtl [data-radix-toast] {
+  direction: rtl;
+}
+
+/* RTL Use toast */
+.rtl [data-radix-use-toast] {
+  direction: rtl;
+}
+
+/* Additional RTL-specific fixes */
+
+/* RTL Sidebar positioning */
+.rtl [data-radix-sidebar] {
+  border-left: none;
+  border-right: 1px solid var(--sidebar-border);
+}
+
+/* RTL Sidebar trigger positioning */
+.rtl [data-radix-sidebar-trigger] {
+  margin-left: 0;
+  margin-right: 1rem;
+}
+
+/* RTL Badge positioning in dropdowns */
+.rtl [data-radix-dropdown-menu-item] .badge {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+/* RTL Icon positioning in buttons */
+.rtl button svg:first-child {
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+.rtl button svg:last-child {
+  margin-right: 0.5rem;
+  margin-left: 0;
+}
+
+/* RTL Form field spacing */
+.rtl .form-field {
+  direction: rtl;
+}
+
+/* RTL Label positioning */
+.rtl label {
+  text-align: right;
+}
+
+/* RTL Checkbox and radio positioning */
+.rtl [type="checkbox"],
+.rtl [type="radio"] {
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+/* RTL List positioning */
+.rtl ul,
+.rtl ol {
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+/* RTL Quote positioning */
+.rtl blockquote {
+  border-right: 4px solid var(--border);
+  border-left: none;
+  padding-right: 1rem;
+  padding-left: 0;
+}
+
+/* RTL Code block positioning */
+.rtl pre {
+  direction: ltr;
+  text-align: left;
+}
+
+/* RTL Inline code */
+.rtl code {
+  direction: ltr;
+}
+
+/* RTL Number inputs */
+.rtl input[type="number"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Email inputs */
+.rtl input[type="email"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL URL inputs */
+.rtl input[type="url"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Password inputs */
+.rtl input[type="password"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Search inputs */
+.rtl input[type="search"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Tel inputs */
+.rtl input[type="tel"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Date inputs */
+.rtl input[type="date"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Time inputs */
+.rtl input[type="time"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Datetime-local inputs */
+.rtl input[type="datetime-local"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Month inputs */
+.rtl input[type="month"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Week inputs */
+.rtl input[type="week"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* RTL Color inputs */
+.rtl input[type="color"] {
+  direction: ltr;
+}
+
+/* RTL File inputs */
+.rtl input[type="file"] {
+  direction: ltr;
+}
+
+/* RTL Range inputs */
+.rtl input[type="range"] {
+  direction: ltr;
+}
+
+/* RTL Progress bars */
+.rtl progress {
+  direction: ltr;
+}
+
+/* RTL Meter elements */
+.rtl meter {
+  direction: ltr;
+}
+
+/* RTL Time elements */
+.rtl time {
+  direction: ltr;
+}
+
+/* RTL Address elements */
+.rtl address {
+  direction: rtl;
+  text-align: right;
+}
+
+/* RTL Definition lists */
+.rtl dl {
+  direction: rtl;
+}
+
+.rtl dt {
+  text-align: right;
+  font-weight: bold;
+}
+
+.rtl dd {
+  text-align: right;
+  margin-right: 1rem;
+  margin-left: 0;
+}
+
+/* RTL Figure and figcaption */
+.rtl figure {
+  direction: rtl;
+}
+
+.rtl figcaption {
+  text-align: right;
+}
+
+/* RTL Details and summary */
+.rtl details {
+  direction: rtl;
+}
+
+.rtl summary {
+  text-align: right;
+  cursor: pointer;
+}
+
+/* RTL Mark elements */
+.rtl mark {
+  direction: rtl;
+}
+
+/* RTL Small elements */
+.rtl small {
+  direction: rtl;
+}
+
+/* RTL Sub and sup elements */
+.rtl sub,
+.rtl sup {
+  direction: ltr;
+}
+
+/* RTL Abbreviation elements */
+.rtl abbr {
+  direction: rtl;
+}
+
+/* RTL Acronym elements */
+.rtl acronym {
+  direction: rtl;
+}
+
+/* RTL Citation elements */
+.rtl cite {
+  direction: rtl;
+}
+
+/* RTL Definition elements */
+.rtl dfn {
+  direction: rtl;
+}
+
+/* RTL Keyboard elements */
+.rtl kbd {
+  direction: ltr;
+}
+
+/* RTL Sample elements */
+.rtl samp {
+  direction: ltr;
+}
+
+/* RTL Variable elements */
+.rtl var {
+  direction: rtl;
+}
+
+/* RTL Output elements */
+.rtl output {
+  direction: rtl;
+}
+
+/* RTL Data elements */
+.rtl data {
+  direction: rtl;
+}
+
+/* RTL Time elements */
+.rtl time {
+  direction: rtl;
+}
+
+/* RTL Ruby elements */
+.rtl ruby {
+  direction: rtl;
+}
+
+.rtl rt {
+  direction: ltr;
+}
+
+.rtl rp {
+  direction: ltr;
+}
+
+/* RTL BDI elements */
+.rtl bdi {
+  direction: rtl;
+}
+
+/* RTL BDO elements */
+.rtl bdo {
+  direction: rtl;
+}
+
+/* RTL WBR elements */
+.rtl wbr {
+  direction: ltr;
+}
+
+/* RTL Canvas elements */
+.rtl canvas {
+  direction: ltr;
+}
+
+/* RTL SVG elements */
+.rtl svg {
+  direction: ltr;
+}
+
+/* RTL Math elements */
+.rtl math {
+  direction: ltr;
+}
+
+/* RTL Video elements */
+.rtl video {
+  direction: ltr;
+}
+
+/* RTL Audio elements */
+.rtl audio {
+  direction: ltr;
+}
+
+/* RTL Track elements */
+.rtl track {
+  direction: ltr;
+}
+
+/* RTL Map elements */
+.rtl map {
+  direction: ltr;
+}
+
+/* RTL Area elements */
+.rtl area {
+  direction: ltr;
+}
+
+/* RTL Object elements */
+.rtl object {
+  direction: ltr;
+}
+
+/* RTL Param elements */
+.rtl param {
+  direction: ltr;
+}
+
+/* RTL Source elements */
+.rtl source {
+  direction: ltr;
+}
+
+/* RTL Embed elements */
+.rtl embed {
+  direction: ltr;
+}
+
+/* RTL Iframe elements */
+.rtl iframe {
+  direction: ltr;
+}
+
+/* RTL Picture elements */
+.rtl picture {
+  direction: ltr;
+}
+
+/* RTL Portal elements */
+.rtl portal {
+  direction: ltr;
+}
+
+/* RTL Slot elements */
+.rtl slot {
+  direction: ltr;
+}
+
+/* RTL Template elements */
+.rtl template {
+  direction: ltr;
+}
+
+/* RTL Custom elements */
+.rtl * {
+  direction: inherit;
+}
+
+/* RTL Print styles */
+@media print {
+  .rtl {
+    direction: rtl;
+  }
+  
+  .rtl * {
+    direction: inherit;
   }
 }

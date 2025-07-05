@@ -187,16 +187,16 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between rtl">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight rtl">Dashboard</h1>
+          <p className="text-muted-foreground rtl">
             Welcome back! Here's what's happening with your protocols and tasks.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 rtl">
           <Link href="/dashboard/protocols/new">
-            <Button className="gap-2">
+            <Button className="gap-2 rtl">
               <Plus className="h-4 w-4" />
               New Protocol
             </Button>

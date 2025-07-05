@@ -463,10 +463,10 @@ export default function TaskTrackingPage() {
         </CardHeader>
         <CardContent>
           {/* First row: Search, Status, Priority, Protocol */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 rtl">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground rtl" />
               <Input
                 placeholder="Search tasks..."
                 value={searchTerm}
@@ -474,7 +474,7 @@ export default function TaskTrackingPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-10"
+                className="pr-10 rtl"
               />
             </div>
             {/* Status Filter */}
@@ -546,7 +546,7 @@ export default function TaskTrackingPage() {
           </div>
 
           {/* Second row: Date Range and Advanced Filter */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end mb-4 rtl">
             {/* Date Range */}
             <div>
               <Label className="mb-1 block">Due Date Range</Label>
@@ -555,11 +555,11 @@ export default function TaskTrackingPage() {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-right font-normal rtl",
                       !dateRange?.from && !dateRange?.to && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="ml-2 h-4 w-4 rtl" />
                     {dateRange?.from ? (
                       dateRange?.to ? (
                         <>
@@ -607,7 +607,7 @@ export default function TaskTrackingPage() {
                 variant="ghost"
                 size="sm"
                 onClick={clearAllFilters}
-                className="text-muted-foreground hover:text-foreground ml-2"
+                className="text-muted-foreground hover:text-foreground mr-2 rtl"
               >
                 Clear all
               </Button>
