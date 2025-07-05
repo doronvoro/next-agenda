@@ -82,7 +82,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar" className="rtl">
+    <Sidebar collapsible="icon" variant="sidebar" className="rtl" side="right">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

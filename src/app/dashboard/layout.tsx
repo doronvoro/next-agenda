@@ -90,7 +90,6 @@ export default function DashboardLayout({
     >
       <SidebarProvider>
         <div className="flex h-screen w-screen bg-background rtl">
-          <AppSidebar />
           <div className="flex-1 w-full rtl">
             <div className="flex items-center gap-4 px-5 pt-5 rtl">
               <SidebarTrigger />
@@ -130,6 +129,7 @@ export default function DashboardLayout({
               {children}
             </div>
           </div>
+          <AppSidebar />
         </div>
         <Toaster />
       </SidebarProvider>

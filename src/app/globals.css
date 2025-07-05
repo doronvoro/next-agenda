@@ -419,6 +419,18 @@
   margin-right: 1rem;
 }
 
+/* RTL Sidebar trigger button positioning for right sidebar */
+.rtl [data-side="right"] [data-radix-sidebar-trigger] {
+  margin-left: 1rem;
+  margin-right: 0;
+}
+
+/* RTL Sidebar content positioning */
+.rtl [data-side="right"] [data-radix-sidebar] {
+  border-left: 1px solid var(--sidebar-border);
+  border-right: none;
+}
+
 /* RTL Badge positioning in dropdowns */
 .rtl [data-radix-dropdown-menu-item] .badge {
   margin-left: 0;
