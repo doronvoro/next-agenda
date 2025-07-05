@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { he } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { Task, TaskStatus } from "@/components/KanbanBoard";
 import type { AgendaItem } from "../../[id]/types";
@@ -89,17 +90,17 @@ export function CreateTaskDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
+          <DialogTitle>צור משימה חדשה</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="agenda_item">Agenda Item *</Label>
+            <Label htmlFor="agenda_item">נושא סדר יום *</Label>
             <Select
               value={formData.agenda_item_id}
               onValueChange={(value) => setFormData(prev => ({ ...prev, agenda_item_id: value }))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select an agenda item" />
+                <SelectValue placeholder="בחר נושא סדר יום" />
               </SelectTrigger>
               <SelectContent>
                 {agendaItems.map((item) => (
@@ -112,30 +113,30 @@ export function CreateTaskDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">כותרת *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter task title"
+              placeholder="הזן כותרת משימה"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">תיאור</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Enter task description"
+              placeholder="הזן תיאור משימה"
               rows={3}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">סטטוס</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value: TaskStatus) => setFormData(prev => ({ ...prev, status: value }))}
@@ -144,16 +145,16 @@ export function CreateTaskDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Done</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
+                  <SelectItem value="pending">ממתין</SelectItem>
+                  <SelectItem value="in_progress">בביצוע</SelectItem>
+                  <SelectItem value="completed">הושלם</SelectItem>
+                  <SelectItem value="overdue">באיחור</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">עדיפות</Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value: 'low' | 'medium' | 'high') => setFormData(prev => ({ ...prev, priority: value }))}
@@ -162,9 +163,9 @@ export function CreateTaskDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="low">נמוכה</SelectItem>
+                  <SelectItem value="medium">בינונית</SelectItem>
+                  <SelectItem value="high">גבוהה</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -172,17 +173,17 @@ export function CreateTaskDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="assigned_to">Assigned To</Label>
+              <Label htmlFor="assigned_to">מוקצה ל</Label>
               <Input
                 id="assigned_to"
                 value={formData.assigned_to}
                 onChange={(e) => setFormData(prev => ({ ...prev, assigned_to: e.target.value }))}
-                placeholder="Enter assignee name"
+                placeholder="הזן שם אחראי"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Due Date</Label>
+              <Label>תאריך יעד</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -193,7 +194,7 @@ export function CreateTaskDialog({
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.due_date ? format(formData.due_date, "PPP") : "Pick a date"}
+                    {formData.due_date ? format(formData.due_date, "PPP", { locale: he }) : "בחר תאריך"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -215,10 +216,10 @@ export function CreateTaskDialog({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              ביטול
             </Button>
             <Button type="submit" disabled={isSubmitting || !formData.agenda_item_id || !formData.title.trim()}>
-              {isSubmitting ? "Creating..." : "Create Task"}
+              {isSubmitting ? "יוצר..." : "צור משימה"}
             </Button>
           </div>
         </form>

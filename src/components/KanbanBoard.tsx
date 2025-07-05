@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, MoreHorizontal, Calendar, User } from "lucide-react";
 import { format, isValid } from "date-fns";
+import { he } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'overdue';
@@ -84,7 +85,7 @@ const getPriorityColor = (priority: Task['priority']) => {
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return isValid(date) ? format(date, "MMM dd") : "Invalid date";
+  return isValid(date) ? format(date, "MMM dd", { locale: he }) : "תאריך שגוי";
 };
 
 const TaskCard = ({ task }: { task: Task }) => {
@@ -221,25 +222,25 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const columns: KanbanColumn[] = [
     {
       id: 'pending',
-      title: 'To Do',
+      title: 'ממתין',
       color: 'bg-gray-100',
       tasks: tasks.filter(task => task.status === 'pending'),
     },
     {
       id: 'in_progress',
-      title: 'In Progress',
+      title: 'בביצוע',
       color: 'bg-blue-100',
       tasks: tasks.filter(task => task.status === 'in_progress'),
     },
     {
       id: 'completed',
-      title: 'Done',
+      title: 'הושלם',
       color: 'bg-green-100',
       tasks: tasks.filter(task => task.status === 'completed'),
     },
     {
       id: 'overdue',
-      title: 'Overdue',
+      title: 'באיחור',
       color: 'bg-red-100',
       tasks: tasks.filter(task => task.status === 'overdue'),
     },

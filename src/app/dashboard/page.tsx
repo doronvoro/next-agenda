@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { format, isValid, parseISO, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { he } from "date-fns/locale";
 import type { Database } from "@/types/supabase";
 
 type Protocol = Database["public"]["Tables"]["protocols"]["Row"] & {
@@ -128,7 +129,7 @@ export default function DashboardPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return isValid(date) ? format(date, "dd/MM/yyyy") : "תאריך לא תקין";
+    return isValid(date) ? format(date, "dd/MM/yyyy", { locale: he }) : "תאריך לא תקין";
   };
 
   const getStatusBadge = (dueDate: string) => {

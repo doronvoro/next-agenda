@@ -4,6 +4,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import heLocale from '@fullcalendar/core/locales/he';
 import { useEffect, useState } from "react";
 import { fetchAllProtocolsWithDueDatesAndMessageSent } from "../protocols/[id]/supabaseApi";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -67,17 +68,18 @@ export default function ProtocolCalendarPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800 py-10 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Calendar</h1>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">לוח שנה</h1>
           {/* Example action button */}
           {/* <button className="bg-primary text-white px-4 py-2 rounded shadow hover:bg-primary-dark transition">Add Event</button> */}
         </div>
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg p-6">
           {loading ? (
-            <div className="text-center py-10 text-gray-500 dark:text-gray-400">Loading events...</div>
+            <div className="text-center py-10 text-gray-500 dark:text-gray-400">טוען אירועים...</div>
           ) : (
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
+              locale={heLocale}
               headerToolbar={{
                 left: 'prev,next today',
                 center: 'title',

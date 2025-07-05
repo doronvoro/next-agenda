@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/types/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, isValid, parseISO, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { he } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
 import {
   Table,
@@ -86,7 +87,7 @@ type SortOrder = "asc" | "desc";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return isValid(date) ? format(date, "dd/MM/yyyy") : "תאריך שגוי";
+  return isValid(date) ? format(date, "dd/MM/yyyy", { locale: he }) : "תאריך שגוי";
 };
 
 const getStatusBadge = (dueDate: string) => {

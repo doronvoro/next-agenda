@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { format, isValid } from "date-fns";
+import { he } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus } from "lucide-react";
@@ -60,7 +61,7 @@ import { Badge } from "@/components/ui/badge";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return isValid(date) ? format(date, "dd/MM/yyyy") : "תאריך שגוי";
+  return isValid(date) ? format(date, "dd/MM/yyyy", { locale: he }) : "תאריך שגוי";
 };
 
 declare global {
