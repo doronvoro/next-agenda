@@ -192,11 +192,11 @@ export default function FutureTopicsPage() {
   const getPriorityBadge = (priority: "low" | "medium" | "high") => {
     switch (priority) {
       case "high":
-        return <Badge variant="destructive">High</Badge>;
+        return <Badge variant="destructive">גבוה</Badge>;
       case "medium":
-        return <Badge variant="secondary">Medium</Badge>;
+        return <Badge variant="secondary">בינוני</Badge>;
       case "low":
-        return <Badge variant="outline">Low</Badge>;
+        return <Badge variant="outline">נמוך</Badge>;
       default:
         return priority;
     }
@@ -220,8 +220,8 @@ export default function FutureTopicsPage() {
     } catch (err) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to improve text",
+        title: "שגיאה",
+        description: "נכשל שיפור הטקסט",
       });
     } finally {
       setIsImprovingContent(false);
@@ -249,41 +249,41 @@ export default function FutureTopicsPage() {
   }, [transcript, dictatingContent, setTranscript]);
 
   if (loading) {
-    return <div className="container mx-auto p-6 text-center">Loading future topics...</div>;
+    return <div className="container mx-auto p-6 text-center">טוען נושאים עתידיים...</div>;
   }
   if (error) {
-    return <div className="container mx-auto p-6 text-center text-red-500">Error: {error}</div>;
+    return <div className="container mx-auto p-6 text-center text-red-500">שגיאה: {error}</div>;
   }
 
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Future Topics</h1>
-          <p className="text-muted-foreground mt-1">Manage and track all future topics</p>
+          <h1 className="text-3xl font-bold">נושאים עתידיים</h1>
+          <p className="text-muted-foreground mt-1">ניהול וטיפול בנושאים עתידיים</p>
         </div>
         <Button className="gap-2" onClick={handleDialogOpen}>
           <Plus className="h-4 w-4" />
-          Create Topic
+          צור נושא
         </Button>
       </div>
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Filters & Search
+            סינון וחיפוש נושאים
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
             <div className="space-y-2">
-              <Label htmlFor="search">Search</Label>
+              <Label htmlFor="search">חיפוש נושאים</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search future topics..."
+                  placeholder="חפש נושאים עתידיים..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -292,19 +292,19 @@ export default function FutureTopicsPage() {
             </div>
             {/* Priority Filter */}
             <div className="space-y-2">
-              <Label htmlFor="priority-filter">Priority</Label>
+              <Label htmlFor="priority-filter">עדיפות</Label>
               <Select
                 value={priorityFilter}
                 onValueChange={setPriorityFilter}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All priorities" />
+                  <SelectValue placeholder="כל העדיפויות" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All priorities</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="all">כל העדיפויות</SelectItem>
+                  <SelectItem value="low">נמוך</SelectItem>
+                  <SelectItem value="medium">בינוני</SelectItem>
+                  <SelectItem value="high">גבוה</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -317,18 +317,18 @@ export default function FutureTopicsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead><SortableHeader field="title">Title</SortableHeader></TableHead>
-                  <TableHead><SortableHeader field="priority">Priority</SortableHeader></TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead><SortableHeader field="created_at">Created</SortableHeader></TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead><SortableHeader field="title">כותרת</SortableHeader></TableHead>
+                  <TableHead><SortableHeader field="priority">עדיפות</SortableHeader></TableHead>
+                  <TableHead>סטטוס</TableHead>
+                  <TableHead><SortableHeader field="created_at">נוצר ב</SortableHeader></TableHead>
+                  <TableHead>פעולות</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTopics.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No future topics found
+                      לא נמצאו נושאים עתידיים
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -345,18 +345,18 @@ export default function FutureTopicsPage() {
                       <TableCell>
                         {topic.related_agenda_item_id ? (
                           <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            Linked to Agenda
+                            קשור לפגישה
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="text-muted-foreground">
-                            Available
+                            זמין
                           </Badge>
                         )}
                       </TableCell>
                       <TableCell>{new Date(topic.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="sm" onClick={() => handleEditTopic(topic)}>
-                          Edit
+                          ערוך
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -371,22 +371,22 @@ export default function FutureTopicsPage() {
         <DialogContent className="max-w-3xl w-full max-h-[95vh] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
-              {isEditing ? "Edit Future Topic" : "Create New Topic"}
+              {isEditing ? "ערוך נושא עתידי" : "צור נושא חדש"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">כותרת</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleFormChange("title", e.target.value)}
-                placeholder="Enter topic title"
+                placeholder="הזן כותרת נושא"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="content">Content</Label>
+              <Label htmlFor="content">תוכן</Label>
               <VoiceMagicTextarea
                 value={formData.content}
                 onChange={e => handleFormChange("content", e.target.value)}
@@ -405,51 +405,51 @@ export default function FutureTopicsPage() {
                 dictating={dictatingContent}
                 listening={listening}
                 disabled={!!contentImproved}
-                placeholder="Enter topic content"
-                ariaLabel="Topic Content"
+                placeholder="הזן תוכן נושא"
+                ariaLabel="תוכן נושא"
               />
               {contentImproved && (
                 <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
-                  <div className="font-bold mb-2 text-primary">Compare Versions</div>
+                  <div className="font-bold mb-2 text-primary">השווה גרסאות</div>
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1">
-                      <div className="text-xs text-muted-foreground mb-1">Original</div>
+                      <div className="text-xs text-muted-foreground mb-1">מקורי</div>
                       <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{contentOriginal}</div>
                     </div>
                     <div className="flex-1">
-                      <div className="text-xs text-muted-foreground mb-1">Improved Suggestion</div>
+                      <div className="text-xs text-muted-foreground mb-1">הצעה משופרת</div>
                       <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{contentImproved}</div>
                     </div>
                   </div>
                   <div className="flex gap-2 mt-4 justify-end">
-                    <Button size="lg" className="px-6" onClick={handleAcceptImprovedContent}>Accept</Button>
-                    <Button size="lg" variant="outline" className="px-6" onClick={handleRevertImprovedContent}>Revert</Button>
+                    <Button size="lg" className="px-6" onClick={handleAcceptImprovedContent}>אשר</Button>
+                    <Button size="lg" variant="outline" className="px-6" onClick={handleRevertImprovedContent}>החזר</Button>
                   </div>
                 </div>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">עדיפות</Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => handleFormChange("priority", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
+                  <SelectValue placeholder="בחר עדיפות" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="low">נמוך</SelectItem>
+                  <SelectItem value="medium">בינוני</SelectItem>
+                  <SelectItem value="high">גבוה</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <DialogFooter className="flex gap-2 justify-end mt-8">
               <Button type="button" variant="outline" onClick={handleDialogClose} disabled={isSubmitting}>
-                Cancel
+                ביטול
               </Button>
               <Button type="submit" disabled={isSubmitting || !formData.title.trim()}>
-                {isSubmitting ? (isEditing ? "Updating..." : "Creating...") : (isEditing ? "Update Topic" : "Create Topic")}
+                {isSubmitting ? (isEditing ? "עדכון..." : "יצירה...") : (isEditing ? "עדכן נושא" : "צור נושא")}
               </Button>
             </DialogFooter>
           </form>

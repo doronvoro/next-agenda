@@ -29,42 +29,42 @@ import {
 
 const items = [
   {
-    title: "Dashboard",
+    title: "ראשי", // Dashboard
     url: "/dashboard",
     icon: Home,
   },
   {
-    title: "Protocols",
+    title: "פרוטוקולים", // Protocols
     url: "/dashboard/protocols",
     icon: FileText,
   },
   {
-    title: "Task Tracking",
+    title: "מעקב משימות", // Task Tracking
     url: "/dashboard/task-tracking",
     icon: CheckSquare,
   },
   {
-    title: "Future Topics",
+    title: "נושאים עתידיים", // Future Topics
     url: "/dashboard/future-topics",
     icon: BookOpen,
   },
   {
-    title: "Calendar",
+    title: "לוח שנה", // Calendar
     url: "/dashboard/protocol-calendar",
     icon: LayoutDashboard,
   },
   {
-    title: "AI Protocol",
+    title: "פרוטוקול AI", // AI Protocol
     url: "/dashboard/protocols/ai",
     icon: Computer,
   },
   {
-    title: "Committees",
+    title: "ועדות", // Committees
     url: "/dashboard/committees",
     icon: Users,
   },
   {
-    title: "Companies",
+    title: "חברות", // Companies
     url: "/dashboard/companies",
     icon: Building2,
   },
@@ -100,7 +100,7 @@ export function AppSidebar() {
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                   <LogOutIcon className="size-4 text-destructive mr-2" />
-                  Sign out
+                  התנתק
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -110,7 +110,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sm">Main</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm">ראשי</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

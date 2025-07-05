@@ -22,47 +22,47 @@ interface ProtocolAttachmentsProps {
 const getFileTypeDisplay = (mimeType: string): string => {
   const mimeTypeMap: { [key: string]: string } = {
     // Microsoft Office
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel Spreadsheet',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word Document',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint Presentation',
-    'application/vnd.ms-excel': 'Excel Spreadsheet',
-    'application/msword': 'Word Document',
-    'application/vnd.ms-powerpoint': 'PowerPoint Presentation',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'גיליון Excel',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'מסמך Word',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'מצגת PowerPoint',
+    'application/vnd.ms-excel': 'גיליון Excel',
+    'application/msword': 'מסמך Word',
+    'application/vnd.ms-powerpoint': 'מצגת PowerPoint',
     
     // PDF
-    'application/pdf': 'PDF Document',
+    'application/pdf': 'מסמך PDF',
     
     // Images
-    'image/jpeg': 'JPEG Image',
-    'image/jpg': 'JPEG Image',
-    'image/png': 'PNG Image',
-    'image/gif': 'GIF Image',
-    'image/webp': 'WebP Image',
-    'image/svg+xml': 'SVG Image',
+    'image/jpeg': 'תמונה JPEG',
+    'image/jpg': 'תמונה JPEG',
+    'image/png': 'תמונה PNG',
+    'image/gif': 'תמונה GIF',
+    'image/webp': 'תמונה WebP',
+    'image/svg+xml': 'תמונה SVG',
     
     // Text
-    'text/plain': 'Text File',
-    'text/csv': 'CSV File',
-    'text/html': 'HTML File',
+    'text/plain': 'קובץ טקסט',
+    'text/csv': 'קובץ CSV',
+    'text/html': 'קובץ HTML',
     
     // Archives
-    'application/zip': 'ZIP Archive',
-    'application/x-rar-compressed': 'RAR Archive',
-    'application/x-7z-compressed': '7-Zip Archive',
+    'application/zip': 'ארכיון ZIP',
+    'application/x-rar-compressed': 'ארכיון RAR',
+    'application/x-7z-compressed': 'ארכיון 7-Zip',
     
     // Audio
-    'audio/mpeg': 'MP3 Audio',
-    'audio/wav': 'WAV Audio',
-    'audio/ogg': 'OGG Audio',
+    'audio/mpeg': 'אודיו MP3',
+    'audio/wav': 'אודיו WAV',
+    'audio/ogg': 'אודיו OGG',
     
     // Video
-    'video/mp4': 'MP4 Video',
-    'video/avi': 'AVI Video',
-    'video/mov': 'MOV Video',
-    'video/wmv': 'WMV Video',
+    'video/mp4': 'וידאו MP4',
+    'video/avi': 'וידאו AVI',
+    'video/mov': 'וידאו MOV',
+    'video/wmv': 'וידאו WMV',
   };
 
-  return mimeTypeMap[mimeType] || mimeType.split('/')[1]?.toUpperCase() || 'Unknown File Type';
+  return mimeTypeMap[mimeType] || mimeType.split('/')[1]?.toUpperCase() || 'סוג קובץ לא ידוע';
 };
 
 const ProtocolAttachments: React.FC<ProtocolAttachmentsProps> = ({
@@ -74,7 +74,7 @@ const ProtocolAttachments: React.FC<ProtocolAttachmentsProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Protocol Attachments</h3>
+        <h3 className="text-lg font-medium">קבצים מצורפים לפרוטוקול</h3>
         <Button
           onClick={() => {
             const fileInput = document.getElementById('file-upload');
@@ -85,7 +85,7 @@ const ProtocolAttachments: React.FC<ProtocolAttachmentsProps> = ({
           className="gap-2"
         >
           <Plus className="h-4 w-4" />
-          Upload Attachment
+          העלה קובץ מצורף
         </Button>
       </div>
 
@@ -100,19 +100,19 @@ const ProtocolAttachments: React.FC<ProtocolAttachmentsProps> = ({
       {protocolAttachments.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
           <Paperclip className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-          <p>No attachments found for this protocol</p>
-          <p className="text-sm">Upload files to share with protocol members</p>
+          <p>לא נמצאו קבצים מצורפים לפרוטוקול זה</p>
+          <p className="text-sm">העלה קבצים לשיתוף עם חברי הפרוטוקול</p>
         </div>
       ) : (
         <div className="space-y-4">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>File Name</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Uploaded</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
+                <TableHead>שם הקובץ</TableHead>
+                <TableHead>גודל</TableHead>
+                <TableHead>סוג</TableHead>
+                <TableHead>הועלה ב</TableHead>
+                <TableHead className="w-[100px]">פעולות</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,7 +143,7 @@ const ProtocolAttachments: React.FC<ProtocolAttachmentsProps> = ({
                           window.open(data.publicUrl, '_blank');
                         }}
                       >
-                        Download
+                        הורדה
                       </Button>
                       <Button
                         variant="ghost"

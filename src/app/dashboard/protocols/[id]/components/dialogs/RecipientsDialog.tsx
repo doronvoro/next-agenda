@@ -39,16 +39,16 @@ export function RecipientsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Select Message Recipients</DialogTitle>
+          <DialogTitle>בחר נמעני הודעה</DialogTitle>
           <DialogDescription>
-            Choose which protocol members should receive this message
+            בחר איזה חברי פרוטוקול צריכים לקבל הודעה זו
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">
-              {selectedRecipients.length} of {protocolMembers.length} selected
+              {selectedRecipients.length} מתוך {protocolMembers.length} נבחרו
             </span>
             <div className="flex space-x-2">
               <Button
@@ -57,7 +57,7 @@ export function RecipientsDialog({
                 size="sm"
                 onClick={onSelectAll}
               >
-                Select All
+                בחר הכל
               </Button>
               <Button
                 type="button"
@@ -65,7 +65,7 @@ export function RecipientsDialog({
                 size="sm"
                 onClick={onClearAll}
               >
-                Clear All
+                נקה הכל
               </Button>
             </div>
           </div>
@@ -73,7 +73,7 @@ export function RecipientsDialog({
           <div className="max-h-[300px] overflow-y-auto space-y-2">
             {protocolMembers.length === 0 ? (
               <div className="text-center text-muted-foreground py-4">
-                No protocol members found
+                לא נמצאו חברי פרוטוקול
               </div>
             ) : (
               protocolMembers.map((member) => (
@@ -87,7 +87,7 @@ export function RecipientsDialog({
                     htmlFor={`recipient-${member.id}`}
                     className="text-sm cursor-pointer flex-1"
                   >
-                    {member.name || `Member ${member.id}`}
+                    {member.name || `חבר ${member.id}`}
                   </Label>
                 </div>
               ))
@@ -101,13 +101,13 @@ export function RecipientsDialog({
             variant="outline"
             onClick={onCancel}
           >
-            Cancel
+            ביטול
           </Button>
           <Button
             type="button"
             onClick={onConfirm}
           >
-            Confirm Selection
+            אשר בחירה
           </Button>
         </DialogFooter>
       </DialogContent>

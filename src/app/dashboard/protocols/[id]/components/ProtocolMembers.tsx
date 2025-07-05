@@ -55,10 +55,10 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
       if (error) throw error;
       setProtocolMembers(prev => [...prev, data]);
       setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
-      toast({ title: "Success", description: "Member added successfully" });
+      toast({ title: "הצלחה", description: "חבר נוסף בהצלחה" });
     } catch (err) {
       setNewMember({ name: "", type: 1, status: 1, vote_status: null, isEditing: false });
-      toast({ variant: "destructive", title: "Error", description: "Failed to add member" });
+      toast({ variant: "destructive", title: "שגיאה", description: "נכשל הוספת חבר" });
     }
   };
 
@@ -69,48 +69,48 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
       if (error) throw error;
       setProtocolMembers(prev => prev.map(m => m.id === editingMember.id ? { ...m, ...editingMember } : m));
       setEditingMember(null);
-      toast({ title: "Success", description: "Member updated successfully" });
+      toast({ title: "הצלחה", description: "חבר עודכן בהצלחה" });
     } catch (err) {
       setEditingMember(null);
-      toast({ variant: "destructive", title: "Error", description: "Failed to update member" });
+      toast({ variant: "destructive", title: "שגיאה", description: "נכשל עדכון חבר" });
     }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Protocol Members</h3>
+        <h3 className="text-lg font-medium">חברי הפרוטוקול</h3>
         <Button
           onClick={() => setNewMember(prev => ({ ...prev, isEditing: true }))}
           className="gap-2"
           disabled={newMember.isEditing}
         >
           <Plus className="h-4 w-4" />
-          Add Member
+          הוסף חבר
         </Button>
       </div>
 
       {newMember.isEditing && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Add New Member</CardTitle>
+            <CardTitle className="text-lg">הוסף חבר חדש</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateMember} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="member-name">Name *</Label>
-                <Input
-                  id="member-name"
-                  value={newMember.name}
-                  onChange={(e) => setNewMember(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter member name"
-                  required
-                />
+                <Label htmlFor="member-name">שם *</Label>
+                                  <Input
+                    id="member-name"
+                    value={newMember.name}
+                    onChange={(e) => setNewMember(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="הזן שם חבר"
+                    required
+                  />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="member-type">Type</Label>
+                  <Label htmlFor="member-type">סוג</Label>
                   <Select
                     value={newMember.type.toString()}
                     onValueChange={(value) => setNewMember(prev => ({ ...prev, type: parseInt(value) }))}
@@ -119,14 +119,14 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Committee Member</SelectItem>
-                      <SelectItem value="2">External</SelectItem>
+                      <SelectItem value="1">חבר ועדה</SelectItem>
+                      <SelectItem value="2">חיצוני</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="member-status">Status</Label>
+                  <Label htmlFor="member-status">סטטוס</Label>
                   <Select
                     value={newMember.status.toString()}
                     onValueChange={(value) => setNewMember(prev => ({ ...prev, status: parseInt(value) }))}
@@ -135,30 +135,30 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Absent</SelectItem>
-                      <SelectItem value="2">Present</SelectItem>
+                      <SelectItem value="1">נעדר</SelectItem>
+                      <SelectItem value="2">נוכח</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="member-vote-status">Vote Status</Label>
+                <Label htmlFor="member-vote-status">סטטוס הצבעה</Label>
                 <div className="flex gap-2">
-                  <Select
-                    value={newMember.vote_status?.toString() || ""}
-                    onValueChange={(value) => setNewMember(prev => ({ 
-                      ...prev, 
-                      vote_status: parseInt(value) 
-                    }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="No vote" />
-                    </SelectTrigger>
+                                      <Select
+                      value={newMember.vote_status?.toString() || ""}
+                      onValueChange={(value) => setNewMember(prev => ({ 
+                        ...prev, 
+                        vote_status: parseInt(value) 
+                      }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="אין הצבעה" />
+                      </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">For</SelectItem>
-                      <SelectItem value="2">Against</SelectItem>
-                      <SelectItem value="3">Abstain</SelectItem>
+                      <SelectItem value="1">בעד</SelectItem>
+                      <SelectItem value="2">נגד</SelectItem>
+                      <SelectItem value="3">נמנע</SelectItem>
                     </SelectContent>
                   </Select>
                   {newMember.vote_status && (
@@ -168,7 +168,7 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                       onClick={() => setNewMember(prev => ({ ...prev, vote_status: null }))}
                       className="text-destructive hover:text-destructive"
                     >
-                      Clear
+                      נקה
                     </Button>
                   )}
                 </div>
@@ -180,10 +180,10 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                   variant="ghost"
                   onClick={() => setNewMember(prev => ({ ...prev, isEditing: false }))}
                 >
-                  Cancel
+                  ביטול
                 </Button>
                 <Button type="submit" disabled={!newMember.name.trim()}>
-                  Add Member
+                  הוסף חבר
                 </Button>
               </div>
             </form>
@@ -193,18 +193,18 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
 
       {protocolMembers.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
-          No members found for this protocol
+          לא נמצאו חברים לפרוטוקול זה
         </div>
       ) : (
         <div className="space-y-4">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Vote Status</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
+                <TableHead>שם</TableHead>
+                <TableHead>סוג</TableHead>
+                <TableHead>סטטוס</TableHead>
+                <TableHead>סטטוס הצבעה</TableHead>
+                <TableHead className="w-[100px]">פעולות</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -216,7 +216,7 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                         <Input
                           value={editingMember.name}
                           onChange={(e) => setEditingMember(prev => prev ? { ...prev, name: e.target.value } : null)}
-                          placeholder="Enter member name"
+                          placeholder="הזן שם חבר"
                         />
                       </TableCell>
                       <TableCell>
@@ -228,8 +228,8 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1">Committee Member</SelectItem>
-                            <SelectItem value="2">External</SelectItem>
+                            <SelectItem value="1">חבר ועדה</SelectItem>
+                            <SelectItem value="2">חיצוני</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -242,8 +242,8 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1">Absent</SelectItem>
-                            <SelectItem value="2">Present</SelectItem>
+                            <SelectItem value="1">נעדר</SelectItem>
+                            <SelectItem value="2">נוכח</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -254,12 +254,12 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                             onValueChange={(value) => setEditingMember(prev => prev ? { ...prev, vote_status: parseInt(value) } : null)}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="No vote" />
+                              <SelectValue placeholder="אין הצבעה" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">For</SelectItem>
-                              <SelectItem value="2">Against</SelectItem>
-                              <SelectItem value="3">Abstain</SelectItem>
+                              <SelectItem value="1">בעד</SelectItem>
+                              <SelectItem value="2">נגד</SelectItem>
+                              <SelectItem value="3">נמנע</SelectItem>
                             </SelectContent>
                           </Select>
                           {editingMember.vote_status && (
@@ -269,7 +269,7 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                               onClick={() => setEditingMember(prev => prev ? { ...prev, vote_status: null } : null)}
                               className="text-destructive hover:text-destructive"
                             >
-                              Clear
+                              נקה
                             </Button>
                           )}
                         </div>
@@ -296,9 +296,9 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                     </>
                   ) : (
                     <>
-                      <TableCell>{member.name || "Unnamed"}</TableCell>
+                      <TableCell>{member.name || "ללא שם"}</TableCell>
                       <TableCell>
-                        {member.type === 1 ? "Committee Member" : "External"}
+                        {member.type === 1 ? "חבר ועדה" : "חיצוני"}
                       </TableCell>
                       <TableCell>
                         <span className={cn(
@@ -307,7 +307,7 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                             ? "bg-green-100 text-green-800" 
                             : "bg-red-100 text-red-800"
                         )}>
-                          {member.status === 2 ? "Present" : "Absent"}
+                          {member.status === 2 ? "נוכח" : "נעדר"}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -321,7 +321,7 @@ const ProtocolMembers: React.FC<ProtocolMembersProps> = ({
                             ? "bg-yellow-100 text-yellow-800"
                             : "bg-gray-100 text-gray-800"
                         )}>
-                          {member.vote_status === 1 ? "For" : member.vote_status === 2 ? "Against" : member.vote_status === 3 ? "Abstain" : "No vote"}
+                          {member.vote_status === 1 ? "בעד" : member.vote_status === 2 ? "נגד" : member.vote_status === 3 ? "נמנע" : "אין הצבעה"}
                         </span>
                       </TableCell>
                       <TableCell>

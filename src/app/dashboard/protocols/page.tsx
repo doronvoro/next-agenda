@@ -86,7 +86,7 @@ type SortOrder = "asc" | "desc";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return isValid(date) ? format(date, "dd/MM/yyyy") : "Invalid date";
+  return isValid(date) ? format(date, "dd/MM/yyyy") : "תאריך שגוי";
 };
 
 const getStatusBadge = (dueDate: string) => {
@@ -94,11 +94,11 @@ const getStatusBadge = (dueDate: string) => {
   const due = new Date(dueDate);
   
   if (isAfter(today, due)) {
-    return <Badge variant="destructive">Overdue</Badge>;
+    return <Badge variant="destructive">באיחור</Badge>;
   } else if (isAfter(today, new Date(due.getTime() - 7 * 24 * 60 * 60 * 1000))) {
-    return <Badge variant="secondary">Due Soon</Badge>;
+    return <Badge variant="secondary">בקרוב</Badge>;
   } else {
-    return <Badge variant="default">On Track</Badge>;
+    return <Badge variant="default">במסלול</Badge>;
   }
 };
 
@@ -180,7 +180,7 @@ export default function ProtocolsPage() {
         }
       } catch (err) {
         console.error("Unexpected error:", err);
-        setError(err instanceof Error ? err.message : "An unexpected error occurred");
+        setError(err instanceof Error ? err.message : "אירעה שגיאה בלתי צפויה");
       } finally {
         setLoading(false);
       }
@@ -359,8 +359,8 @@ export default function ProtocolsPage() {
       setProtocols(prev => prev.filter(p => p.id !== deletingProtocol.id));
       
       toast({
-        title: "Protocol Deleted",
-        description: `Protocol #${deletingProtocol.number} has been successfully deleted.`,
+        title: "פרוטוקול נמחק",
+        description: `פרוטוקול #${deletingProtocol.number} נמחק בהצלחה.`,
       });
 
       // Close dialog and reset state
@@ -370,8 +370,8 @@ export default function ProtocolsPage() {
       console.error("Error deleting protocol:", error);
       toast({
         variant: "destructive",
-        title: "Error Deleting Protocol",
-        description: "Failed to delete protocol. Please try again.",
+        title: "שגיאת מחיקת פרוטוקול",
+        description: "נכשל מחיקת פרוטוקול. אנא נסה שוב.",
       });
     } finally {
       setIsDeleting(false);
@@ -405,7 +405,7 @@ export default function ProtocolsPage() {
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center">Loading protocols...</div>
+        <div className="text-center">טוען פרוטוקולים...</div>
       </div>
     );
   }
@@ -414,7 +414,7 @@ export default function ProtocolsPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center text-red-500">
-          Error: {error}
+          שגיאה: {error}
         </div>
       </div>
     );
@@ -425,15 +425,15 @@ export default function ProtocolsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Protocols</h1>
+          <h1 className="text-3xl font-bold">פרוטוקולים</h1>
           <p className="text-muted-foreground mt-1">
-            Manage and track all committee protocols
+            ניהול ומעקב אחר כל פרוטוקולי הוועדות
           </p>
         </div>
         <Link href="/dashboard/protocols/new">
           <Button className="gap-2">
             <Plus className="h-4 w-4" />
-            Create Protocol
+            צור פרוטוקול
           </Button>
         </Link>
       </div>
@@ -443,19 +443,19 @@ export default function ProtocolsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Filters & Search
+            סינון וחיפוש
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
             <div className="space-y-2">
-              <Label htmlFor="search">Search</Label>
+              <Label htmlFor="search">חיפוש</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search protocols..."
+                  placeholder="חפש פרוטוקולים..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -468,7 +468,7 @@ export default function ProtocolsPage() {
 
             {/* Committee Filter */}
             <div className="space-y-2">
-              <Label htmlFor="committee">Committee</Label>
+              <Label htmlFor="committee">ועדה</Label>
               <Select
                 value={selectedCommittee}
                 onValueChange={(value) => {
@@ -477,10 +477,10 @@ export default function ProtocolsPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All committees" />
+                  <SelectValue placeholder="כל הוועדות" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All committees</SelectItem>
+                  <SelectItem value="all">כל הוועדות</SelectItem>
                   {committees.map((committee) => (
                     <SelectItem key={committee.id} value={committee.id}>
                       {committee.name}
@@ -492,7 +492,7 @@ export default function ProtocolsPage() {
 
             {/* Status Filter */}
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">סטטוס</Label>
               <Select
                 value={statusFilter}
                 onValueChange={(value) => {
@@ -501,20 +501,20 @@ export default function ProtocolsPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All statuses" />
+                  <SelectValue placeholder="כל הסטטוסים" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
-                  <SelectItem value="due-soon">Due Soon</SelectItem>
-                  <SelectItem value="on-track">On Track</SelectItem>
+                  <SelectItem value="all">כל הסטטוסים</SelectItem>
+                  <SelectItem value="overdue">באיחור</SelectItem>
+                  <SelectItem value="due-soon">בקרוב</SelectItem>
+                  <SelectItem value="on-track">במסלול</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Date Range */}
             <div className="space-y-2">
-              <Label>Due Date Range</Label>
+              <Label>טווח תאריך יעד</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -534,7 +534,7 @@ export default function ProtocolsPage() {
                         format(dateRange.from, "dd/MM/yyyy")
                       )
                     ) : (
-                      "Select date range"
+                      "בחר טווח תאריכים"
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -558,7 +558,7 @@ export default function ProtocolsPage() {
           {/* Clear Filters */}
           <div className="flex justify-between items-center mt-4 pt-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Showing {filteredAndSortedProtocols.length} of {protocols.length} protocols
+              מציג {filteredAndSortedProtocols.length} מתוך {protocols.length} פרוטוקולים
             </div>
             <Button
               variant="outline"
@@ -566,7 +566,7 @@ export default function ProtocolsPage() {
               onClick={clearFilters}
               disabled={!searchTerm && selectedCommittee === "all" && !dateRange?.from && statusFilter === "all"}
             >
-              Clear Filters
+              נקה סינון
             </Button>
           </div>
         </CardContent>
@@ -579,13 +579,13 @@ export default function ProtocolsPage() {
             <div className="text-muted-foreground">
               {protocols.length === 0 ? (
                 <>
-                  <p className="text-lg font-medium mb-2">No protocols found</p>
-                  <p>Get started by creating your first protocol.</p>
+                  <p className="text-lg font-medium mb-2">לא נמצאו פרוטוקולים</p>
+                  <p>התחל על ידי יצירת הפרוטוקול הראשון שלך.</p>
                 </>
               ) : (
                 <>
-                  <p className="text-lg font-medium mb-2">No protocols match your filters</p>
-                  <p>Try adjusting your search criteria or clear the filters.</p>
+                  <p className="text-lg font-medium mb-2">אין פרוטוקולים התואמים לסינון שלך</p>
+                  <p>נסה לשנות את קריטריוני החיפוש או נקה את הסינון.</p>
                 </>
               )}
             </div>
@@ -599,19 +599,19 @@ export default function ProtocolsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <SortableHeader field="number">Protocol #</SortableHeader>
+                      <SortableHeader field="number">מספר פרוטוקול</SortableHeader>
                     </TableHead>
                     <TableHead>
-                      <SortableHeader field="committee_name">Committee</SortableHeader>
+                      <SortableHeader field="committee_name">ועדה</SortableHeader>
                     </TableHead>
                     <TableHead>
-                      <SortableHeader field="due_date">Due Date</SortableHeader>
+                      <SortableHeader field="due_date">תאריך יעד</SortableHeader>
                     </TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>סטטוס</TableHead>
                     <TableHead>
-                      <SortableHeader field="created_at">Created</SortableHeader>
+                      <SortableHeader field="created_at">נוצר ב</SortableHeader>
                     </TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className="w-[100px]">פעולות</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -627,7 +627,7 @@ export default function ProtocolsPage() {
                       </TableCell>
                       <TableCell>
                         {protocol.committee?.name || (
-                          <span className="text-muted-foreground">No committee</span>
+                          <span className="text-muted-foreground">אין ועדה</span>
                         )}
                       </TableCell>
                       <TableCell>{formatDate(protocol.due_date)}</TableCell>
@@ -643,26 +643,26 @@ export default function ProtocolsPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleViewProtocol(protocol)}>
                               <Eye className="mr-2 h-4 w-4" />
-                              View
+                              צפייה
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleEditProtocol(protocol.id)}>
                               <Edit className="mr-2 h-4 w-4" />
-                              Edit
+                              עריכה
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleViewPdf(protocol)}>
                               <Download className="mr-2 h-4 w-4" />
-                              Export
+                              ייצוא
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleTasksProtocol(protocol.id)}>
                               <CheckSquare className="mr-2 h-4 w-4" />
-                              Tasks
+                              משימות
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDeleteProtocol(protocol)}
                               className="text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                              מחיקה
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -677,9 +677,9 @@ export default function ProtocolsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-6 py-4 border-t">
                 <div className="text-sm text-muted-foreground">
-                  Showing {((currentPage - 1) * itemsPerPage) + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, filteredAndSortedProtocols.length)} of{" "}
-                  {filteredAndSortedProtocols.length} results
+                  מציג {((currentPage - 1) * itemsPerPage) + 1} עד{" "}
+                  {Math.min(currentPage * itemsPerPage, filteredAndSortedProtocols.length)} מתוך{" "}
+                  {filteredAndSortedProtocols.length} תוצאות
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button
@@ -688,7 +688,7 @@ export default function ProtocolsPage() {
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
                   >
-                    Previous
+                    קודם
                   </Button>
                   <div className="flex items-center space-x-1">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -709,7 +709,7 @@ export default function ProtocolsPage() {
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
                   >
-                    Next
+                    הבא
                   </Button>
                 </div>
               </div>
@@ -734,14 +734,14 @@ export default function ProtocolsPage() {
           <DialogContent className="max-w-5xl w-full max-h-[80vh] bg-white flex flex-col p-0" style={{ borderRadius: 0 }}>
             <DialogHeader className="sticky top-0 z-10 bg-white text-black flex flex-row items-center justify-between p-6 border-b shadow">
               <div className="flex items-center gap-2">
-                <DialogTitle>Protocol #{viewingProtocol.number}</DialogTitle>
+                <DialogTitle>פרוטוקול #{viewingProtocol.number}</DialogTitle>
                 <Button variant="secondary" onClick={() => window.print()} className="ml-4 rounded-md border border-blue-600 bg-blue-600 text-white shadow-sm flex items-center gap-2 hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none">
                   <Printer className="h-4 w-4" />
-                  Print
+                  הדפסה
                 </Button>
                 <Button variant="secondary" onClick={handleCloseViewModal} className="ml-2 rounded-md border border-gray-300 shadow-sm flex items-center gap-2 hover:bg-gray-100 hover:border-gray-400 focus:ring-2 focus:ring-blue-400">
                   <X className="h-4 w-4" />
-                  Close
+                  סגירה
                 </Button>
               </div>
             </DialogHeader>
@@ -750,7 +750,7 @@ export default function ProtocolsPage() {
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                    <p>Loading protocol data...</p>
+                    <p>טוען נתוני פרוטוקול...</p>
                   </div>
                 </div>
               ) : viewModalData ? (
@@ -765,7 +765,7 @@ export default function ProtocolsPage() {
                 />
               ) : (
                 <div className="text-center text-red-500">
-                  Failed to load protocol data
+                  נכשל טעינת נתוני הפרוטוקול
                 </div>
               )}
             </div>
@@ -777,19 +777,19 @@ export default function ProtocolsPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Protocol</AlertDialogTitle>
+            <AlertDialogTitle>מחיקת פרוטוקול</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete Protocol #{deletingProtocol?.number}? This action cannot be undone and will permanently remove the protocol and all its associated data including agenda items, members, attachments, and messages.
+              האם אתה בטוח שברצונך למחוק את פרוטוקול #{deletingProtocol?.number}? פעולה זו אינה ניתנת לביטול ותסיר לצמיתות את הפרוטוקול וכל הנתונים המשויכים אליו כולל סעיפים, חברים, קבצים והודעות.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={cancelDelete}>ביטול</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? "מוחק..." : "מחק"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -13,8 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email("אנא הזן כתובת דואר אלקטרוני תקינה"),
+  password: z.string().min(6, "הסיסמה חייבת להיות לפחות 6 תווים"),
 });
 
 export function LoginForm() {
@@ -65,9 +65,9 @@ export function LoginForm() {
           <form onSubmit={handleSubmit} className="p-6 my-4 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
-                <h1 className="text-2xl font-bold">Welcome back</h1>
+                <h1 className="text-2xl font-bold">ברוכים חזרה</h1>
                 <p className="text-balance text-muted-foreground">
-                  Login to your account
+                  התחברות לחשבון שלך
                 </p>
               </div>
               {authError && (
@@ -76,7 +76,7 @@ export function LoginForm() {
                 </div>
               )}
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">דואר אלקטרוני</Label>
                 <Input
                   id="email"
                   type="email"
@@ -94,12 +94,12 @@ export function LoginForm() {
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">סיסמה</Label>
                   <a
                     href="/auth/reset-password"
                     className="ml-auto text-sm underline-offset-2 hover:underline"
                   >
-                    Forgot your password?
+                    שכחת את הסיסמה?
                   </a>
                 </div>
                 <Input
@@ -117,12 +117,12 @@ export function LoginForm() {
                 )}
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Continue"}
+                {isLoading ? "מתחבר..." : "המשך"}
               </Button>
               <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
+                אין לך חשבון?{" "}
                 <a href="/auth/signup" className="underline underline-offset-4">
-                  Sign up
+                  הירשם
                 </a>
               </div>
             </div>
@@ -138,9 +138,9 @@ export function LoginForm() {
         </CardContent>
       </Card>
       <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-        By clicking continue, you agree to our{" "}
-        <a href="/info/legal/terms-of-service">Terms of Service</a> and{" "}
-        <a href="/info/legal/privacy-policy">Privacy Policy</a>.
+        בלחיצה על המשך, אתה מסכים ל-{" "}
+        <a href="/info/legal/terms-of-service">תנאי השירות</a> ו-{" "}
+        <a href="/info/legal/privacy-policy">מדיניות הפרטיות</a>.
       </div>
     </div>
   );

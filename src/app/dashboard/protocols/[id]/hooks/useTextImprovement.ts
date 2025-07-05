@@ -33,8 +33,8 @@ export function useTextImprovement(toast: any) {
     } catch (err) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to improve text",
+        title: "שגיאה",
+        description: "נכשל שיפור הטקסט",
       });
     } finally {
       setIsImproving(prev => ({ ...prev, [field]: false }));

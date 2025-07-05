@@ -114,7 +114,7 @@ export function AgendaItemDialog({
                   /> 
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="popup-topic">Topic Content</Label>
+                  <Label htmlFor="popup-topic">תוכן נושא</Label>
                   <VoiceMagicTextarea
                     value={popupEditingAgendaItem?.topic_content || ""}
                     onChange={e => setPopupEditingAgendaItem(prev => prev ? { ...prev, topic_content: e.target.value } : null)}
@@ -133,35 +133,35 @@ export function AgendaItemDialog({
                     dictating={dictatingField === 'topic_content'}
                     listening={listening}
                     disabled={!!topicImproved}
-                    placeholder="Enter topic content"
-                    ariaLabel="Topic Content"
+                    placeholder="הזן תוכן נושא"
+                    ariaLabel="תוכן נושא"
                   />
                   <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                     <Info className="w-3 h-3" />
-                    <span>Enter the topic content for this agenda item. You can dictate or paste text.</span>
+                    <span>הזן את תוכן הנושא עבור סעיף זה. אתה יכול לדבר או להדביק טקסט.</span>
                   </div>
                   {topicImproved && (
                     <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
-                      <div className="font-bold mb-2 text-primary">Compare Versions</div>
+                      <div className="font-bold mb-2 text-primary">השווה גרסאות</div>
                       <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1">
-                          <div className="text-xs text-muted-foreground mb-1">Original</div>
+                          <div className="text-xs text-muted-foreground mb-1">מקורי</div>
                           <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{topicOriginal}</div>
                         </div>
                         <div className="flex-1">
-                          <div className="text-xs text-muted-foreground mb-1">Improved Suggestion</div>
+                          <div className="text-xs text-muted-foreground mb-1">הצעה משופרת</div>
                           <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{topicImproved}</div>
                         </div>
                       </div>
                       <div className="flex gap-2 mt-4 justify-end">
-                        <Button size="lg" className="px-6" onClick={() => onAcceptImproved('topic_content')}>Accept</Button>
-                        <Button size="lg" variant="outline" className="px-6" onClick={() => onRevertImproved('topic_content')}>Revert</Button>
+                        <Button size="lg" className="px-6" onClick={() => onAcceptImproved('topic_content')}>אשר</Button>
+                        <Button size="lg" variant="outline" className="px-6" onClick={() => onRevertImproved('topic_content')}>החזר</Button>
                       </div>
                     </div>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="popup-decision">Decision Content</Label>
+                  <Label htmlFor="popup-decision">תוכן החלטה</Label>
                   <VoiceMagicTextarea
                     value={popupEditingAgendaItem?.decision_content || ""}
                     onChange={e => setPopupEditingAgendaItem(prev => prev ? { ...prev, decision_content: e.target.value } : null)}
@@ -180,12 +180,12 @@ export function AgendaItemDialog({
                     dictating={dictatingField === 'decision_content'}
                     listening={listening}
                     disabled={!!decisionImproved}
-                    placeholder="Enter decision content"
-                    ariaLabel="Decision Content"
+                            placeholder="הזן תוכן החלטה"
+        ariaLabel="תוכן החלטה"
                   />
                   <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                     <Info className="w-3 h-3" />
-                    <span>Enter the decision content for this agenda item. You can dictate or paste text.</span>
+                    <span>הזן את תוכן ההחלטה עבור סעיף זה. אתה יכול לדבר או להדביק טקסט.</span>
                   </div>
                   {decisionImproved && (
                     <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
