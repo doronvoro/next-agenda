@@ -481,7 +481,7 @@ export default function ProtocolPage() {
     <div className="min-h-screen bg-background">
       {/* Document Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-8 py-4">
+        <div className="px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/dashboard/protocols">
@@ -561,7 +561,7 @@ export default function ProtocolPage() {
       </div>
 
       {/* Document Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="px-8 py-8">
         <div className="bg-card rounded-lg shadow-sm border border-border">
           {/* Document Tabs */}
           <div className="border-b border-border rtl">
