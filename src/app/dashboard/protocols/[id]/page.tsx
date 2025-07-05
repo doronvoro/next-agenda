@@ -486,8 +486,9 @@ export default function ProtocolPage() {
             <div className="flex items-center gap-4">
               <Link href="/dashboard/protocols">
                 <Button variant="ghost" size="sm" className="gap-2">
-                  <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4 rotate-180" />
                   חזרה
+                 
                 </Button>
               </Link>
               <div className="h-6 w-px bg-border"></div>
