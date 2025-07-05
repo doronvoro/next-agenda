@@ -17,6 +17,20 @@ import {
 
 import { AppSidebar } from "./sidebar";
 
+// Translation mapping for breadcrumb items
+const breadcrumbTranslations: Record<string, string> = {
+  dashboard: "ראשי",
+  protocols: "פרוטוקולים",
+  "task-tracking": "מעקב משימות",
+  "future-topics": "נושאים עתידיים",
+  "protocol-calendar": "לוח שנה",
+  committees: "ועדות",
+  companies: "חברות",
+  ai: "פרוטוקול AI",
+  loading: "טוען...",
+  protocol: "פרוטוקול",
+};
+
 export default function DashboardLayout({
   children,
 }: {
@@ -44,6 +58,11 @@ export default function DashboardLayout({
     return () => clearInterval(interval);
   }, [pathname]);
 
+  // Helper function to translate breadcrumb segments
+  const translateSegment = (segment: string): string => {
+    return breadcrumbTranslations[segment] || segment;
+  };
+
   // Custom breadcrumb for protocol details page
   let customBreadcrumb: React.ReactNode = null;
   if (
@@ -52,23 +71,23 @@ export default function DashboardLayout({
     pathSegments.length === 3
   ) {
     // Format the display text
-    let displayText = "Loading..."; // Show loading initially
+    let displayText = breadcrumbTranslations.loading; // Show loading initially
     if (protocolNumber) {
       displayText = protocolNumber;
     } else if (pathSegments[2]) {
       // If no protocol number but we have the ID, show a generic message
-      displayText = "Protocol";
+      displayText = breadcrumbTranslations.protocol;
     }
     
     customBreadcrumb = (
       <Breadcrumb className="rtl">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard">{breadcrumbTranslations.dashboard}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard/protocols">Protocols</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard/protocols">{breadcrumbTranslations.protocols}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -98,7 +117,7 @@ export default function DashboardLayout({
                 <Breadcrumb className="rtl">
                   <BreadcrumbList>
                     <BreadcrumbItem>
-                      <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                      <BreadcrumbLink href="/dashboard">{breadcrumbTranslations.dashboard}</BreadcrumbLink>
                     </BreadcrumbItem>
                     {pathSegments.slice(1).map((segment, index) => (
                       <React.Fragment key={segment}>
@@ -106,7 +125,7 @@ export default function DashboardLayout({
                         <BreadcrumbItem>
                           {index === pathSegments.slice(1).length - 1 ? (
                             <BreadcrumbPage className="capitalize">
-                              {segment}
+                              {translateSegment(segment)}
                             </BreadcrumbPage>
                           ) : (
                             <BreadcrumbLink
@@ -115,7 +134,7 @@ export default function DashboardLayout({
                                 .join("/")}`}
                               className="capitalize"
                             >
-                              {segment}
+                              {translateSegment(segment)}
                             </BreadcrumbLink>
                           )}
                         </BreadcrumbItem>
