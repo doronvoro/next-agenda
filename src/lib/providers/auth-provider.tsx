@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (loginError) {
-      setError("Invalid email or password. Please try again.");
+      setError("כתובת דואר אלקטרוני או סיסמה לא תקינים. אנא נסה שוב.");
       setLoading(false);
       return { error: loginError.message };
     }

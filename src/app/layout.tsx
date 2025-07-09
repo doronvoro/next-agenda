@@ -24,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${rubik.variable} font-sans`}>
+    <html lang="he" dir="rtl" suppressHydrationWarning>
+      <body className={`${rubik.variable} font-sans rtl`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -39,7 +39,7 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
     setError(null);
     try {
       if (!protocolNumber || !committeeId || !initialDate) {
-        setError("All fields are required");
+        setError("כל השדות נדרשים");
         setCreating(false);
         return;
       }
@@ -50,7 +50,7 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
       });
       onSuccess(protocol.id, protocol.number);
     } catch (err: any) {
-      setError(err?.message || "Failed to create protocol");
+      setError(err?.message || "שגיאה ביצירת הפרוטוקול");
     } finally {
       setCreating(false);
     }
@@ -60,10 +60,10 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
     <form onSubmit={handleSubmit} className="space-y-4 text-sm">
       <div>
         <div className="mb-2">
-          <Label htmlFor="committee" className="mb-1">Committee *</Label>
+          <Label htmlFor="committee" className="mb-1">ועדה *</Label>
           <Select value={committeeId} onValueChange={setCommitteeId} required>
             <SelectTrigger className="h-8 text-sm w-full">
-              <SelectValue placeholder="Select a committee" />
+              <SelectValue placeholder="בחר ועדה" />
             </SelectTrigger>
             <SelectContent className="text-sm">
               {committees.map((committee: any) => (
@@ -77,12 +77,12 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
       </div>
       <div>
         <div className="mb-2">
-          <Label htmlFor="protocol-number" className="mb-1">Protocol Number *</Label>
+          <Label htmlFor="protocol-number" className="mb-1">מספר פרוטוקול *</Label>
           <Input
             id="protocol-number"
             value={protocolNumber}
             onChange={e => setProtocolNumber(e.target.value)}
-            placeholder="Enter protocol number"
+            placeholder="הזן מספר פרוטוקול"
             required
             className="h-8 px-2 text-sm w-full"
           />
@@ -90,7 +90,7 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
       </div>
       {setDate && (
         <div className="mb-2">
-          <Label className="mb-1">Due Date *</Label>
+          <Label className="mb-1">תאריך יעד *</Label>
           <Input
             type="date"
             value={typeof date === 'object' && date ? date.toISOString().substring(0, 10) : ""}
@@ -102,14 +102,14 @@ export default function ProtocolCreateForm({ initialDate, date, setDate, onSucce
       )}
       {initialDate && !setDate && (
         <div className="mb-2">
-          <Label className="mb-1">Date</Label>
+          <Label className="mb-1">תאריך</Label>
           <Input value={initialDate.substring(0, 10)} disabled className="h-8 px-2 text-sm bg-muted" />
         </div>
       )}
       {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
       <div className="flex justify-end gap-2 mt-2">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={creating}>Cancel</Button>
-        <Button type="submit" size="sm" disabled={creating || !committeeId}>{creating ? "Creating..." : "Create Protocol"}</Button>
+        <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={creating}>ביטול</Button>
+        <Button type="submit" size="sm" disabled={creating || !committeeId}>{creating ? "יוצר..." : "צור פרוטוקול"}</Button>
       </div>
     </form>
   );

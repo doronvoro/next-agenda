@@ -17,6 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { he } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { updateTask, type TaskWithDetails } from "../../protocols/[id]/supabaseApi";
 import { useToast } from "@/components/ui/use-toast";
@@ -80,8 +81,8 @@ export function EditTaskDialog({
       
       if (success) {
         toast({
-          title: "Task Updated",
-          description: "Task has been updated successfully.",
+          title: "משימה עודכנה",
+          description: "משימה עודכנה בהצלחה.",
         });
         onTaskUpdated();
         onOpenChange(false);
@@ -92,8 +93,8 @@ export function EditTaskDialog({
       console.error("Error updating task:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update task. Please try again.",
+        title: "שגיאה",
+        description: "לא ניתן לעדכן את המשימה. אנא נסה שוב.",
       });
     } finally {
       setLoading(false);
@@ -110,137 +111,140 @@ export function EditTaskDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit Task</DialogTitle>
+          <DialogTitle>ערוך משימה</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">כותרת *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter task title"
+              placeholder="הזן כותרת משימה"
               required
             />
           </div>
 
-          {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">תיאור</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Enter task description"
+              placeholder="הזן תיאור משימה"
               rows={3}
             />
           </div>
 
-          {/* Status and Priority */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">סטטוס</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as TaskStatus }))}
+                onValueChange={(value: TaskStatus) => setFormData(prev => ({ ...prev, status: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Done</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
+                  <SelectItem value="pending">ממתין</SelectItem>
+                  <SelectItem value="in_progress">בביצוע</SelectItem>
+                  <SelectItem value="completed">הושלם</SelectItem>
+                  <SelectItem value="overdue">באיחור</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">עדיפות</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as 'low' | 'medium' | 'high' }))}
+                onValueChange={(value: 'low' | 'medium' | 'high') => setFormData(prev => ({ ...prev, priority: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="low">נמוכה</SelectItem>
+                  <SelectItem value="medium">בינונית</SelectItem>
+                  <SelectItem value="high">גבוהה</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Assigned To */}
-          <div className="space-y-2">
-            <Label htmlFor="assigned_to">Assigned To</Label>
-            <Input
-              id="assigned_to"
-              value={formData.assigned_to}
-              onChange={(e) => setFormData(prev => ({ ...prev, assigned_to: e.target.value }))}
-              placeholder="Enter assignee name"
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="assigned_to">מוקצה ל</Label>
+              <Input
+                id="assigned_to"
+                value={formData.assigned_to}
+                onChange={(e) => setFormData(prev => ({ ...prev, assigned_to: e.target.value }))}
+                placeholder="הזן שם אחראי"
+              />
+            </div>
 
-          {/* Due Date */}
-          <div className="space-y-2">
-            <Label>Due Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.due_date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.due_date ? (
-                    format(formData.due_date, "PPP")
-                  ) : (
-                    "Select due date"
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.due_date}
-                  onSelect={(date) => setFormData(prev => ({ ...prev, due_date: date }))}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="space-y-2">
+              <Label>תאריך יעד</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.due_date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.due_date ? (
+                      format(formData.due_date, "PPP", { locale: he })
+                    ) : (
+                      "בחר תאריך יעד"
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.due_date}
+                    onSelect={(date) => setFormData(prev => ({ ...prev, due_date: date }))}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
           {/* Task Info Display */}
           <div className="space-y-2 p-4 bg-muted rounded-lg">
-            <h4 className="font-medium text-sm">Task Information</h4>
+            <h4 className="font-medium text-sm">מידע על המשימה</h4>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p><strong>Agenda Item:</strong> {task.agenda_item.title}</p>
-              <p><strong>Protocol:</strong> #{task.protocol?.number} - {task.protocol?.committee?.name}</p>
-              <p><strong>Created:</strong> {format(new Date(task.created_at), "PPP")}</p>
+              <p><strong>נושא סדר יום:</strong> {task.agenda_item.title}</p>
+              <p><strong>פרוטוקול:</strong> #{task.protocol?.number} - {task.protocol?.committee?.name}</p>
+              <p><strong>נוצר:</strong> {format(new Date(task.created_at), "PPP", { locale: he })}</p>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={handleCancel}
+              onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              ביטול
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Update Task
+            <Button type="submit" disabled={loading || !formData.title.trim()}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  מעדכן...
+                </>
+              ) : (
+                "עדכן משימה"
+              )}
             </Button>
           </div>
         </form>

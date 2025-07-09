@@ -58,7 +58,7 @@ export const VoiceMagicTextarea: React.FC<VoiceMagicTextareaProps> = ({
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Dictate with your voice</TooltipContent>
+              <TooltipContent>דבר עם הקול שלך</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
@@ -75,7 +75,7 @@ export const VoiceMagicTextarea: React.FC<VoiceMagicTextareaProps> = ({
                 <Wand2 className="w-5 h-5 text-primary" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>Automatically improve the text</TooltipContent>
+            <TooltipContent>שפר עם AI</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

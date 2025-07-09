@@ -89,7 +89,7 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
                     <div className="space-y-4 pl-11">
                       <div className="space-y-2">
                         <Label htmlFor={`topic-${item.id}`} className="text-sm font-medium text-foreground">
-                          Topic Content
+                          תוכן נושא
                         </Label>
                         <textarea
                           id={`topic-${item.id}`}
@@ -101,13 +101,13 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
                             })
                           }
                           className="min-h-[120px] w-full rounded-lg border border-border bg-background px-4 py-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-                          placeholder="Enter topic content..."
+                          placeholder="הזן תוכן נושא..."
                         />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor={`decision-${item.id}`} className="text-sm font-medium text-foreground">
-                          Decision Content
+                          תוכן החלטה
                         </Label>
                         <textarea
                           id={`decision-${item.id}`}
@@ -119,7 +119,7 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
                             })
                           }
                           className="min-h-[120px] w-full rounded-lg border border-border bg-background px-4 py-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-                          placeholder="Enter decision content..."
+                          placeholder="הזן תוכן החלטה..."
                         />
                       </div>
                     </div>
@@ -165,23 +165,23 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
                     
                     <div className="space-y-4 pl-11">
                       <div className="space-y-2">
-                        <div className="text-sm font-medium text-foreground">Topic Content</div>
+                        <div className="text-sm font-medium text-foreground">תוכן נושא</div>
                         <div className="min-h-[80px] w-full rounded-lg border border-border/50 bg-muted/30 px-4 py-3 text-sm text-foreground">
                           {item.topic_content ? (
                             <div className="whitespace-pre-wrap">{item.topic_content}</div>
                           ) : (
-                            <div className="text-muted-foreground italic">No topic content</div>
+                            <div className="text-muted-foreground italic">אין תוכן נושא</div>
                           )}
                         </div>
                       </div>
                       
                       <div className="space-y-2">
-                        <div className="text-sm font-medium text-foreground">Decision Content</div>
+                        <div className="text-sm font-medium text-foreground">תוכן החלטה</div>
                         <div className="min-h-[80px] w-full rounded-lg border border-border/50 bg-muted/30 px-4 py-3 text-sm text-foreground">
                           {item.decision_content ? (
                             <div className="whitespace-pre-wrap">{item.decision_content}</div>
                           ) : (
-                            <div className="text-muted-foreground italic">No decision content</div>
+                            <div className="text-muted-foreground italic">אין תוכן החלטה</div>
                           )}
                         </div>
                       </div>

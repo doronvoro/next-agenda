@@ -17,28 +17,28 @@ export class ValidationError extends AppError {
 }
 
 export class AuthenticationError extends AppError {
-  constructor(message: string = "Authentication failed", code?: string) {
+  constructor(message: string = "האימות נכשל", code?: string) {
     super(message, 401, code || "AUTHENTICATION_ERROR");
     this.name = "AuthenticationError";
   }
 }
 
 export class AuthorizationError extends AppError {
-  constructor(message: string = "Not authorized", code?: string) {
+  constructor(message: string = "לא מורשה", code?: string) {
     super(message, 403, code || "AUTHORIZATION_ERROR");
     this.name = "AuthorizationError";
   }
 }
 
 export class NotFoundError extends AppError {
-  constructor(message: string = "Resource not found", code?: string) {
+  constructor(message: string = "המשאב לא נמצא", code?: string) {
     super(message, 404, code || "NOT_FOUND_ERROR");
     this.name = "NotFoundError";
   }
 }
 
 export class ConflictError extends AppError {
-  constructor(message: string = "Resource already exists", code?: string) {
+  constructor(message: string = "המשאב כבר קיים", code?: string) {
     super(message, 409, code || "CONFLICT_ERROR");
     this.name = "ConflictError";
   }
@@ -77,7 +77,7 @@ export function handleApiError(error: unknown) {
   }
 
   return {
-    error: "An unexpected error occurred",
+    error: "אירעה שגיאה בלתי צפויה",
     code: "INTERNAL_ERROR",
     status: 500,
   };

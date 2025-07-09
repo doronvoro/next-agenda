@@ -49,7 +49,7 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
     e.preventDefault();
     if (!newMessage.trim()) return;
     if (!userId) {
-      setError("You must be logged in to send messages.");
+      setError("עליך להיות מחובר כדי לשלוח הודעות.");
       return;
     }
     
@@ -81,24 +81,24 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
           if (!emailResponse.ok) {
             console.error("Email sending failed:", emailResult.error);
             // Show a warning but don't prevent the message from being sent
-            setError(`Message sent successfully, but email notification failed: ${emailResult.error}`);
+            setError(`ההודעה נשלחה בהצלחה, אך שליחת ההתראה במייל נכשלה: ${emailResult.error}`);
           } else {
             console.log("Email sending result:", emailResult);
             // Show success message for email
             if (emailResult.note) {
-              setError(`Message sent successfully! ${emailResult.note}`);
+              setError(`ההודעה נשלחה בהצלחה! ${emailResult.note}`);
             }
           }
         } catch (emailError) {
           console.error("Error sending emails:", emailError);
-          setError("Message sent successfully, but email notification failed due to network error");
+          setError("ההודעה נשלחה בהצלחה, אך שליחת ההתראה במייל נכשלה עקב שגיאת רשת");
         }
       }
       
       setNewMessage("");
       setSelectedRecipients([]); // Clear selected recipients after sending
     } catch (err) {
-      setError("Failed to send message");
+      setError("שליחת ההודעה נכשלה");
     } finally {
       setIsSending(false);
     }
@@ -111,10 +111,10 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
         setNewMessage("");
         break;
       case "pre-meeting materials":
-        setNewMessage("Pre-meeting materials are now available for review.");
+        setNewMessage("חומרים לפני ישיבה עכשיו זמינים לבדיקה.");
         break;
       case "protocol approval":
-        setNewMessage("Protocol approval is required. Please review and approve.");
+        setNewMessage("אישור פרוטוקול נדרש. אנא בדוק ואשר.");
         break;
       case "general message":
         setNewMessage("");
@@ -152,14 +152,14 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Messages</h3>
+        <h3 className="text-lg font-medium">הודעות</h3>
       </div>
 
       <div className="h-[500px] flex flex-col">
         <div className="flex-1 overflow-y-auto space-y-4 p-4">
           {protocolMessages.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              No messages found for this protocol
+              לא נמצאו הודעות עבור פרוטוקול זה
             </div>
           ) : (
             protocolMessages.map((message) => (
@@ -186,7 +186,7 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
               id="new-message-textarea"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your message..."
+              placeholder="הקלד את ההודעה שלך..."
               className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-right"
             />
             <div className="flex items-center justify-between">
@@ -196,7 +196,7 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
                   onClick={() => setIsRecipientsDialogOpen(true)}
                   className="text-sm text-primary hover:underline"
                 >
-                  Select Recipients ({selectedRecipients.length} selected)
+                  בחר נמענים ({selectedRecipients.length} נבחרו)
                 </button>
                 <div className="flex items-center space-x-2">
                   <Select
@@ -204,13 +204,13 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
                     onValueChange={handleTemplateChange}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Choose template" />
+                      <SelectValue placeholder="בחר תבנית" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="select-template">Select template</SelectItem>
-                      <SelectItem value="pre-meeting materials">Pre-meeting materials</SelectItem>
-                      <SelectItem value="protocol approval">Protocol approval</SelectItem>
-                      <SelectItem value="general message">General message</SelectItem>
+                      <SelectItem value="select-template">בחר תבנית</SelectItem>
+                      <SelectItem value="pre-meeting materials">חומרים לפני ישיבה</SelectItem>
+                      <SelectItem value="protocol approval">אישור פרוטוקול</SelectItem>
+                      <SelectItem value="general message">הודעה כללית</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -222,10 +222,10 @@ const ProtocolMessages: React.FC<ProtocolMessagesProps> = ({
                   onClick={() => setNewMessage("")}
                   disabled={!newMessage.trim() || isSending}
                 >
-                  Clear
+                  נקה
                 </Button>
                 <Button type="submit" disabled={!newMessage.trim() || isSending}>
-                  {isSending ? "Sending..." : "Send Message"}
+                  {isSending ? "שולח..." : "שלח הודעה"}
                 </Button>
               </div>
             </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { format, isValid } from "date-fns";
+import { he } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus } from "lucide-react";
@@ -57,11 +58,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useRouter } from "next/navigation";
 import ProtocolPdfModal from "../components/ProtocolPdfModal";
 import { Badge } from "@/components/ui/badge";
-import { DialogPrimitive } from "@/components/ui/dialog";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return isValid(date) ? format(date, "dd/MM/yyyy") : "Invalid date";
+  return isValid(date) ? format(date, "dd/MM/yyyy", { locale: he }) : "תאריך שגוי";
 };
 
 declare global {
@@ -226,10 +226,10 @@ export default function ProtocolPage() {
     try {
       // Validate required fields
       if (!editFormData.number.trim() || !editDate) {
-        throw new Error("Please fill in all required fields");
+        throw new Error("אנא מלא את כל השדות הנדרשים");
       }
       if (!editFormData.committee_id) {
-        setError("Please select a committee.");
+        setError("אנא בחר מועדיה");
         return;
       }
 
@@ -267,10 +267,10 @@ export default function ProtocolPage() {
       }
       
       setIsEditing(false);
-      toast({ title: "Success", description: "Protocol updated successfully" });
+      toast({ title: "הצלחה", description: "פרוטוקול עודכן בהצלחה" });
     } catch (err) {
       console.error("Error updating protocol:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "התרחשה שגיאה");
     } finally {
       setIsSaving(false);
     }
@@ -323,11 +323,11 @@ export default function ProtocolPage() {
       setSelectedAgendaItem(prev => prev && prev.id === popupEditingAgendaItem.id ? { ...prev, ...popupEditingAgendaItem } : prev);
       setIsPopupEditing(false);
       setIsAgendaItemDialogOpen(false);
-      toast({ title: "Success", description: "Agenda item updated successfully" });
+      toast({ title: "הצלחה", description: "סעיף האג'נדה עודכן בהצלחה" });
     } catch (err) {
       console.error("Error updating agenda item:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item" });
+      setError(err instanceof Error ? err.message : "התרחשה שגיאה");
+      toast({ variant: "destructive", title: "שגיאה", description: "נכשל עדכון סעיף האג'נדה" });
     }
   };
 
@@ -362,7 +362,7 @@ export default function ProtocolPage() {
       );
 
       if (error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to create agenda item" });
+        toast({ variant: "destructive", title: "שגיאה", description: "נכשל יצירת סעיף סדר היום" });
         return;
       }
 
@@ -377,11 +377,11 @@ export default function ProtocolPage() {
         setAgendaItems(prev => [...prev, newAgendaItem]);
         setFutureTopics(prev => prev.filter(topic => topic.id !== topicId));
 
-        toast({ title: "Success", description: "Agenda item created from future topic" });
+        toast({ title: "הצלחה", description: "סעיף האג'נדה נוצר מסעיף עתידי" });
       }
     } catch (err) {
       console.error("Error creating agenda item from future topic:", err);
-      toast({ variant: "destructive", title: "Error", description: "Failed to create agenda item from future topic" });
+      toast({ variant: "destructive", title: "שגיאה", description: "נכשל יצירת סעיף האג'נדה מסעיף עתידי" });
     }
   };
 
@@ -389,7 +389,7 @@ export default function ProtocolPage() {
     try {
       const item = agendaItems.find(item => item.id === itemId);
       if (!item) {
-        toast({ variant: "destructive", title: "Error", description: "Agenda item not found" });
+        toast({ variant: "destructive", title: "שגיאה", description: "סעיף האג'נדה לא נמצא" });
         return;
       }
 
@@ -400,7 +400,7 @@ export default function ProtocolPage() {
         decision_content: item.decision_content || ""
       });
       if (error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item title" });
+        toast({ variant: "destructive", title: "שגיאה", description: "נכשל עדכון כותרת סעיף סדר היום" });
         return;
       }
 
@@ -409,10 +409,10 @@ export default function ProtocolPage() {
         item.id === itemId ? { ...item, title: newTitle } : item
       ));
 
-      toast({ title: "Success", description: "Agenda item title updated" });
+      toast({ title: "הצלחה", description: "כותרת סעיף סדר היום עודכנה" });
     } catch (err) {
       console.error("Error updating agenda item title:", err);
-      toast({ variant: "destructive", title: "Error", description: "Failed to update agenda item title" });
+      toast({ variant: "destructive", title: "שגיאה", description: "נכשל עדכון כותרת סעיף סדר היום" });
       throw err;
     }
   };
@@ -421,17 +421,17 @@ export default function ProtocolPage() {
     try {
       const { error } = await apiDeleteAgendaItem(itemId);
       if (error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to delete agenda item" });
+        toast({ variant: "destructive", title: "שגיאה", description: "נכשל מחיקת סעיף סדר היום" });
         return;
       }
 
       // Update local state
       setAgendaItems(prev => prev.filter(item => item.id !== itemId));
 
-      toast({ title: "Success", description: "Agenda item deleted" });
+      toast({ title: "הצלחה", description: "סעיף סדר היום נמחק" });
     } catch (err) {
       console.error("Error deleting agenda item:", err);
-      toast({ variant: "destructive", title: "Error", description: "Failed to delete agenda item" });
+      toast({ variant: "destructive", title: "שגיאה", description: "נכשל מחיקת סעיף סדר היום" });
     }
   };
 
@@ -461,7 +461,7 @@ export default function ProtocolPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-destructive text-lg mb-2">Error loading protocol</div>
+          <div className="text-destructive text-lg mb-2">שגיאה בטעינת הפרוטוקול</div>
           <div className="text-muted-foreground">{error}</div>
         </div>
       </div>
@@ -472,7 +472,7 @@ export default function ProtocolPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-muted-foreground text-lg">Protocol not found</div>
+          <div className="text-muted-foreground text-lg">הפרוטוקול לא נמצא</div>
         </div>
       </div>
     );
@@ -482,22 +482,23 @@ export default function ProtocolPage() {
     <div className="min-h-screen bg-background">
       {/* Document Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-8 py-4">
+        <div className="px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/dashboard/protocols">
                 <Button variant="ghost" size="sm" className="gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  Back
+                <ArrowLeft className="h-4 w-4 rotate-180" />
+                  חזרה
+                 
                 </Button>
               </Link>
               <div className="h-6 w-px bg-border"></div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  Protocol #{protocol.number}
+                  פרוטוקול #{protocol.number}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {formatDate(protocol.due_date)} • {protocolMembers.length} members
+                  {formatDate(protocol.due_date)} • {protocolMembers.length} חברים
                 </p>
               </div>
             </div>
@@ -505,7 +506,7 @@ export default function ProtocolPage() {
               {isSaving && (
                 <Badge variant="secondary" className="gap-1">
                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
-                  Saving...
+                  שמירה...
                 </Badge>
               )}
               <TooltipProvider>
@@ -518,10 +519,10 @@ export default function ProtocolPage() {
                       className="gap-2"
                     >
                       <FileText className="h-4 w-4" />
-                      View PDF
+                      צפה
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>View as PDF</TooltipContent>
+                  <TooltipContent>צפייה כ-PDF</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <TooltipProvider>
@@ -534,10 +535,10 @@ export default function ProtocolPage() {
                       className="gap-2"
                     >
                       <CheckSquare className="h-4 w-4" />
-                      Tasks
+                      משימות
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Task Tracking</TooltipContent>
+                  <TooltipContent>מעקב משימות</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <TooltipProvider>
@@ -550,10 +551,10 @@ export default function ProtocolPage() {
                       className="gap-2"
                     >
                       <Download className="h-4 w-4" />
-                      Export
+                      ייצוא
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Export</TooltipContent>
+                  <TooltipContent>ייצוא</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
@@ -562,32 +563,32 @@ export default function ProtocolPage() {
       </div>
 
       {/* Document Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="px-8 py-8">
         <div className="bg-card rounded-lg shadow-sm border border-border">
           {/* Document Tabs */}
-          <div className="border-b border-border">
-            <Tabs defaultValue="content" className="w-full" value={currentTab} onValueChange={setCurrentTab}>
-              <TabsList className="grid w-full grid-cols-4 h-12 rounded-none border-b-0 bg-transparent">
-                <TabsTrigger value="content" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
-                  Document
+          <div className="border-b border-border rtl">
+            <Tabs defaultValue="content" className="w-full rtl" value={currentTab} onValueChange={setCurrentTab}>
+              <TabsList className="grid w-full grid-cols-4 h-12 rounded-none border-b-0 bg-transparent rtl">
+                <TabsTrigger value="content" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
+                  מסמך
                   {currentTab === "content" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="members" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
-                  Members
+                <TabsTrigger value="members" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
+                  חברים
                   {currentTab === "members" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="attachments" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
-                  Attachments
+                <TabsTrigger value="attachments" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
+                  קבצים מצורפים
                   {currentTab === "attachments" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="messages" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors">
-                  Messages
+                <TabsTrigger value="messages" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
+                  הודעות
                   {currentTab === "messages" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
                   )}
@@ -599,7 +600,7 @@ export default function ProtocolPage() {
                   {/* Protocol Details Section */}
                   <section>
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">Protocol Details</h2>
+                      <h2 className="text-xl font-semibold text-foreground">פרטי פרוטוקול</h2>
                       {!isEditing && (
                         <Button
                           variant="ghost"
@@ -608,7 +609,7 @@ export default function ProtocolPage() {
                           className="gap-2 text-muted-foreground hover:text-foreground"
                         >
                           <Edit3 className="h-4 w-4" />
-                          Edit
+                          עריכה
                         </Button>
                       )}
                     </div>
@@ -638,7 +639,7 @@ export default function ProtocolPage() {
                   {/* Agenda Section */}
                   <section>
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">Agenda</h2>
+                      <h2 className="text-xl font-semibold text-foreground">סדר יום</h2>
                     </div>
                     <div className="bg-card border border-border rounded-lg">
                       <AgendaList
@@ -664,9 +665,9 @@ export default function ProtocolPage() {
                   {/* Agenda Details Section */}
                   <section>
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">Agenda Details</h2>
+                      <h2 className="text-xl font-semibold text-foreground">פרטי סדר יום</h2>
                       <div className="text-sm text-muted-foreground">
-                        {agendaItems.length} item{agendaItems.length !== 1 ? 's' : ''}
+                        {agendaItems.length} סעיפים
                       </div>
                     </div>
                     
@@ -771,15 +772,15 @@ export default function ProtocolPage() {
         <DialogContent className="max-w-5xl w-full max-h-[80vh] bg-card flex flex-col p-0" style={{ borderRadius: 0 }}>
           <DialogHeader className="sticky top-0 z-10 bg-card text-foreground flex flex-row items-center justify-between p-6 border-b shadow">
             <div className="flex items-center gap-2">
-              <DialogTitle>Protocol PDF View</DialogTitle>
+              <DialogTitle>צפה ב-PDF של הפרוטוקול</DialogTitle>
             </div>
             <DialogClose
               onClick={() => setIsPdfModalOpen(false)}
-              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 left-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
               aria-label="Close PDF view"
             >
               <X />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">סגירה</span>
             </DialogClose>
           </DialogHeader>
           <div className="overflow-auto p-12 pt-6" style={{ maxHeight: "calc(80vh - 80px)" }}>

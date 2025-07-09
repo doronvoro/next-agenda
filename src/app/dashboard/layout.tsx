@@ -5,7 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { usePathname } from "next/navigation";
 
 import { Toaster } from "@/components/ui/sonner";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -16,6 +16,20 @@ import {
 } from "@/components/ui/breadcrumb";
 
 import { AppSidebar } from "./sidebar";
+
+// Translation mapping for breadcrumb items
+const breadcrumbTranslations: Record<string, string> = {
+  dashboard: "ראשי",
+  protocols: "פרוטוקולים",
+  "task-tracking": "מעקב משימות",
+  "future-topics": "נושאים עתידיים",
+  "protocol-calendar": "לוח שנה",
+  committees: "ועדות",
+  companies: "חברות",
+  ai: "פרוטוקול AI",
+  loading: "טוען...",
+  protocol: "פרוטוקול",
+};
 
 export default function DashboardLayout({
   children,
@@ -44,6 +58,11 @@ export default function DashboardLayout({
     return () => clearInterval(interval);
   }, [pathname]);
 
+  // Helper function to translate breadcrumb segments
+  const translateSegment = (segment: string): string => {
+    return breadcrumbTranslations[segment] || segment;
+  };
+
   // Custom breadcrumb for protocol details page
   let customBreadcrumb: React.ReactNode = null;
   if (
@@ -52,23 +71,23 @@ export default function DashboardLayout({
     pathSegments.length === 3
   ) {
     // Format the display text
-    let displayText = "Loading..."; // Show loading initially
+    let displayText = breadcrumbTranslations.loading; // Show loading initially
     if (protocolNumber) {
       displayText = protocolNumber;
     } else if (pathSegments[2]) {
       // If no protocol number but we have the ID, show a generic message
-      displayText = "Protocol";
+      displayText = breadcrumbTranslations.protocol;
     }
     
     customBreadcrumb = (
-      <Breadcrumb>
+      <Breadcrumb className="rtl">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard">{breadcrumbTranslations.dashboard}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard/protocols">Protocols</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard/protocols">{breadcrumbTranslations.protocols}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -89,16 +108,16 @@ export default function DashboardLayout({
       disableTransitionOnChange
     >
       <SidebarProvider>
-        <div className="flex h-screen w-screen bg-background">
+        <div className="flex h-screen w-screen bg-background rtl">
           <AppSidebar />
-          <div className="flex-1 w-full">
-            <div className="flex items-center gap-4 px-5 pt-5">
+          <SidebarInset className="flex flex-col">
+            <div className="flex items-center gap-4 px-5 pt-5 rtl">
               <SidebarTrigger />
               {customBreadcrumb ?? (
-                <Breadcrumb>
+                <Breadcrumb className="rtl">
                   <BreadcrumbList>
                     <BreadcrumbItem>
-                      <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                      <BreadcrumbLink href="/dashboard">{breadcrumbTranslations.dashboard}</BreadcrumbLink>
                     </BreadcrumbItem>
                     {pathSegments.slice(1).map((segment, index) => (
                       <React.Fragment key={segment}>
@@ -106,7 +125,7 @@ export default function DashboardLayout({
                         <BreadcrumbItem>
                           {index === pathSegments.slice(1).length - 1 ? (
                             <BreadcrumbPage className="capitalize">
-                              {segment}
+                              {translateSegment(segment)}
                             </BreadcrumbPage>
                           ) : (
                             <BreadcrumbLink
@@ -115,7 +134,7 @@ export default function DashboardLayout({
                                 .join("/")}`}
                               className="capitalize"
                             >
-                              {segment}
+                              {translateSegment(segment)}
                             </BreadcrumbLink>
                           )}
                         </BreadcrumbItem>
@@ -126,10 +145,10 @@ export default function DashboardLayout({
               )}
             </div>
 
-            <div className="container mx-auto overflow-auto px-6 py-4 space-y-5">
+            <div className="container mx-auto overflow-auto px-6 py-4 space-y-5 rtl flex-1">
               {children}
             </div>
-          </div>
+          </SidebarInset>
         </div>
         <Toaster />
       </SidebarProvider>

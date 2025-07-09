@@ -25,8 +25,8 @@ export function useAttachments({
     if (!files || files.length === 0) return;
     setError(null);
     if (!userId) {
-      setError("No user ID");
-      toast({ variant: "destructive", title: "Error", description: "No user ID" });
+      setError("אין מזהה משתמש");
+      toast({ variant: "destructive", title: "שגיאה", description: "אין מזהה משתמש" });
       return;
     }
     try {
@@ -35,10 +35,10 @@ export function useAttachments({
         const attachmentData = await uploadAttachment(protocolId, file, userId);
         setProtocolAttachments(prev => [...prev, attachmentData]);
       }
-      toast({ title: "Success", description: `Successfully uploaded ${files.length} file(s)` });
+      toast({ title: "הצלחה", description: `הועלו בהצלחה ${files.length} קובץ(ים)` });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to upload attachments" });
+      setError(err instanceof Error ? err.message : "התרחשה שגיאה");
+      toast({ variant: "destructive", title: "שגיאה", description: "נכשל העלאת הקבצים המצורפים" });
     }
   };
 
@@ -47,8 +47,8 @@ export function useAttachments({
     setError(null);
     const attachment = protocolAttachments.find(a => a.id === deletingAttachmentId);
     if (!attachment) {
-      setError("Attachment not found");
-      toast({ variant: "destructive", title: "Error", description: "Attachment not found" });
+      setError("הקובץ המצורף לא נמצא");
+      toast({ variant: "destructive", title: "שגיאה", description: "הקובץ המצורף לא נמצא" });
       return;
     }
     try {
@@ -56,10 +56,10 @@ export function useAttachments({
       if (error) throw error;
       setProtocolAttachments(prev => prev.filter(a => a.id !== deletingAttachmentId));
       setDeletingAttachmentId(null);
-      toast({ title: "Success", description: "Attachment deleted successfully" });
+      toast({ title: "הצלחה", description: "הקובץ המצורף נמחק בהצלחה" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      toast({ variant: "destructive", title: "Error", description: "Failed to delete attachment" });
+      setError(err instanceof Error ? err.message : "התרחשה שגיאה");
+      toast({ variant: "destructive", title: "שגיאה", description: "נכשל מחיקת הקובץ המצורף" });
     }
   };
 

@@ -29,42 +29,42 @@ import {
 
 const items = [
   {
-    title: "Dashboard",
+    title: "ראשי", // Dashboard
     url: "/dashboard",
     icon: Home,
   },
   {
-    title: "Protocols",
+    title: "פרוטוקולים", // Protocols
     url: "/dashboard/protocols",
     icon: FileText,
   },
   {
-    title: "Task Tracking",
+    title: "מעקב משימות", // Task Tracking
     url: "/dashboard/task-tracking",
     icon: CheckSquare,
   },
   {
-    title: "Future Topics",
+    title: "נושאים עתידיים", // Future Topics
     url: "/dashboard/future-topics",
     icon: BookOpen,
   },
   {
-    title: "Calendar",
+    title: "לוח שנה", // Calendar
     url: "/dashboard/protocol-calendar",
     icon: LayoutDashboard,
   },
   {
-    title: "AI Protocol",
+    title: "פרוטוקול AI", // AI Protocol
     url: "/dashboard/protocols/ai",
     icon: Computer,
   },
   {
-    title: "Committees",
+    title: "ועדות", // Committees
     url: "/dashboard/committees",
     icon: Users,
   },
   {
-    title: "Companies",
+    title: "חברות", // Companies
     url: "/dashboard/companies",
     icon: Building2,
   },
@@ -82,13 +82,13 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar">
+    <Sidebar collapsible="icon" variant="sidebar" className="rtl" side="right">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="py-6 px-4 text-lg cursor-pointer hover:bg-sidebar-accent">
+                <SidebarMenuButton className="py-6 px-4 text-lg cursor-pointer hover:bg-sidebar-accent rtl">
                   <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
                     <AvatarImage src={authUser?.user_metadata?.avatar_url} />
                     <AvatarFallback className="text-sm font-medium">
@@ -97,10 +97,10 @@ export function AppSidebar() {
                   </Avatar>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-                  <LogOutIcon className="size-4 text-destructive mr-2" />
-                  Sign out
+              <DropdownMenuContent className="rtl">
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer rtl">
+                  <LogOutIcon className="size-4 text-destructive ml-2" />
+                  התנתק
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -108,16 +108,16 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="rtl">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sm">Main</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm rtl">ראשי</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <Link href={item.url} passHref legacyBehavior>
                     <SidebarMenuButton
-                      className="hover:bg-primary/10 data-[active=true]:bg-primary/20 data-[active=true]:text-primary py-5 px-4 text-lg transition-all duration-150 cursor-pointer"
+                      className="hover:bg-primary/10 data-[active=true]:bg-primary/20 data-[active=true]:text-primary py-5 px-4 text-lg transition-all duration-150 cursor-pointer rtl"
                       data-active={pathname === item.url}
                     >
                       <item.icon className="h-5 w-5" />

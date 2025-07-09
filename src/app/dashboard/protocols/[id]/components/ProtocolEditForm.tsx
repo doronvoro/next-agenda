@@ -8,6 +8,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { CalendarIcon, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { he } from "date-fns/locale";
 import type { Committee } from "../types";
 
 interface ProtocolEditFormProps {
@@ -47,17 +48,17 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
     setError(null);
     try {
       if (!editFormData.number.trim() || !editDate) {
-        throw new Error("Please fill in all required fields");
+        throw new Error("אנא מלא את כל השדות הנדרשים");
       }
       if (!editFormData.committee_id) {
-        setError("Please select a committee.");
+        setError("אנא בחר ועדה");
         return;
       }
       
       await onUpdate(e);
     } catch (err) {
       console.error("Error updating protocol:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "אירעה שגיאה");
     }
   };
 
@@ -65,7 +66,7 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
     <form onSubmit={handleUpdate} className="space-y-6 mb-8">
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="number">Protocol Number *</Label>
+          <Label htmlFor="number">מספר פרוטוקול *</Label>
           <Input
             id="number"
             type="text"
@@ -73,12 +74,12 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
             onChange={(e) =>
               setEditFormData({ ...editFormData, number: e.target.value })
             }
-            placeholder="Enter protocol number"
+            placeholder="הזן מספר פרוטוקול"
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="committee">Committee</Label>
+          <Label htmlFor="committee">ועדה</Label>
           <Select
             value={editFormData.committee_id}
             onValueChange={(value) =>
@@ -86,7 +87,7 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a committee" />
+              <SelectValue placeholder="בחר ועדה" />
             </SelectTrigger>
             <SelectContent>
               {committees.map((committee) => (
@@ -98,7 +99,7 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Due Date *</Label>
+          <Label>תאריך יעד *</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -109,7 +110,7 @@ export const ProtocolEditForm: React.FC<ProtocolEditFormProps> = ({
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {editDate ? format(editDate, "dd/MM/yyyy") : "Pick a date"}
+                {editDate ? format(editDate, "dd/MM/yyyy", { locale: he }) : "בחר תאריך"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">

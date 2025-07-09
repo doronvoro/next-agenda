@@ -111,12 +111,12 @@ export default function AIProtocolPage() {
       });
       const data = await res.json();
 
-      let conversationText = "Sorry, I had trouble processing that response.";
+      let conversationText = "מצטערים, הייתה בעיה בעיבוד התגובה.";
       let protocolData = null;
 
       if (data.result && typeof data.result === 'object') {
         const result = data.result;
-        conversationText = result.conversation_result || "I've updated the protocol. What's next?";
+        conversationText = result.conversation_result || "עדכנתי את הפרוטוקול. מה הלאה?";
         const { conversation_result, ...rest } = result;
         protocolData = rest;
       } else if (typeof data.result === 'string') {
@@ -141,7 +141,7 @@ export default function AIProtocolPage() {
         {
           id: nextId.current++,
           sender: "ai",
-          content: "Sorry, there was an error generating the protocol.",
+          content: "מצטערים, הייתה שגיאה ביצירת הפרוטוקול.",
         },
       ]);
     } finally {
@@ -153,8 +153,8 @@ export default function AIProtocolPage() {
     <div className="flex flex-row h-[80vh] max-w-6xl mx-auto">
       <div className="flex-1 flex flex-col bg-background border rounded-xl shadow-lg overflow-hidden mr-6">
         <div className="flex-shrink-0 px-6 py-4 border-b bg-muted">
-          <h1 className="text-2xl font-bold">AI Protocol Assistant</h1>
-          <p className="text-muted-foreground text-sm">Chat with AI to create your protocol</p>
+          <h1 className="text-2xl font-bold">עוזר פרוטוקול AI</h1>
+          <p className="text-muted-foreground text-sm">שוחח עם הבינה המלאכותית כדי ליצור את הפרוטוקול שלך</p>
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-background">
           {messages.map((msg) => (
@@ -177,7 +177,7 @@ export default function AIProtocolPage() {
           {loading && (
             <div className="flex justify-start">
               <div className="max-w-[70%] px-4 py-2 rounded-2xl shadow text-base bg-muted text-foreground rounded-bl-none opacity-70">
-                Thinking...
+                חושב...
               </div>
             </div>
           )}

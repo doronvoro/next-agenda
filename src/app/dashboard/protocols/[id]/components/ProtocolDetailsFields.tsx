@@ -57,15 +57,15 @@ export const ProtocolDetailsFields: React.FC<ProtocolDetailsFieldsProps> = ({ pr
             icon={<Hash className="h-4 w-4" />}
           />
           <Field 
-            label="Committee" 
+            label="וועד הנהלה" 
             value={protocol.committee?.name || 'Not specified'}
             icon={<Users className="h-4 w-4" />}
           />
           <Field
-            label="Members"
+            label="חברים"
             value={
-              <span className="truncate block max-w-[150px]" title={`Total: ${total}, Present: ${present}, Absent: ${absent}`}>
-                {`Total: ${total}, Present: ${present}, Absent: ${absent}`}
+              <span className="truncate block max-w-[150px]" title={`סה"כ: ${total}, נוכחים: ${present}, נעדרים: ${absent}`}>
+                {`סה"כ: ${total}, נוכחים: ${present}, נעדרים: ${absent}`}
               </span>
             }
             icon={<Users className="h-4 w-4" />}
