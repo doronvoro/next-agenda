@@ -5,7 +5,7 @@ import { Computer } from "lucide-react";
  */
 export const brand = {
   lucideIcon: Computer,
-  name: "אג'נדה הבאה",
+  name: "Next Agenda",
   description: "עורך פרוטוקולים לשיפור האג'נדות שלך",
   email: "email@example.com",
   social: {

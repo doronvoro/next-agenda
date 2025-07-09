@@ -24,18 +24,18 @@ export function ConfirmDeleteMemberDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogTitle>אתה בטוח?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the member from this protocol.
+            פעולה זו לא ניתן לבטל. זה ימחק בצורה משמרת את החבר מהפרוטוקול הזה.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>ביטול</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            Delete
+            מחק
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
