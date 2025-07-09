@@ -519,7 +519,7 @@ export default function ProtocolPage() {
                       className="gap-2"
                     >
                       <FileText className="h-4 w-4" />
-                      צפייה ב-PDF
+                      צפה
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>צפייה כ-PDF</TooltipContent>
@@ -772,7 +772,7 @@ export default function ProtocolPage() {
         <DialogContent className="max-w-5xl w-full max-h-[80vh] bg-card flex flex-col p-0" style={{ borderRadius: 0 }}>
           <DialogHeader className="sticky top-0 z-10 bg-card text-foreground flex flex-row items-center justify-between p-6 border-b shadow">
             <div className="flex items-center gap-2">
-              <DialogTitle>צפייה ב-PDF של הפרוטוקול</DialogTitle>
+              <DialogTitle>צפה ב-PDF של הפרוטוקול</DialogTitle>
             </div>
             <DialogClose
               onClick={() => setIsPdfModalOpen(false)}
