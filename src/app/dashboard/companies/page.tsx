@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,7 +49,7 @@ import { useRouter } from "next/navigation";
 
 type Company = Database["public"]["Tables"]["companies"]["Row"];
 
-type SortField = "name" | "created_at";
+type SortField = "name" | "address" | "number" | "created_at";
 type SortOrder = "asc" | "desc";
 
 export default function CompaniesPage() {
@@ -63,6 +62,8 @@ export default function CompaniesPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [isAdding, setIsAdding] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState("");
+  const [newCompanyAddress, setNewCompanyAddress] = useState("");
+  const [newCompanyNumber, setNewCompanyNumber] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
   const { toast } = useToast();
@@ -77,13 +78,13 @@ export default function CompaniesPage() {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("companies")
-        .select("*")
-        .order("name", { ascending: true });
-
-      if (error) throw error;
+      const response = await fetch("/api/companies");
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch companies");
+      }
+      
+      const data = await response.json();
       setCompanies(data || []);
     } catch (error) {
       console.error("Error fetching companies:", error);
@@ -113,19 +114,32 @@ export default function CompaniesPage() {
     }
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("companies")
-        .insert([{ name: newCompanyName.trim() }]);
+      const response = await fetch("/api/companies", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newCompanyName.trim(),
+          address: newCompanyAddress.trim() || null,
+          number: newCompanyNumber.trim() || null,
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create company");
+      }
 
       toast({
         title: "הצלחה",
         description: "החברה נוספה בהצלחה",
       });
 
+      // Clear form and hide it
       setNewCompanyName("");
+      setNewCompanyAddress("");
+      setNewCompanyNumber("");
       setIsAdding(false);
       fetchCompanies();
     } catch (error) {
@@ -135,6 +149,8 @@ export default function CompaniesPage() {
         description: "שגיאה בהוספת החברה",
         variant: "destructive",
       });
+      // Hide form even on error to prevent user confusion
+      setIsAdding(false);
     }
   };
 
@@ -142,13 +158,14 @@ export default function CompaniesPage() {
     if (!companyToDelete) return;
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("companies")
-        .delete()
-        .eq("id", companyToDelete.id);
+      const response = await fetch(`/api/companies/${companyToDelete.id}`, {
+        method: "DELETE",
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete company");
+      }
 
       toast({
         title: "הצלחה",
@@ -179,6 +196,12 @@ export default function CompaniesPage() {
       if (sortField === "name") {
         aValue = a.name;
         bValue = b.name;
+      } else if (sortField === "address") {
+        aValue = a.address || "";
+        bValue = b.address || "";
+      } else if (sortField === "number") {
+        aValue = a.number || "";
+        bValue = b.number || "";
       } else {
         aValue = new Date(a.created_at);
         bValue = new Date(b.created_at);
@@ -243,9 +266,6 @@ export default function CompaniesPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">חברות</h1>
-        <Button onClick={() => router.push("/dashboard")}>
-          חזרה ללוח בקרה
-        </Button>
       </div>
 
       {/* Filters */}
@@ -300,31 +320,56 @@ export default function CompaniesPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="new-company">שם החברה</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="new-company"
-                      value={newCompanyName}
-                      onChange={(e) => setNewCompanyName(e.target.value)}
-                      placeholder="הכנס שם חברה"
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsAdding(false)}
-                      className="h-10 w-10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleAddCompany}
-                      className="h-10 w-10"
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Input
+                    id="new-company"
+                    value={newCompanyName}
+                    onChange={(e) => setNewCompanyName(e.target.value)}
+                    placeholder="הכנס שם חברה"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-company-address">כתובת</Label>
+                  <Input
+                    id="new-company-address"
+                    value={newCompanyAddress}
+                    onChange={(e) => setNewCompanyAddress(e.target.value)}
+                    placeholder="הכנס כתובת החברה"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-company-number">מספר</Label>
+                  <Input
+                    id="new-company-number"
+                    value={newCompanyNumber}
+                    onChange={(e) => setNewCompanyNumber(e.target.value)}
+                    placeholder="הכנס מספר החברה"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setIsAdding(false);
+                      setNewCompanyName("");
+                      setNewCompanyAddress("");
+                      setNewCompanyNumber("");
+                    }}
+                    className="h-10 w-10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleAddCompany}
+                    className="h-10 w-10"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -332,10 +377,12 @@ export default function CompaniesPage() {
 
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">רשימת חברות</h2>
-            <Button onClick={() => setIsAdding(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              הוסף חברה
-            </Button>
+            {!isAdding && (
+              <Button onClick={() => setIsAdding(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                הוסף חברה
+              </Button>
+            )}
           </div>
 
           <Table>
@@ -343,6 +390,12 @@ export default function CompaniesPage() {
               <TableRow>
                 <TableHead>
                   <SortableHeader field="name">שם החברה</SortableHeader>
+                </TableHead>
+                <TableHead>
+                  <SortableHeader field="address">כתובת</SortableHeader>
+                </TableHead>
+                <TableHead>
+                  <SortableHeader field="number">מספר</SortableHeader>
                 </TableHead>
                 <TableHead>
                   <SortableHeader field="created_at">תאריך יצירה</SortableHeader>
@@ -353,7 +406,7 @@ export default function CompaniesPage() {
             <TableBody>
               {paginatedCompanies.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     {searchTerm ? "לא נמצאו חברות" : "אין חברות"}
                   </TableCell>
                 </TableRow>
@@ -361,6 +414,8 @@ export default function CompaniesPage() {
                 paginatedCompanies.map((company) => (
                   <TableRow key={company.id}>
                     <TableCell className="font-medium">{company.name}</TableCell>
+                    <TableCell>{company.address || "-"}</TableCell>
+                    <TableCell>{company.number || "-"}</TableCell>
                     <TableCell>
                       {new Date(company.created_at).toLocaleDateString("he-IL")}
                     </TableCell>
