@@ -64,6 +64,11 @@ export default function CompaniesPage() {
   const [newCompanyName, setNewCompanyName] = useState("");
   const [newCompanyAddress, setNewCompanyAddress] = useState("");
   const [newCompanyNumber, setNewCompanyNumber] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [editCompanyName, setEditCompanyName] = useState("");
+  const [editCompanyAddress, setEditCompanyAddress] = useState("");
+  const [editCompanyNumber, setEditCompanyNumber] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
   const { toast } = useToast();
@@ -151,6 +156,66 @@ export default function CompaniesPage() {
       });
       // Hide form even on error to prevent user confusion
       setIsAdding(false);
+    }
+  };
+
+  const handleEditCompany = (company: Company) => {
+    setEditingCompany(company);
+    setEditCompanyName(company.name);
+    setEditCompanyAddress(company.address || "");
+    setEditCompanyNumber(company.number || "");
+    setIsEditing(true);
+  };
+
+  const handleUpdateCompany = async () => {
+    if (!editingCompany || !editCompanyName.trim()) {
+      toast({
+        title: "שגיאה",
+        description: "שם החברה לא יכול להיות ריק",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/companies/${editingCompany.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editCompanyName.trim(),
+          address: editCompanyAddress.trim() || null,
+          number: editCompanyNumber.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update company");
+      }
+
+      toast({
+        title: "הצלחה",
+        description: "החברה עודכנה בהצלחה",
+      });
+
+      // Clear form and hide it
+      setEditCompanyName("");
+      setEditCompanyAddress("");
+      setEditCompanyNumber("");
+      setEditingCompany(null);
+      setIsEditing(false);
+      fetchCompanies();
+    } catch (error) {
+      console.error("Error updating company:", error);
+      toast({
+        title: "שגיאה",
+        description: "שגיאה בעדכון החברה",
+        variant: "destructive",
+      });
+      // Hide form even on error to prevent user confusion
+      setIsEditing(false);
     }
   };
 
@@ -375,9 +440,73 @@ export default function CompaniesPage() {
             </div>
           )}
 
+          {isEditing && editingCompany && (
+            <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold">עריכת חברה: {editingCompany.name}</h3>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-company">שם החברה</Label>
+                  <Input
+                    id="edit-company"
+                    value={editCompanyName}
+                    onChange={(e) => setEditCompanyName(e.target.value)}
+                    placeholder="הכנס שם חברה"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-company-address">כתובת</Label>
+                  <Input
+                    id="edit-company-address"
+                    value={editCompanyAddress}
+                    onChange={(e) => setEditCompanyAddress(e.target.value)}
+                    placeholder="הכנס כתובת החברה"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-company-number">מספר</Label>
+                  <Input
+                    id="edit-company-number"
+                    value={editCompanyNumber}
+                    onChange={(e) => setEditCompanyNumber(e.target.value)}
+                    placeholder="הכנס מספר החברה"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditingCompany(null);
+                      setEditCompanyName("");
+                      setEditCompanyAddress("");
+                      setEditCompanyNumber("");
+                    }}
+                    className="h-10 w-10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleUpdateCompany}
+                    className="h-10 w-10"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">רשימת חברות</h2>
-            {!isAdding && (
+            {!isAdding && !isEditing && (
               <Button onClick={() => setIsAdding(true)} className="gap-2">
                 <Plus className="h-4 w-4" />
                 הוסף חברה
@@ -431,7 +560,7 @@ export default function CompaniesPage() {
                             <Eye className="mr-2 h-4 w-4" />
                             צפייה
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditCompany(company)}>
                             <Edit className="mr-2 h-4 w-4" />
                             עריכה
                           </DropdownMenuItem>
