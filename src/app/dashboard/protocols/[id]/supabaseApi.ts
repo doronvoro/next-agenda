@@ -675,7 +675,9 @@ export async function fetchAllProtocolsWithDueDatesAndMessageSent() {
 
 export async function createProtocol({ number, due_date, committee_id }: { number: string; due_date: string; committee_id?: string | null }) {
   const supabase = createClient();
-  const { data, error } = await supabase
+  
+  // Create the protocol
+  const { data: protocol, error: protocolError } = await supabase
     .from("protocols")
     .insert([
       {
@@ -686,6 +688,45 @@ export async function createProtocol({ number, due_date, committee_id }: { numbe
     ])
     .select()
     .single();
-  if (error) throw error;
-  return data;
+    
+  if (protocolError) throw protocolError;
+  
+  // If a committee is selected, automatically add all committee members as protocol members
+  if (committee_id) {
+    try {
+      // Fetch all committee members
+      const { data: committeeMembers, error: membersError } = await supabase
+        .from("committees_members")
+        .select("name")
+        .eq("committee_id", committee_id);
+        
+      if (membersError) {
+        console.error("Error fetching committee members:", membersError);
+        // Don't throw error here, just log it and continue
+      } else if (committeeMembers && committeeMembers.length > 0) {
+        // Create protocol members for each committee member
+        const protocolMembers = committeeMembers.map(member => ({
+          protocol_id: protocol.id,
+          name: member.name,
+          type: 1, // 1 = committee member
+          status: 1, // 1 = active
+          source_type: 1, // 1 = from committee
+        }));
+        
+        const { error: insertError } = await supabase
+          .from("protocol_members")
+          .insert(protocolMembers);
+          
+        if (insertError) {
+          console.error("Error creating protocol members:", insertError);
+          // Don't throw error here, just log it and continue
+        }
+      }
+    } catch (error) {
+      console.error("Error in committee members processing:", error);
+      // Don't throw error here, just log it and continue
+    }
+  }
+  
+  return protocol;
 } 
