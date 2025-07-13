@@ -79,8 +79,14 @@ export default function CommitteesPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [newCommitteeName, setNewCommitteeName] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingCommittee, setEditingCommittee] = useState<CommitteeWithCompany | null>(null);
+  const [editCommitteeName, setEditCommitteeName] = useState("");
+  const [editCommitteeCompanyId, setEditCommitteeCompanyId] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [committeeToDelete, setCommitteeToDelete] = useState<Committee | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [committeeToView, setCommitteeToView] = useState<CommitteeWithCompany | null>(null);
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const [selectedCommittee, setSelectedCommittee] = useState<CommitteeWithCompany | null>(null);
   const [members, setMembers] = useState<any[]>([]);
@@ -195,10 +201,14 @@ export default function CommitteesPage() {
         description: "הוועדה נוספה בהצלחה",
       });
 
+      const newCommittee = await response.json();
+      
+      // Add the new committee to local state
+      setCommittees(prevCommittees => [...prevCommittees, { ...newCommittee, company: companies.find(c => c.id === newCommittee.company_id) || null, members: [{ count: 0 }] }]);
+      
       setNewCommitteeName("");
       setSelectedCompanyId("");
       setIsAdding(false);
-      fetchCommittees();
     } catch (error) {
       console.error("Error adding committee:", error);
       toast({
@@ -235,6 +245,104 @@ export default function CommitteesPage() {
       toast({
         title: "שגיאה",
         description: "שגיאה במחיקת הוועדה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewCommittee = (committee: CommitteeWithCompany) => {
+    setCommitteeToView(committee);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditCommittee = (committee: CommitteeWithCompany) => {
+    setEditingCommittee(committee);
+    setEditCommitteeName(committee.name);
+    setEditCommitteeCompanyId(committee.company_id || "");
+    setIsEditing(true);
+  };
+
+  const handleUpdateCommittee = async () => {
+    if (!editingCommittee || !editCommitteeName.trim()) {
+      toast({
+        title: "שגיאה",
+        description: "שם הוועדה לא יכול להיות ריק",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!editCommitteeCompanyId) {
+      toast({
+        title: "שגיאה",
+        description: "יש לבחור חברה",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if committee name already exists (excluding current committee)
+    const existingCommittee = committees.find(
+      committee => 
+        committee.id !== editingCommittee.id &&
+        committee.name.toLowerCase() === editCommitteeName.trim().toLowerCase()
+    );
+
+    if (existingCommittee) {
+      toast({
+        title: "שגיאה",
+        description: "כבר קיימת ועדה עם שם זה",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/committees/${editingCommittee.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editCommitteeName.trim(),
+          company_id: editCommitteeCompanyId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update committee");
+      }
+
+      toast({
+        title: "הצלחה",
+        description: "הוועדה עודכנה בהצלחה",
+      });
+
+      const updatedCommittee = await response.json();
+      
+      // Update the committee in local state
+      setCommittees(prevCommittees => 
+        prevCommittees.map(committee => 
+          committee.id === editingCommittee.id 
+            ? { 
+                ...updatedCommittee, 
+                company: companies.find(c => c.id === updatedCommittee.company_id) || null,
+                members: committee.members // Keep existing member count
+              }
+            : committee
+        )
+      );
+      
+      setEditCommitteeName("");
+      setEditCommitteeCompanyId("");
+      setEditingCommittee(null);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating committee:", error);
+      toast({
+        title: "שגיאה",
+        description: "שגיאה בעדכון הוועדה",
         variant: "destructive",
       });
     }
@@ -577,9 +685,68 @@ export default function CommitteesPage() {
             </div>
           )}
 
+          {isEditing && editingCommittee && (
+            <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold">עריכת ועדה: {editingCommittee.name}</h3>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-committee">שם הוועדה</Label>
+                  <Input
+                    id="edit-committee"
+                    value={editCommitteeName}
+                    onChange={(e) => setEditCommitteeName(e.target.value)}
+                    placeholder="הכנס שם ועדה"
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-company-select">חברה</Label>
+                  <Select value={editCommitteeCompanyId} onValueChange={setEditCommitteeCompanyId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="בחר חברה" />
+                    </SelectTrigger>
+                    <SelectContent className="w-fit min-w-0">
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditingCommittee(null);
+                      setEditCommitteeName("");
+                      setEditCommitteeCompanyId("");
+                    }}
+                    className="h-10 w-10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleUpdateCommittee}
+                    disabled={!editCommitteeName.trim() || !editCommitteeCompanyId}
+                    className="h-10 w-10"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">רשימת ועדות</h2>
-            {!isAdding && (
+            {!isAdding && !isEditing && (
               <Button onClick={() => setIsAdding(true)} className="gap-2">
                 <Plus className="h-4 w-4" />
                 הוסף ועדה
@@ -636,11 +803,11 @@ export default function CommitteesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-fit min-w-0">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleViewCommittee(committee)}>
                             <Eye className="mr-2 h-4 w-4" />
                             צפייה
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditCommittee(committee)}>
                             <Edit className="mr-2 h-4 w-4" />
                             עריכה
                           </DropdownMenuItem>
@@ -691,6 +858,41 @@ export default function CommitteesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* View Committee Dialog */}
+      <AlertDialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <AlertDialogContent className="max-w-md rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>פרטי הוועדה</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4 rtl">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">שם הוועדה</Label>
+              <p className="text-sm">{committeeToView?.name}</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">חברה</Label>
+              <p className="text-sm">{committeeToView?.company?.name || "לא צוין"}</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">מספר חברים</Label>
+              <p className="text-sm">{committeeToView?.members?.[0]?.count || 0} חברים</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">תאריך יצירה</Label>
+              <p className="text-sm">
+                {committeeToView?.created_at 
+                  ? new Date(committeeToView.created_at).toLocaleDateString("he-IL")
+                  : "לא צוין"
+                }
+              </p>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>סגור</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
