@@ -9,7 +9,8 @@ export async function GET() {
       .from("committees")
       .select(`
         *,
-        company:companies!company_id(id, name)
+        company:companies!company_id(id, name),
+        members:committees_members(count)
       `)
       .order("name", { ascending: true });
 

@@ -61,6 +61,7 @@ type Company = Database["public"]["Tables"]["companies"]["Row"];
 type CompanyOption = Pick<Company, "id" | "name">;
 type CommitteeWithCompany = Committee & {
   company: CompanyOption | null;
+  members: { count: number }[];
 };
 
 type SortField = "name" | "created_at";
@@ -80,6 +81,12 @@ export default function CommitteesPage() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [committeeToDelete, setCommitteeToDelete] = useState<Committee | null>(null);
+  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
+  const [selectedCommittee, setSelectedCommittee] = useState<CommitteeWithCompany | null>(null);
+  const [members, setMembers] = useState<any[]>([]);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [editingMember, setEditingMember] = useState<any | null>(null);
+  const [editMemberName, setEditMemberName] = useState("");
   const { toast } = useToast();
   const router = useRouter();
 
@@ -228,6 +235,155 @@ export default function CommitteesPage() {
       toast({
         title: "שגיאה",
         description: "שגיאה במחיקת הוועדה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOpenMembersDialog = async (committee: CommitteeWithCompany) => {
+    setSelectedCommittee(committee);
+    setMembersDialogOpen(true);
+    setNewMemberName("");
+    setEditingMember(null);
+    setEditMemberName("");
+    
+    try {
+      const response = await fetch(`/api/committees/${committee.id}/members`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch members");
+      }
+      const data = await response.json();
+      setMembers(data || []);
+    } catch (error) {
+      console.error("Error fetching members:", error);
+      toast({
+        title: "שגיאה",
+        description: "שגיאה בטעינת חברי הוועדה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (!selectedCommittee || !newMemberName.trim()) {
+      toast({
+        title: "שגיאה",
+        description: "שם החבר נדרש",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/committees/${selectedCommittee.id}/members`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newMemberName.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add member");
+      }
+
+      const newMember = await response.json();
+      setMembers([...members, newMember]);
+      setNewMemberName("");
+      
+      // Refresh committees to update member count
+      fetchCommittees();
+      
+      toast({
+        title: "הצלחה",
+        description: "החבר נוסף בהצלחה",
+      });
+    } catch (error) {
+      console.error("Error adding member:", error);
+      toast({
+        title: "שגיאה",
+        description: "שגיאה בהוספת החבר",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditMember = async () => {
+    if (!editingMember || !editMemberName.trim()) {
+      toast({
+        title: "שגיאה",
+        description: "שם החבר נדרש",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/committees/${selectedCommittee!.id}/members/${editingMember.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editMemberName.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update member");
+      }
+
+      const updatedMember = await response.json();
+      setMembers(members.map(m => m.id === editingMember.id ? updatedMember : m));
+      setEditingMember(null);
+      setEditMemberName("");
+      
+      // Refresh committees to update member count
+      fetchCommittees();
+      
+      toast({
+        title: "הצלחה",
+        description: "החבר עודכן בהצלחה",
+      });
+    } catch (error) {
+      console.error("Error updating member:", error);
+      toast({
+        title: "שגיאה",
+        description: "שגיאה בעדכון החבר",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteMember = async (memberId: string) => {
+    try {
+      const response = await fetch(`/api/committees/${selectedCommittee!.id}/members/${memberId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete member");
+      }
+
+      setMembers(members.filter(m => m.id !== memberId));
+      
+      // Refresh committees to update member count
+      fetchCommittees();
+      
+      toast({
+        title: "הצלחה",
+        description: "החבר נמחק בהצלחה",
+      });
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      toast({
+        title: "שגיאה",
+        description: "שגיאה במחיקת החבר",
         variant: "destructive",
       });
     }
@@ -429,6 +585,7 @@ export default function CommitteesPage() {
                   <SortableHeader field="name">שם הוועדה</SortableHeader>
                 </TableHead>
                 <TableHead>חברה</TableHead>
+                <TableHead>מספר חברים</TableHead>
                 <TableHead>
                   <SortableHeader field="created_at">תאריך יצירה</SortableHeader>
                 </TableHead>
@@ -438,7 +595,7 @@ export default function CommitteesPage() {
             <TableBody>
               {paginatedCommittees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     {searchTerm ? "לא נמצאו ועדות" : "אין ועדות"}
                   </TableCell>
                 </TableRow>
@@ -448,6 +605,16 @@ export default function CommitteesPage() {
                     <TableCell className="font-medium">{committee.name}</TableCell>
                     <TableCell>
                       {committee.company?.name || "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        onClick={() => handleOpenMembersDialog(committee)}
+                      >
+                        <Users className="h-4 w-4" />
+                        {committee.members?.[0]?.count || 0}
+                      </Button>
                     </TableCell>
                     <TableCell>
                       {new Date(committee.created_at).toLocaleDateString("he-IL")}
@@ -531,6 +698,113 @@ export default function CommitteesPage() {
             <AlertDialogAction onClick={handleDeleteCommittee} className="bg-red-600">
               מחק
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Members Management Dialog */}
+      <AlertDialog open={membersDialogOpen} onOpenChange={setMembersDialogOpen}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>ניהול חברי ועדה: {selectedCommittee?.name}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Add New Member */}
+            <div className="space-y-4 p-4 border rounded-lg">
+              <h3 className="text-lg font-semibold">הוסף חבר חדש</h3>
+              <div className="flex gap-2">
+                <Input
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  placeholder="הזן שם חבר"
+                  className="flex-1"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleAddMember}
+                  disabled={!newMemberName.trim()}
+                  className="h-10 w-10"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Members List */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">רשימת חברים</h3>
+              {members.length === 0 ? (
+                <div className="text-center text-muted-foreground py-4">
+                  אין חברים בוועדה זו
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {members.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      {editingMember?.id === member.id ? (
+                        <div className="flex gap-2 flex-1">
+                          <Input
+                            value={editMemberName}
+                            onChange={(e) => setEditMemberName(e.target.value)}
+                            placeholder="הזן שם חבר"
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleEditMember}
+                            disabled={!editMemberName.trim()}
+                            className="h-8 w-8"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setEditingMember(null);
+                              setEditMemberName("");
+                            }}
+                            className="h-8 w-8"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="flex-1">{member.name}</span>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditingMember(member);
+                                setEditMemberName(member.name);
+                              }}
+                              className="h-8 w-8"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteMember(member.id)}
+                              className="h-8 w-8 text-red-600 hover:text-red-800"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>סגור</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
