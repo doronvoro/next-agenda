@@ -294,8 +294,14 @@ export default function CommitteesPage() {
       setMembers([...members, newMember]);
       setNewMemberName("");
       
-      // Refresh committees to update member count
-      fetchCommittees();
+      // Update the committee's member count locally
+      setCommittees(prevCommittees => 
+        prevCommittees.map(committee => 
+          committee.id === selectedCommittee?.id 
+            ? { ...committee, members: [{ count: (committee.members?.[0]?.count || 0) + 1 }] }
+            : committee
+        )
+      );
       
       toast({
         title: "הצלחה",
@@ -342,9 +348,6 @@ export default function CommitteesPage() {
       setEditingMember(null);
       setEditMemberName("");
       
-      // Refresh committees to update member count
-      fetchCommittees();
-      
       toast({
         title: "הצלחה",
         description: "החבר עודכן בהצלחה",
@@ -372,8 +375,14 @@ export default function CommitteesPage() {
 
       setMembers(members.filter(m => m.id !== memberId));
       
-      // Refresh committees to update member count
-      fetchCommittees();
+      // Update the committee's member count locally
+      setCommittees(prevCommittees => 
+        prevCommittees.map(committee => 
+          committee.id === selectedCommittee?.id 
+            ? { ...committee, members: [{ count: Math.max(0, (committee.members?.[0]?.count || 0) - 1) }] }
+            : committee
+        )
+      );
       
       toast({
         title: "הצלחה",
