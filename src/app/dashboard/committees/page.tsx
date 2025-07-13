@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -50,12 +57,18 @@ import type { Database } from "@/types/supabase";
 import { useRouter } from "next/navigation";
 
 type Committee = Database["public"]["Tables"]["committees"]["Row"];
+type Company = Database["public"]["Tables"]["companies"]["Row"];
+type CompanyOption = Pick<Company, "id" | "name">;
+type CommitteeWithCompany = Committee & {
+  company: CompanyOption | null;
+};
 
 type SortField = "name" | "created_at";
 type SortOrder = "asc" | "desc";
 
 export default function CommitteesPage() {
-  const [committees, setCommittees] = useState<Committee[]>([]);
+  const [committees, setCommittees] = useState<CommitteeWithCompany[]>([]);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,6 +77,7 @@ export default function CommitteesPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [isAdding, setIsAdding] = useState(false);
   const [newCommitteeName, setNewCommitteeName] = useState("");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [committeeToDelete, setCommitteeToDelete] = useState<Committee | null>(null);
   const { toast } = useToast();
@@ -73,24 +87,40 @@ export default function CommitteesPage() {
 
   useEffect(() => {
     fetchCommittees();
+    fetchCompanies();
   }, []);
 
   const fetchCommittees = async () => {
     try {
       setLoading(true);
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("committees")
-        .select("*")
-        .order("name", { ascending: true });
-
-      if (error) throw error;
+      const response = await fetch("/api/committees");
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch committees");
+      }
+      
+      const data = await response.json();
       setCommittees(data || []);
     } catch (error) {
       console.error("Error fetching committees:", error);
       setError("שגיאה בטעינת הוועדות");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await fetch("/api/companies");
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch companies");
+      }
+      
+      const data = await response.json();
+      setCompanies(data || []);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
     }
   };
 
@@ -113,13 +143,45 @@ export default function CommitteesPage() {
       return;
     }
 
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("committees")
-        .insert([{ name: newCommitteeName.trim() }]);
+    if (!selectedCompanyId) {
+      toast({
+        title: "שגיאה",
+        description: "יש לבחור חברה",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      if (error) throw error;
+    // Check if committee name already exists
+    const existingCommittee = committees.find(
+      committee => committee.name.toLowerCase() === newCommitteeName.trim().toLowerCase()
+    );
+
+    if (existingCommittee) {
+      toast({
+        title: "שגיאה",
+        description: "כבר קיימת ועדה עם שם זה",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/committees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newCommitteeName.trim(),
+          company_id: selectedCompanyId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create committee");
+      }
 
       toast({
         title: "הצלחה",
@@ -127,6 +189,7 @@ export default function CommitteesPage() {
       });
 
       setNewCommitteeName("");
+      setSelectedCompanyId("");
       setIsAdding(false);
       fetchCommittees();
     } catch (error) {
@@ -143,13 +206,14 @@ export default function CommitteesPage() {
     if (!committeeToDelete) return;
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("committees")
-        .delete()
-        .eq("id", committeeToDelete.id);
+      const response = await fetch(`/api/committees/${committeeToDelete.id}`, {
+        method: "DELETE",
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete committee");
+      }
 
       toast({
         title: "הצלחה",
@@ -244,9 +308,6 @@ export default function CommitteesPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">ועדות</h1>
-        <Button onClick={() => router.push("/dashboard")}>
-          חזרה ללוח בקרה
-        </Button>
       </div>
 
       {/* Filters */}
@@ -301,31 +362,51 @@ export default function CommitteesPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="new-committee">שם הוועדה</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="new-committee"
-                      value={newCommitteeName}
-                      onChange={(e) => setNewCommitteeName(e.target.value)}
-                      placeholder="הכנס שם ועדה"
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsAdding(false)}
-                      className="h-10 w-10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleAddCommittee}
-                      className="h-10 w-10"
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Input
+                    id="new-committee"
+                    value={newCommitteeName}
+                    onChange={(e) => setNewCommitteeName(e.target.value)}
+                    placeholder="הכנס שם ועדה"
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company-select">חברה</Label>
+                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="בחר חברה" />
+                    </SelectTrigger>
+                    <SelectContent className="w-fit min-w-0">
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setIsAdding(false);
+                      setNewCommitteeName("");
+                      setSelectedCompanyId("");
+                    }}
+                    className="h-10 w-10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleAddCommittee}
+                    disabled={!newCommitteeName.trim() || !selectedCompanyId}
+                    className="h-10 w-10"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -333,10 +414,12 @@ export default function CommitteesPage() {
 
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">רשימת ועדות</h2>
-            <Button onClick={() => setIsAdding(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              הוסף ועדה
-            </Button>
+            {!isAdding && (
+              <Button onClick={() => setIsAdding(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                הוסף ועדה
+              </Button>
+            )}
           </div>
 
           <Table>
@@ -345,6 +428,7 @@ export default function CommitteesPage() {
                 <TableHead>
                   <SortableHeader field="name">שם הוועדה</SortableHeader>
                 </TableHead>
+                <TableHead>חברה</TableHead>
                 <TableHead>
                   <SortableHeader field="created_at">תאריך יצירה</SortableHeader>
                 </TableHead>
@@ -354,7 +438,7 @@ export default function CommitteesPage() {
             <TableBody>
               {paginatedCommittees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8">
+                  <TableCell colSpan={4} className="text-center py-8">
                     {searchTerm ? "לא נמצאו ועדות" : "אין ועדות"}
                   </TableCell>
                 </TableRow>
@@ -362,6 +446,9 @@ export default function CommitteesPage() {
                 paginatedCommittees.map((committee) => (
                   <TableRow key={committee.id}>
                     <TableCell className="font-medium">{committee.name}</TableCell>
+                    <TableCell>
+                      {committee.company?.name || "-"}
+                    </TableCell>
                     <TableCell>
                       {new Date(committee.created_at).toLocaleDateString("he-IL")}
                     </TableCell>
@@ -372,7 +459,7 @@ export default function CommitteesPage() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-fit min-w-0">
                           <DropdownMenuItem>
                             <Eye className="mr-2 h-4 w-4" />
                             צפייה

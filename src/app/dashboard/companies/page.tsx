@@ -69,6 +69,8 @@ export default function CompaniesPage() {
   const [editCompanyName, setEditCompanyName] = useState("");
   const [editCompanyAddress, setEditCompanyAddress] = useState("");
   const [editCompanyNumber, setEditCompanyNumber] = useState("");
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [companyToView, setCompanyToView] = useState<Company | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
   const { toast } = useToast();
@@ -157,6 +159,11 @@ export default function CompaniesPage() {
       // Hide form even on error to prevent user confusion
       setIsAdding(false);
     }
+  };
+
+  const handleViewCompany = (company: Company) => {
+    setCompanyToView(company);
+    setViewDialogOpen(true);
   };
 
   const handleEditCompany = (company: Company) => {
@@ -556,7 +563,7 @@ export default function CompaniesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleViewCompany(company)}>
                             <Eye className="mr-2 h-4 w-4" />
                             צפייה
                           </DropdownMenuItem>
@@ -611,6 +618,41 @@ export default function CompaniesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* View Company Dialog */}
+      <AlertDialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>פרטי החברה</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">שם החברה</Label>
+              <p className="text-sm">{companyToView?.name}</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">כתובת</Label>
+              <p className="text-sm">{companyToView?.address || "לא צוין"}</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">מספר</Label>
+              <p className="text-sm">{companyToView?.number || "לא צוין"}</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">תאריך יצירה</Label>
+              <p className="text-sm">
+                {companyToView?.created_at 
+                  ? new Date(companyToView.created_at).toLocaleDateString("he-IL")
+                  : "לא צוין"
+                }
+              </p>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>סגור</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
