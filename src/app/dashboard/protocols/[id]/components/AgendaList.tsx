@@ -121,7 +121,7 @@ const AgendaList: React.FC<AgendaListProps> = ({
                     onChange={(e) => setNewAgendaItem({ ...newAgendaItem, title: e.target.value })}
                     onKeyDown={handleInputKeyDown}
                     onBlur={handleBlur}
-                    placeholder="Type agenda item title and press Enter to save"
+                    placeholder="הקלד כותרת לסעיף ולחץ אנטר לשמירה"
                     autoFocus
                     className="border-0 border-b-2 border-blue-300 focus:border-blue-500 focus:ring-0 px-0 py-1 rounded-none bg-transparent"
                     disabled={isCreating}
@@ -187,11 +187,11 @@ const AgendaList: React.FC<AgendaListProps> = ({
                           onClick={() => setNewAgendaItem({ title: "", isEditing: true })}
                         >
                           <Plus className="h-4 w-4 mr-2" />
-                          Add Item
+                          הוסף סעיף
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Add a new agenda item</p>
+                        <p>הוסף סעיף חדש</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -210,14 +210,14 @@ const AgendaList: React.FC<AgendaListProps> = ({
                               >
                                 <SelectTrigger className="h-8 px-3 w-auto min-w-[200px] border-blue-200 text-blue-600 hover:bg-blue-500/10 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-500/20">
                                   <Sparkles className="h-4 w-4 mr-2 text-blue-500" />
-                                  <SelectValue placeholder={loadingFutureTopics ? "Loading..." : "From Future Topic"} />
+                                  <SelectValue placeholder={loadingFutureTopics ? "טוען..." : "סעיף עתידי"} />
                                   <Badge variant="secondary" className="ml-2 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                                     {futureTopics.length}
                                   </Badge>
                                 </SelectTrigger>
                                 <SelectContent className="max-w-md">
                                   <div className="p-2 text-xs text-muted-foreground border-b mb-2">
-                                    Available future topics
+                                    נושאים עתידיים זמינים
                                   </div>
                                   {futureTopics.map((topic) => (
                                     <SelectItem key={topic.id} value={topic.id} className="py-3">
@@ -235,7 +235,7 @@ const AgendaList: React.FC<AgendaListProps> = ({
                               </Select>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Create agenda item from existing future topic</p>
+                              <p>צור סעיף מסעיף עתידי קיים</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

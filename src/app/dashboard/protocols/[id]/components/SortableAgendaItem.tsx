@@ -199,15 +199,15 @@ const SortableAgendaItem: React.FC<SortableAgendaItemProps> = ({
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Agenda Item</AlertDialogTitle>
+            <AlertDialogTitle className="text-right rtl">מחק סעיף מסדר היום</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{item.title}"? This action cannot be undone.
+              {`האם אתה בטוח שברצונך למחוק את "${item.title}"? פעולה זו אינה ניתנת לביטול.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCancelDelete}>ביטול</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              מחק
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
