@@ -59,6 +59,7 @@ import { useRouter } from "next/navigation";
 import ProtocolPdfModal from "../components/ProtocolPdfModal";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { ProtocolQuickNav } from "./components/ProtocolQuickNav";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -660,80 +661,16 @@ export default function ProtocolPage() {
       </div>
 
       {/* Sticky Section Navigation */}
-      {showStickyNav && (
-        <div className="sticky top-[72px] z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm animate-in slide-in-from-top-2 duration-300">
-          <div className="px-8 py-3">
-            <div className="flex items-center gap-6">
-              <span className="text-sm font-medium text-muted-foreground">ניווט מהיר:</span>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => {
-                    setActiveSection("protocol-details");
-                    scrollToSection("protocol-details");
-                  }}
-                  className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary px-3 py-1 rounded-md",
-                    activeSection === "protocol-details"
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:bg-muted/50"
-                  )}
-                >
-                  פרטי פרוטוקול
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveSection("agenda-list");
-                    setActiveAgendaItem(null);
-                    scrollToSection("agenda-list");
-                  }}
-                  className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary px-3 py-1 rounded-md",
-                    activeSection === "agenda-list" && !activeAgendaItem
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:bg-muted/50"
-                  )}
-                >
-                  סדר יום
-                </button>
-                {/* Agenda item numbers navigation */}
-                {agendaItems.length > 0 && (
-                  <div className="flex items-center gap-1 ml-4">
-                    <>
-                      {agendaItems
-                        .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
-                        .map((item: any, idx: number) => {
-                          const firstTwoWords = item.title.split(" ").slice(0, 2).join(" ");
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => {
-                                setActiveAgendaItem(item.id);
-                                setActiveSection("agenda-list");
-                                scrollToAgendaItem(item.id);
-                              }}
-                              className={cn(
-                                "text-sm font-medium transition-colors hover:text-primary px-3 py-1 rounded-md flex items-center gap-1 w-auto max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap",
-                                activeSection === "agenda-list" && activeAgendaItem === item.id
-                                  ? "text-primary bg-primary/10"
-                                  : "text-muted-foreground hover:bg-muted/50"
-                              )}
-                              title={item.title}
-                            >
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-bold border border-border mr-1">
-                                {item.display_order || idx + 1}
-                              </span>
-                              <span className="truncate">{firstTwoWords}</span>
-                            </button>
-                          );
-                        })}
-                    </>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProtocolQuickNav
+        showStickyNav={showStickyNav}
+        agendaItems={agendaItems}
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+        activeAgendaItem={activeAgendaItem}
+        setActiveAgendaItem={setActiveAgendaItem}
+        scrollToSection={scrollToSection}
+        scrollToAgendaItem={scrollToAgendaItem}
+      />
 
       {/* Agenda Item Quick Navigation */}
       {showAgendaQuickNav && agendaItems.length > 0 && currentTab === "content" && (
