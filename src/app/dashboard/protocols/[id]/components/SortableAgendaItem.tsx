@@ -5,16 +5,7 @@ import { GripVertical, Eye, Edit3, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AgendaItem } from "../types";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDeleteAgendaItemDialog } from "./dialogs/ConfirmDeleteAgendaItemDialog";
 
 interface SortableAgendaItemProps {
   item: AgendaItem;
@@ -196,22 +187,12 @@ const SortableAgendaItem: React.FC<SortableAgendaItemProps> = ({
         </div>
       </div>
 
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-right rtl">מחק סעיף מסדר היום</AlertDialogTitle>
-            <AlertDialogDescription>
-              {`האם אתה בטוח שברצונך למחוק את "${item.title}"? פעולה זו אינה ניתנת לביטול.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelDelete}>ביטול</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              מחק
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteAgendaItemDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={handleConfirmDelete}
+        agendaItemTitle={item.title}
+      />
     </>
   );
 };
