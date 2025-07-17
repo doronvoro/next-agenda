@@ -822,3 +822,25 @@
     direction: inherit;
   }
 }
+
+/* Custom scrollbar for Protocol page */
+.protocol-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) var(--color-muted);
+  direction: ltr !important;
+  scrollbar-gutter: stable;
+}
+.protocol-content-rtl {
+  direction: rtl !important;
+}
+.protocol-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  background: var(--color-muted);
+}
+.protocol-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 8px;
+}
+.protocol-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-foreground);
+}
