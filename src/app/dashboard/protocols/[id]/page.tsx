@@ -5,7 +5,7 @@ import { format, isValid } from "date-fns";
 import { he } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus } from "lucide-react";
+import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -58,6 +58,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useRouter } from "next/navigation";
 import ProtocolPdfModal from "../components/ProtocolPdfModal";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -114,7 +115,22 @@ export default function ProtocolPage() {
   const [loadingFutureTopics, setLoadingFutureTopics] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("protocol-details");
+  const [showStickyNav, setShowStickyNav] = useState(false);
+  const [showAgendaQuickNav, setShowAgendaQuickNav] = useState(false);
+  const [activeAgendaItem, setActiveAgendaItem] = useState<string | null>(null);
   const router = useRouter();
+
+  // Add state for anchor link feedback
+  const [copiedAnchor, setCopiedAnchor] = useState<string | null>(null);
+
+  const handleAnchorClick = (anchor: string) => {
+    const url = `${window.location.origin}${window.location.pathname}#${anchor}`;
+    navigator.clipboard.writeText(url);
+    setCopiedAnchor(anchor);
+    window.location.hash = anchor;
+    setTimeout(() => setCopiedAnchor(null), 1200);
+  };
 
   const agendaApi = {
     updateAgendaItem: async (item: EditingAgendaItem) => {
@@ -176,6 +192,88 @@ export default function ProtocolPage() {
     fetchData();
     fetchFutureTopics();
   }, [protocolId]);
+
+  // Use scroll container logic
+  const getScrollContainer = () => document.getElementById("protocol-scroll-container");
+
+  // Update scroll detection for sticky nav and agenda quick nav
+  useEffect(() => {
+    const container = getScrollContainer();
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (currentTab !== "content") {
+        setShowStickyNav(false);
+        return;
+      }
+      setShowStickyNav(true); // Always show sticky nav on content tab
+      const scrollY = container.scrollTop;
+      const protocolDetailsSection = document.getElementById("protocol-details");
+      const agendaListSection = document.getElementById("agenda-list");
+      const agendaDetailsSection = document.getElementById("agenda-details");
+      if (!protocolDetailsSection || !agendaListSection || !agendaDetailsSection) return;
+      const protocolDetailsTop = protocolDetailsSection.offsetTop - 150;
+      const agendaListTop = agendaListSection.offsetTop - 150;
+      const agendaDetailsTop = agendaDetailsSection.offsetTop - 150;
+      if (scrollY < agendaListTop) {
+        setActiveSection("protocol-details");
+        setActiveAgendaItem(null);
+      } else if (scrollY < agendaDetailsTop) {
+        setActiveSection("agenda-list");
+        setActiveAgendaItem(null);
+      } else {
+        setActiveSection("agenda-details");
+        const agendaItemElements = agendaItems.map(item => ({
+          id: item.id,
+          element: document.getElementById(`agenda-item-${item.id}`)
+        })).filter(item => item.element);
+        let currentItem = null;
+        for (const item of agendaItemElements) {
+          if (item.element) {
+            const rect = item.element.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            if (rect.top - containerRect.top <= 200 && rect.bottom - containerRect.top >= 200) {
+              currentItem = item.id;
+              break;
+            }
+          }
+        }
+        setActiveAgendaItem(currentItem);
+      }
+    };
+    container.addEventListener("scroll", handleScroll);
+    handleScroll();
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [currentTab, agendaItems.length]);
+
+  // Ensure sticky nav is visible immediately when content tab is active
+  useEffect(() => {
+    if (currentTab === "content") {
+      setShowStickyNav(true);
+    }
+  }, [currentTab]);
+
+  // Update scrollToSection and scrollToAgendaItem to use the container
+  const scrollToSection = (sectionId: string) => {
+    const container = getScrollContainer();
+    const element = document.getElementById(sectionId);
+    if (element && container) {
+      container.scrollTo({
+        top: element.offsetTop - 24,
+        behavior: "smooth"
+      });
+    }
+  };
+  const scrollToAgendaItem = (itemId: string) => {
+    const container = getScrollContainer();
+    const element = document.getElementById(`agenda-item-${itemId}`);
+    if (element && container) {
+      container.scrollTo({
+        top: element.offsetTop - 24,
+        behavior: "smooth"
+      });
+    }
+  };
 
   // Set protocol number immediately when protocol data is available
   useEffect(() => {
@@ -487,9 +585,8 @@ export default function ProtocolPage() {
             <div className="flex items-center gap-4">
               <Link href="/dashboard/protocols">
                 <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="h-4 w-4 rotate-180" />
                   חזרה
-                 
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
               <div className="h-6 w-px bg-border"></div>
@@ -562,8 +659,135 @@ export default function ProtocolPage() {
         </div>
       </div>
 
+      {/* Sticky Section Navigation */}
+      {showStickyNav && (
+        <div className="sticky top-[72px] z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm animate-in slide-in-from-top-2 duration-300">
+          <div className="px-8 py-3">
+            <div className="flex items-center gap-6">
+              <span className="text-sm font-medium text-muted-foreground">ניווט מהיר:</span>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => {
+                    setActiveSection("protocol-details");
+                    scrollToSection("protocol-details");
+                  }}
+                  className={cn(
+                    "text-sm font-medium transition-colors hover:text-primary px-3 py-1 rounded-md",
+                    activeSection === "protocol-details"
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:bg-muted/50"
+                  )}
+                >
+                  פרטי פרוטוקול
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveSection("agenda-list");
+                    setActiveAgendaItem(null);
+                    scrollToSection("agenda-list");
+                  }}
+                  className={cn(
+                    "text-sm font-medium transition-colors hover:text-primary px-3 py-1 rounded-md",
+                    activeSection === "agenda-list" && !activeAgendaItem
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:bg-muted/50"
+                  )}
+                >
+                  סדר יום
+                </button>
+                {/* Agenda item numbers navigation */}
+                {agendaItems.length > 0 && (
+                  <div className="flex items-center gap-1 ml-4">
+                    <>
+                      {agendaItems
+                        .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
+                        .map((item: any, idx: number) => {
+                          const firstTwoWords = item.title.split(" ").slice(0, 2).join(" ");
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => {
+                                setActiveAgendaItem(item.id);
+                                setActiveSection("agenda-list");
+                                scrollToAgendaItem(item.id);
+                              }}
+                              className={cn(
+                                "text-sm font-medium transition-colors hover:text-primary px-3 py-1 rounded-md flex items-center gap-1 w-auto max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap",
+                                activeSection === "agenda-list" && activeAgendaItem === item.id
+                                  ? "text-primary bg-primary/10"
+                                  : "text-muted-foreground hover:bg-muted/50"
+                              )}
+                              title={item.title}
+                            >
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-bold border border-border mr-1">
+                                {item.display_order || idx + 1}
+                              </span>
+                              <span className="truncate">{firstTwoWords}</span>
+                            </button>
+                          );
+                        })}
+                    </>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Agenda Item Quick Navigation */}
+      {showAgendaQuickNav && agendaItems.length > 0 && currentTab === "content" && (
+        <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-40">
+          <div className="bg-card border border-border rounded-lg shadow-lg p-4 max-w-xs">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-foreground">ניווט מהיר לסעיפים</h3>
+              <button
+                onClick={() => setShowAgendaQuickNav(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-1 max-h-64 overflow-y-auto">
+              {agendaItems.map((item, index) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToAgendaItem(item.id)}
+                  className={cn(
+                    "w-full text-right p-2 rounded text-sm transition-colors hover:bg-muted/50",
+                    activeAgendaItem === item.id
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs bg-muted rounded-full w-5 h-5 flex items-center justify-center">
+                      {index + 1}
+                    </span>
+                    <span className="truncate">{item.title}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Button for Agenda Quick Navigation */}
+      {agendaItems.length > 0 && currentTab === "content" && !showAgendaQuickNav && (
+        <div className="fixed right-4 bottom-4 z-40">
+          <button
+            onClick={() => setShowAgendaQuickNav(true)}
+            className="bg-primary text-primary-foreground rounded-full p-3 shadow-lg hover:bg-primary/90 transition-colors"
+            title="ניווט מהיר לסעיפים"
+          >
+            <Eye className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
       {/* Document Content */}
-      <div className="px-8 py-8">
+      <div id="protocol-scroll-container" className="px-8 py-8 h-[calc(100vh-72px)] overflow-y-auto relative">
         <div className="bg-card rounded-lg shadow-sm border border-border">
           {/* Document Tabs */}
           <div className="border-b border-border rtl">
@@ -598,9 +822,26 @@ export default function ProtocolPage() {
               <TabsContent value="content" className="mt-0 p-8">
                 <div className="space-y-8">
                   {/* Protocol Details Section */}
-                  <section>
+                  <section id="protocol-details">
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">פרטי פרוטוקול</h2>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-semibold text-foreground" id="protocol-details-anchor">פרטי פרוטוקול</h2>
+                        <TooltipProvider>
+                          <Tooltip open={copiedAnchor === "protocol-details"}>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                aria-label="העתק קישור"
+                                onClick={() => handleAnchorClick("protocol-details")}
+                                className="text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                <LinkIcon className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>{copiedAnchor === "protocol-details" ? "הועתק!" : "העתק קישור"}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       {!isEditing && (
                         <Button
                           variant="ghost"
@@ -637,9 +878,26 @@ export default function ProtocolPage() {
                   <Separator />
 
                   {/* Agenda Section */}
-                  <section>
+                  <section id="agenda-list">
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">סדר יום</h2>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-semibold text-foreground" id="agenda-list-anchor">סדר יום</h2>
+                        <TooltipProvider>
+                          <Tooltip open={copiedAnchor === "agenda-list"}>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                aria-label="העתק קישור"
+                                onClick={() => handleAnchorClick("agenda-list")}
+                                className="text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                <LinkIcon className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>{copiedAnchor === "agenda-list" ? "הועתק!" : "העתק קישור"}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </div>
                     <div className="bg-card border border-border rounded-lg">
                       <AgendaList
@@ -663,9 +921,26 @@ export default function ProtocolPage() {
                   <Separator />
 
                   {/* Agenda Details Section */}
-                  <section>
+                  <section id="agenda-details">
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">פרטי סדר יום</h2>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-semibold text-foreground" id="agenda-details-anchor">פרטי סדר יום</h2>
+                        <TooltipProvider>
+                          <Tooltip open={copiedAnchor === "agenda-details"}>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                aria-label="העתק קישור"
+                                onClick={() => handleAnchorClick("agenda-details")}
+                                className="text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                <LinkIcon className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>{copiedAnchor === "agenda-details" ? "הועתק!" : "העתק קישור"}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         {agendaItems.length} סעיפים
                       </div>
