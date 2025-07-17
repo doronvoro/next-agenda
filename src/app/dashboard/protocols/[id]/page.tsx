@@ -672,57 +672,6 @@ export default function ProtocolPage() {
         scrollToAgendaItem={scrollToAgendaItem}
       />
 
-      {/* Agenda Item Quick Navigation */}
-      {showAgendaQuickNav && agendaItems.length > 0 && currentTab === "content" && (
-        <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-40">
-          <div className="bg-card border border-border rounded-lg shadow-lg p-4 max-w-xs">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-foreground">ניווט מהיר לסעיפים</h3>
-              <button
-                onClick={() => setShowAgendaQuickNav(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="space-y-1 max-h-64 overflow-y-auto">
-              {agendaItems.map((item, index) => (
-                <button
-                  key={item.id}
-                  onClick={() => scrollToAgendaItem(item.id)}
-                  className={cn(
-                    "w-full text-right p-2 rounded text-sm transition-colors hover:bg-muted/50",
-                    activeAgendaItem === item.id
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs bg-muted rounded-full w-5 h-5 flex items-center justify-center">
-                      {index + 1}
-                    </span>
-                    <span className="truncate">{item.title}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Action Button for Agenda Quick Navigation */}
-      {agendaItems.length > 0 && currentTab === "content" && !showAgendaQuickNav && (
-        <div className="fixed right-4 bottom-4 z-40">
-          <button
-            onClick={() => setShowAgendaQuickNav(true)}
-            className="bg-primary text-primary-foreground rounded-full p-3 shadow-lg hover:bg-primary/90 transition-colors"
-            title="ניווט מהיר לסעיפים"
-          >
-            <Eye className="h-5 w-5" />
-          </button>
-        </div>
-      )}
-
       {/* Document Content */}
       <div id="protocol-scroll-container" className="px-8 py-8 h-[calc(100vh-72px)] overflow-y-auto relative">
         <div className="bg-card rounded-lg shadow-sm border border-border">
