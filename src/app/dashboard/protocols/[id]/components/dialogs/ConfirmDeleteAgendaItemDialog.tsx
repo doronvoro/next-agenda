@@ -26,8 +26,8 @@ export function ConfirmDeleteAgendaItemDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>מחק סעיף מסדר היום</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-right rtl">מחק סעיף מסדר היום</AlertDialogTitle>
+          <AlertDialogDescription className="text-right rtl">
             {`האם אתה בטוח שברצונך למחוק${agendaItemTitle ? ` "${agendaItemTitle}"` : ""}? פעולה זו אינה ניתנת לביטול.`}
           </AlertDialogDescription>
         </AlertDialogHeader>

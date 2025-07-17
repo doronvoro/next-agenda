@@ -527,7 +527,7 @@ export default function ProtocolPage() {
       // Update local state
       setAgendaItems(prev => prev.filter(item => item.id !== itemId));
 
-      toast({ title: "הצלחה", description: "סעיף סדר היום נמחק" });
+      toast({ title: "הצלחה", description: "הסעיף נמחק בהצלחה" });
     } catch (err) {
       console.error("Error deleting agenda item:", err);
       toast({ variant: "destructive", title: "שגיאה", description: "נכשל מחיקת סעיף סדר היום" });
