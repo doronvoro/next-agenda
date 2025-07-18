@@ -79,7 +79,7 @@ export function AgendaItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl w-full max-h-[95vh] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background">
+      <DialogContent className="max-w-5xl w-full max-h-[95vh] min-w-[300px] overflow-y-auto p-8 shadow-2xl border border-border rounded-2xl bg-background resize" style={{ resize: 'both' }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
             {selectedAgendaItem && (
@@ -89,7 +89,7 @@ export function AgendaItemDialog({
             )}
           </DialogTitle>
           <DialogDescription>
-            <span className="text-base text-muted-foreground">View and edit agenda item details</span>
+            
           </DialogDescription>
         </DialogHeader>
 
@@ -97,9 +97,9 @@ export function AgendaItemDialog({
           <div className="space-y-8">
             <div className="bg-muted border border-border rounded-xl p-8 shadow-sm">
               <form onSubmit={onSubmit} className="space-y-8">
-                <h3 className="text-xl font-semibold mb-4 text-primary">Edit Agenda Item</h3>
+                <h3 className="text-xl font-semibold mb-4 text-primary">עריכת סעיף</h3>
                 <div className="space-y-2">
-                  <Label htmlFor="popup-title">Title</Label>
+                  <Label htmlFor="popup-title">כותרת</Label>
                   <Input
                     id="popup-title"
                     className="rounded-lg px-4 py-3 text-base"
@@ -109,7 +109,7 @@ export function AgendaItemDialog({
                         prev ? { ...prev, title: e.target.value } : null
                       )
                     }
-                    placeholder="Enter agenda item title"
+                    placeholder="הזן כותרת לסעיף"
                     required
                   /> 
                 </div>
@@ -136,10 +136,6 @@ export function AgendaItemDialog({
                     placeholder="הזן תוכן נושא"
                     ariaLabel="תוכן נושא"
                   />
-                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                    <Info className="w-3 h-3" />
-                    <span>הזן את תוכן הנושא עבור סעיף זה. אתה יכול לדבר או להדביק טקסט.</span>
-                  </div>
                   {topicImproved && (
                     <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
                       <div className="font-bold mb-2 text-primary">השווה גרסאות</div>
@@ -183,26 +179,22 @@ export function AgendaItemDialog({
                             placeholder="הזן תוכן החלטה"
         ariaLabel="תוכן החלטה"
                   />
-                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                    <Info className="w-3 h-3" />
-                    <span>הזן את תוכן ההחלטה עבור סעיף זה. אתה יכול לדבר או להדביק טקסט.</span>
-                  </div>
                   {decisionImproved && (
                     <div className="mt-4 p-4 border-2 border-primary/30 rounded-xl bg-muted">
-                      <div className="font-bold mb-2 text-primary">Compare Versions</div>
+                      <div className="font-bold mb-2 text-primary">השווה גרסאות</div>
                       <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1">
-                          <div className="text-xs text-muted-foreground mb-1">Original</div>
+                          <div className="text-xs text-muted-foreground mb-1">מקורי</div>
                           <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{decisionOriginal}</div>
                         </div>
                         <div className="flex-1">
-                          <div className="text-xs text-muted-foreground mb-1">Improved Suggestion</div>
+                          <div className="text-xs text-muted-foreground mb-1">הצעה משופרת</div>
                           <div className="p-3 border rounded-lg bg-background whitespace-pre-wrap text-base shadow-inner">{decisionImproved}</div>
                         </div>
                       </div>
                       <div className="flex gap-2 mt-4 justify-end">
-                        <Button size="lg" className="px-6" onClick={() => onAcceptImproved('decision_content')}>Accept</Button>
-                        <Button size="lg" variant="outline" className="px-6" onClick={() => onRevertImproved('decision_content')}>Revert</Button>
+                        <Button size="lg" className="px-6" onClick={() => onAcceptImproved('decision_content')}>אשר</Button>
+                        <Button size="lg" variant="outline" className="px-6" onClick={() => onRevertImproved('decision_content')}>החזר</Button>
                       </div>
                     </div>
                   )}
@@ -215,10 +207,10 @@ export function AgendaItemDialog({
                     className="flex items-center gap-2"
                   >
                     <XIcon className="w-4 h-4" />
-                    Cancel
+                    ביטול
                   </Button>
                   <Button type="submit" className="flex items-center gap-2">
-                    Save Changes
+                    שמור שינויים
                   </Button>
                 </DialogFooter>
               </form>
