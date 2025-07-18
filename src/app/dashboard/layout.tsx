@@ -68,6 +68,46 @@ export default function DashboardLayout({
   if (
     pathSegments[0] === "dashboard" &&
     pathSegments[1] === "protocols" &&
+    pathSegments[2] === "protocol-task-tracking"
+  ) {
+    // Protocol task tracking page
+    let protocolId = null;
+    let protocolNumberText = breadcrumbTranslations.protocol;
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      protocolId = searchParams.get("protocolId");
+      if ((window as any).__protocolNumber) {
+        protocolNumberText = (window as any).__protocolNumber;
+      }
+    }
+    customBreadcrumb = (
+      <Breadcrumb className="rtl">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">{breadcrumbTranslations.dashboard}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/protocols">{breadcrumbTranslations.protocols}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            {protocolId ? (
+              <BreadcrumbLink href={`/dashboard/protocols/${protocolId}`}>{protocolNumberText}</BreadcrumbLink>
+            ) : (
+              <BreadcrumbPage>{protocolNumberText}</BreadcrumbPage>
+            )}
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>לוח משימות</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  } else if (
+    pathSegments[0] === "dashboard" &&
+    pathSegments[1] === "protocols" &&
     pathSegments.length === 3
   ) {
     // Format the display text
