@@ -198,7 +198,7 @@ const AgendaList: React.FC<AgendaListProps> = ({
                   
                   {futureTopics.length > 0 && (
                     <>
-                      <div className="text-muted-foreground text-sm">or</div>
+                      <div className="text-muted-foreground text-sm">או</div>
                       <div className="flex items-center gap-2">
                         <TooltipProvider>
                           <Tooltip>
