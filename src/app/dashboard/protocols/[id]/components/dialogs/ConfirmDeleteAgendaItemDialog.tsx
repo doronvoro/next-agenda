@@ -13,20 +13,22 @@ interface ConfirmDeleteAgendaItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  agendaItemTitle?: string;
 }
 
 export function ConfirmDeleteAgendaItemDialog({
   open,
   onOpenChange,
   onConfirm,
+  agendaItemTitle,
 }: ConfirmDeleteAgendaItemDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>אתה בטוח?</AlertDialogTitle>
-          <AlertDialogDescription>
-            פעולה זו לא ניתן לבטל. זה ימחק בצורה אינסטנטית את פריט האגנה.
+          <AlertDialogTitle className="text-right rtl">מחק סעיף מסדר היום</AlertDialogTitle>
+          <AlertDialogDescription className="text-right rtl">
+            {`האם אתה בטוח שברצונך למחוק${agendaItemTitle ? ` "${agendaItemTitle}"` : ""}? פעולה זו אינה ניתנת לביטול.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

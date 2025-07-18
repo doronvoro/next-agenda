@@ -2,8 +2,10 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Eye, Pencil, Trash2, X, Check, Edit3 } from "lucide-react";
+import { Eye, Pencil, Trash2, X, Check, Edit3, Link as LinkIcon } from "lucide-react";
 import type { EditingAgendaItem, AgendaItem } from "../types";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useState } from "react";
 
 interface AgendaDetailsProps {
   agendaItems: AgendaItem[];
@@ -28,6 +30,16 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
   setDeletingAgendaItemId,
   initialLoading,
 }) => {
+  const [copiedAnchor, setCopiedAnchor] = useState<string | null>(null);
+
+  const handleAnchorClick = (anchor: string) => {
+    const url = `${window.location.origin}${window.location.pathname}#agenda-item-${anchor}`;
+    navigator.clipboard.writeText(url);
+    setCopiedAnchor(anchor);
+    window.location.hash = `agenda-item-${anchor}`;
+    setTimeout(() => setCopiedAnchor(null), 1200);
+  };
+
   return (
     <div className="space-y-8">
       {agendaItems.length === 0 ? (
@@ -40,7 +52,7 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
           {agendaItems
             .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
             .map((item) => (
-              <div key={item.id} className="group">
+              <div key={item.id} id={`agenda-item-${item.id}`} className="group">
                 {editingAgendaItem?.id === item.id ? (
                   <form onSubmit={handleUpdateAgendaItem} className="space-y-6">
                     <div className="flex items-start justify-between">
@@ -131,35 +143,69 @@ const AgendaDetails: React.FC<AgendaDetailsProps> = ({
                         <div className="flex items-center justify-center w-8 h-8 bg-muted text-muted-foreground rounded-full text-sm font-medium">
                           {item.display_order || '•'}
                         </div>
-                        <h3 className="text-lg font-semibold text-foreground">
-                          {item.title}
-                        </h3>
+                        <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
+                        <TooltipProvider>
+                          <Tooltip open={copiedAnchor === item.id}>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                aria-label="העתק קישור לסעיף"
+                                onClick={() => handleAnchorClick(item.id)}
+                                className="text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                <LinkIcon className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>{copiedAnchor === item.id ? "הועתק!" : "העתק קישור"}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenAgendaItemDialog(item)}
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditAgendaItem(item)}
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeletingAgendaItemId(item.id)}
-                          className="h-8 w-8 text-destructive hover:text-destructive/80"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenAgendaItemDialog(item)}
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>צפייה</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditAgendaItem(item)}
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>עריכה</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setDeletingAgendaItemId(item.id)}
+                                className="h-8 w-8 text-destructive hover:text-destructive/80"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>מחיקה</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </div>
                     

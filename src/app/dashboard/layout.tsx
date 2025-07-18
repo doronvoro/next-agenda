@@ -145,7 +145,7 @@ export default function DashboardLayout({
               )}
             </div>
 
-            <div className="container mx-auto overflow-auto px-6 py-4 space-y-5 rtl flex-1">
+            <div className="container mx-auto px-6 py-4 space-y-5 rtl flex-1">
               {children}
             </div>
           </SidebarInset>

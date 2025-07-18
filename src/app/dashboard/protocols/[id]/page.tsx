@@ -5,7 +5,7 @@ import { format, isValid } from "date-fns";
 import { he } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus } from "lucide-react";
+import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -58,6 +58,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useRouter } from "next/navigation";
 import ProtocolPdfModal from "../components/ProtocolPdfModal";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { ProtocolQuickNav } from "./components/ProtocolQuickNav";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -114,7 +116,22 @@ export default function ProtocolPage() {
   const [loadingFutureTopics, setLoadingFutureTopics] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("protocol-details");
+  const [showStickyNav, setShowStickyNav] = useState(false);
+  const [showAgendaQuickNav, setShowAgendaQuickNav] = useState(false);
+  const [activeAgendaItem, setActiveAgendaItem] = useState<string | null>(null);
   const router = useRouter();
+
+  // Add state for anchor link feedback
+  const [copiedAnchor, setCopiedAnchor] = useState<string | null>(null);
+
+  const handleAnchorClick = (anchor: string) => {
+    const url = `${window.location.origin}${window.location.pathname}#${anchor}`;
+    navigator.clipboard.writeText(url);
+    setCopiedAnchor(anchor);
+    window.location.hash = anchor;
+    setTimeout(() => setCopiedAnchor(null), 1200);
+  };
 
   const agendaApi = {
     updateAgendaItem: async (item: EditingAgendaItem) => {
@@ -176,6 +193,88 @@ export default function ProtocolPage() {
     fetchData();
     fetchFutureTopics();
   }, [protocolId]);
+
+  // Use scroll container logic
+  const getScrollContainer = () => document.getElementById("protocol-scroll-container");
+
+  // Update scroll detection for sticky nav and agenda quick nav
+  useEffect(() => {
+    const container = getScrollContainer();
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (currentTab !== "content") {
+        setShowStickyNav(false);
+        return;
+      }
+      setShowStickyNav(true); // Always show sticky nav on content tab
+      const scrollY = container.scrollTop;
+      const protocolDetailsSection = document.getElementById("protocol-details");
+      const agendaListSection = document.getElementById("agenda-list");
+      const agendaDetailsSection = document.getElementById("agenda-details");
+      if (!protocolDetailsSection || !agendaListSection || !agendaDetailsSection) return;
+      const protocolDetailsTop = protocolDetailsSection.offsetTop - 150;
+      const agendaListTop = agendaListSection.offsetTop - 150;
+      const agendaDetailsTop = agendaDetailsSection.offsetTop - 150;
+      if (scrollY < agendaListTop) {
+        setActiveSection("protocol-details");
+        setActiveAgendaItem(null);
+      } else if (scrollY < agendaDetailsTop) {
+        setActiveSection("agenda-list");
+        setActiveAgendaItem(null);
+      } else {
+        setActiveSection("agenda-details");
+        const agendaItemElements = agendaItems.map(item => ({
+          id: item.id,
+          element: document.getElementById(`agenda-item-${item.id}`)
+        })).filter(item => item.element);
+        let currentItem = null;
+        for (const item of agendaItemElements) {
+          if (item.element) {
+            const rect = item.element.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            if (rect.top - containerRect.top <= 200 && rect.bottom - containerRect.top >= 200) {
+              currentItem = item.id;
+              break;
+            }
+          }
+        }
+        setActiveAgendaItem(currentItem);
+      }
+    };
+    container.addEventListener("scroll", handleScroll);
+    handleScroll();
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [currentTab, agendaItems.length]);
+
+  // Ensure sticky nav is visible immediately when content tab is active
+  useEffect(() => {
+    if (currentTab === "content") {
+      setShowStickyNav(true);
+    }
+  }, [currentTab]);
+
+  // Update scrollToSection and scrollToAgendaItem to use the container
+  const scrollToSection = (sectionId: string) => {
+    const container = getScrollContainer();
+    const element = document.getElementById(sectionId);
+    if (element && container) {
+      container.scrollTo({
+        top: element.offsetTop - 24,
+        behavior: "smooth"
+      });
+    }
+  };
+  const scrollToAgendaItem = (itemId: string) => {
+    const container = getScrollContainer();
+    const element = document.getElementById(`agenda-item-${itemId}`);
+    if (element && container) {
+      container.scrollTo({
+        top: element.offsetTop - 24,
+        behavior: "smooth"
+      });
+    }
+  };
 
   // Set protocol number immediately when protocol data is available
   useEffect(() => {
@@ -428,7 +527,7 @@ export default function ProtocolPage() {
       // Update local state
       setAgendaItems(prev => prev.filter(item => item.id !== itemId));
 
-      toast({ title: "הצלחה", description: "סעיף סדר היום נמחק" });
+      toast({ title: "הצלחה", description: "הסעיף נמחק בהצלחה" });
     } catch (err) {
       console.error("Error deleting agenda item:", err);
       toast({ variant: "destructive", title: "שגיאה", description: "נכשל מחיקת סעיף סדר היום" });
@@ -487,9 +586,8 @@ export default function ProtocolPage() {
             <div className="flex items-center gap-4">
               <Link href="/dashboard/protocols">
                 <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="h-4 w-4 rotate-180" />
                   חזרה
-                 
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
               <div className="h-6 w-px bg-border"></div>
@@ -562,160 +660,225 @@ export default function ProtocolPage() {
         </div>
       </div>
 
+      {/* Sticky Section Navigation */}
+      <ProtocolQuickNav
+        showStickyNav={showStickyNav}
+        agendaItems={agendaItems}
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+        activeAgendaItem={activeAgendaItem}
+        setActiveAgendaItem={setActiveAgendaItem}
+        scrollToSection={scrollToSection}
+        scrollToAgendaItem={scrollToAgendaItem}
+      />
+
       {/* Document Content */}
-      <div className="px-8 py-8">
-        <div className="bg-card rounded-lg shadow-sm border border-border">
-          {/* Document Tabs */}
-          <div className="border-b border-border rtl">
-            <Tabs defaultValue="content" className="w-full rtl" value={currentTab} onValueChange={setCurrentTab}>
-              <TabsList className="grid w-full grid-cols-4 h-12 rounded-none border-b-0 bg-transparent rtl">
-                <TabsTrigger value="content" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
-                  מסמך
-                  {currentTab === "content" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="members" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
-                  חברים
-                  {currentTab === "members" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="attachments" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
-                  קבצים מצורפים
-                  {currentTab === "attachments" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="messages" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
-                  הודעות
-                  {currentTab === "messages" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
-                  )}
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="content" className="mt-0 p-8">
-                <div className="space-y-8">
-                  {/* Protocol Details Section */}
-                  <section>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">פרטי פרוטוקול</h2>
-                      {!isEditing && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleEdit}
-                          className="gap-2 text-muted-foreground hover:text-foreground"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                          עריכה
-                        </Button>
-                      )}
-                    </div>
-                    
-                    {isEditing ? (
-                      <ProtocolEditForm
-                        editFormData={editFormData}
-                        setEditFormData={setEditFormData}
-                        editDate={editDate}
-                        setEditDate={setEditDate}
-                        committees={committees}
-                        initialLoading={initialLoading}
-                        updateProtocol={updateProtocol}
-                        protocolId={protocolId}
-                        onCancel={() => setIsEditing(false)}
-                        onUpdate={handleUpdate}
-                      />
-                    ) : (
-                      <div className="bg-muted/50 rounded-lg p-6">
-                        <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} company={company ?? undefined} />
-                      </div>
+      <div id="protocol-scroll-container" className="px-8 py-8 h-[calc(100vh-72px)] overflow-y-auto relative protocol-scrollbar">
+        <div className="protocol-content-rtl">
+          <div className="bg-card rounded-lg shadow-sm border border-border">
+            {/* Document Tabs */}
+            <div className="border-b border-border rtl">
+              <Tabs defaultValue="content" className="w-full rtl" value={currentTab} onValueChange={setCurrentTab}>
+                <TabsList className="grid w-full grid-cols-4 h-12 rounded-none border-b-0 bg-transparent rtl">
+                  <TabsTrigger value="content" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
+                    מסמך
+                    {currentTab === "content" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
                     )}
-                  </section>
-
-                  <Separator />
-
-                  {/* Agenda Section */}
-                  <section>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">סדר יום</h2>
-                    </div>
-                    <div className="bg-card border border-border rounded-lg">
-                      <AgendaList
-                        agendaItems={agendaItems}
-                        newAgendaItem={agendaItemsHook.newAgendaItem}
-                        setNewAgendaItem={agendaItemsHook.setNewAgendaItem}
-                        handleKeyDown={agendaItemsHook.handleKeyDown}
-                        handleBlur={agendaItemsHook.handleBlur}
-                        handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
-                        handleCreateFromFutureTopic={handleCreateFromFutureTopic}
-                        handleDragEnd={agendaItemsHook.handleDragEnd}
-                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
-                        futureTopics={futureTopics}
-                        loadingFutureTopics={loadingFutureTopics}
-                        handleEditAgendaItemTitle={handleEditAgendaItemTitle}
-                        handleDeleteAgendaItem={handleDeleteAgendaItem}
-                      />
-                    </div>
-                  </section>
-
-                  <Separator />
-
-                  {/* Agenda Details Section */}
-                  <section>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-foreground">פרטי סדר יום</h2>
-                      <div className="text-sm text-muted-foreground">
-                        {agendaItems.length} סעיפים
+                  </TabsTrigger>
+                  <TabsTrigger value="members" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
+                    חברים
+                    {currentTab === "members" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="attachments" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
+                    קבצים מצורפים
+                    {currentTab === "attachments" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="messages" className="relative data-[state=active]:text-primary data-[state=active]:bg-transparent rounded-none border-0 hover:bg-muted/50 transition-colors rtl">
+                    הודעות
+                    {currentTab === "messages" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="content" className="mt-0 p-8">
+                  <div className="space-y-8">
+                    {/* Protocol Details Section */}
+                    <section id="protocol-details">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-xl font-semibold text-foreground" id="protocol-details-anchor">פרטי פרוטוקול</h2>
+                          <TooltipProvider>
+                            <Tooltip open={copiedAnchor === "protocol-details"}>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label="העתק קישור"
+                                  onClick={() => handleAnchorClick("protocol-details")}
+                                  className="text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <LinkIcon className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>{copiedAnchor === "protocol-details" ? "הועתק!" : "העתק קישור"}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        {!isEditing && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleEdit}
+                            className="gap-2 text-muted-foreground hover:text-foreground"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                            עריכה
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                    
-                    <div className="space-y-6">
-                      <AgendaDetails
-                        agendaItems={agendaItems}
-                        editingAgendaItem={agendaItemsHook.editingAgendaItem}
-                        handleEditAgendaItem={agendaItemsHook.handleEditAgendaItem}
-                        handleCancelEditAgendaItem={agendaItemsHook.handleCancelEditAgendaItem}
-                        handleUpdateAgendaItem={agendaItemsHook.handleUpdateAgendaItem}
-                        setEditingAgendaItem={agendaItemsHook.setEditingAgendaItem}
-                        handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
-                        setDeletingAgendaItemId={agendaItemsHook.setDeletingAgendaItemId}
-                        initialLoading={initialLoading}
-                      />
-                    </div>
-                  </section>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="members" className="mt-0 p-8">
-                <ProtocolMembers
-                  protocolMembers={protocolMembers}
-                  setProtocolMembers={setProtocolMembers}
-                  setDeletingMemberId={setDeletingMemberId}
-                  protocolId={protocolId}
-                />
-              </TabsContent>
-              
-              <TabsContent value="attachments" className="mt-0 p-8">
-                <ProtocolAttachments
-                  protocolAttachments={protocolAttachments}
-                  handleUploadAttachment={attachmentsHook.handleUploadAttachment}
-                  setDeletingAttachmentId={attachmentsHook.setDeletingAttachmentId}
-                  formatDate={formatDate}
-                />
-              </TabsContent>
-              
-              <TabsContent value="messages" className="mt-0 p-8">
-                <ProtocolMessages
-                  protocolMessages={protocolMessages}
-                  formatDate={formatDate}
-                  protocolId={protocolId}
-                  protocolMembers={protocolMembers}
-                  onMessageSent={msg => setProtocolMessages(prev => [...prev, msg])}
-                />
-              </TabsContent>
-            </Tabs>
+                      
+                      {isEditing ? (
+                        <ProtocolEditForm
+                          editFormData={editFormData}
+                          setEditFormData={setEditFormData}
+                          editDate={editDate}
+                          setEditDate={setEditDate}
+                          committees={committees}
+                          initialLoading={initialLoading}
+                          updateProtocol={updateProtocol}
+                          protocolId={protocolId}
+                          onCancel={() => setIsEditing(false)}
+                          onUpdate={handleUpdate}
+                        />
+                      ) : (
+                        <div className="bg-muted/50 rounded-lg p-6">
+                          <ProtocolDetailsFields protocol={protocol} formatDate={formatDate} company={company ?? undefined} />
+                        </div>
+                      )}
+                    </section>
+
+                    <Separator />
+
+                    {/* Agenda Section */}
+                    <section id="agenda-list">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-xl font-semibold text-foreground" id="agenda-list-anchor">סדר יום</h2>
+                          <TooltipProvider>
+                            <Tooltip open={copiedAnchor === "agenda-list"}>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label="העתק קישור"
+                                  onClick={() => handleAnchorClick("agenda-list")}
+                                  className="text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <LinkIcon className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>{copiedAnchor === "agenda-list" ? "הועתק!" : "העתק קישור"}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </div>
+                      <div className="bg-card border border-border rounded-lg">
+                        <AgendaList
+                          agendaItems={agendaItems}
+                          newAgendaItem={agendaItemsHook.newAgendaItem}
+                          setNewAgendaItem={agendaItemsHook.setNewAgendaItem}
+                          handleKeyDown={agendaItemsHook.handleKeyDown}
+                          handleBlur={agendaItemsHook.handleBlur}
+                          handleCreateAgendaItem={agendaItemsHook.handleCreateAgendaItem}
+                          handleCreateFromFutureTopic={handleCreateFromFutureTopic}
+                          handleDragEnd={agendaItemsHook.handleDragEnd}
+                          handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                          futureTopics={futureTopics}
+                          loadingFutureTopics={loadingFutureTopics}
+                          handleEditAgendaItemTitle={handleEditAgendaItemTitle}
+                          handleDeleteAgendaItem={handleDeleteAgendaItem}
+                        />
+                      </div>
+                    </section>
+
+                    <Separator />
+
+                    {/* Agenda Details Section */}
+                    <section id="agenda-details">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-xl font-semibold text-foreground" id="agenda-details-anchor">פרטי סדר יום</h2>
+                          <TooltipProvider>
+                            <Tooltip open={copiedAnchor === "agenda-details"}>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label="העתק קישור"
+                                  onClick={() => handleAnchorClick("agenda-details")}
+                                  className="text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <LinkIcon className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>{copiedAnchor === "agenda-details" ? "הועתק!" : "העתק קישור"}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {agendaItems.length} סעיפים
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <AgendaDetails
+                          agendaItems={agendaItems}
+                          editingAgendaItem={agendaItemsHook.editingAgendaItem}
+                          handleEditAgendaItem={agendaItemsHook.handleEditAgendaItem}
+                          handleCancelEditAgendaItem={agendaItemsHook.handleCancelEditAgendaItem}
+                          handleUpdateAgendaItem={agendaItemsHook.handleUpdateAgendaItem}
+                          setEditingAgendaItem={agendaItemsHook.setEditingAgendaItem}
+                          handleOpenAgendaItemDialog={handleOpenAgendaItemDialog}
+                          setDeletingAgendaItemId={agendaItemsHook.setDeletingAgendaItemId}
+                          initialLoading={initialLoading}
+                        />
+                      </div>
+                    </section>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="members" className="mt-0 p-8">
+                  <ProtocolMembers
+                    protocolMembers={protocolMembers}
+                    setProtocolMembers={setProtocolMembers}
+                    setDeletingMemberId={setDeletingMemberId}
+                    protocolId={protocolId}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="attachments" className="mt-0 p-8">
+                  <ProtocolAttachments
+                    protocolAttachments={protocolAttachments}
+                    handleUploadAttachment={attachmentsHook.handleUploadAttachment}
+                    setDeletingAttachmentId={attachmentsHook.setDeletingAttachmentId}
+                    formatDate={formatDate}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="messages" className="mt-0 p-8">
+                  <ProtocolMessages
+                    protocolMessages={protocolMessages}
+                    formatDate={formatDate}
+                    protocolId={protocolId}
+                    protocolMembers={protocolMembers}
+                    onMessageSent={msg => setProtocolMessages(prev => [...prev, msg])}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </div>
       </div>
