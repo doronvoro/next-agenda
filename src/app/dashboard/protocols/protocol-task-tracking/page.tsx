@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { KanbanBoard, Task, TaskStatus } from "@/components/KanbanBoard";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/use-toast";
 import { CreateTaskDialog } from "./components/CreateTaskDialog";
@@ -47,9 +47,9 @@ function ProtocolTaskTrackingContent() {
 
   const getReturnText = () => {
     if (returnTo === 'protocol') {
-      return 'Back to Protocol';
+      return 'חזרה';
     }
-    return 'Back to Protocols';
+    return 'חזרה';
   };
 
   useEffect(() => {
@@ -165,12 +165,12 @@ function ProtocolTaskTrackingContent() {
         <div className="flex items-center gap-4">
           <Link href={getReturnPath()}>
             <Button variant="ghost" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4" />
               {getReturnText()}
             </Button>
           </Link>
           <h1 className="text-3xl font-bold">
-            {protocol ? `Protocol #${protocol.number} Board` : 'Task Board'}
+            {protocol ? `לוח משימות פרוטוקול #${protocol.number}` : 'לוח משימות'}
           </h1>
         </div>
       </div>
