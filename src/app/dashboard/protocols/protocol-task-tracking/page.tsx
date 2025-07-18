@@ -170,7 +170,14 @@ function ProtocolTaskTrackingContent() {
             </Button>
           </Link>
           <h1 className="text-3xl font-bold">
-            {protocol ? `לוח משימות פרוטוקול #${protocol.number}` : 'לוח משימות'}
+            {protocol ? (
+              <>
+                לוח משימות פרוטוקול{' '}
+                <Link href={`/dashboard/protocols/${protocol.id}`} className="text-blue-600 underline hover:text-blue-800">
+                  #{protocol.number}
+                </Link>
+              </>
+            ) : 'לוח משימות'}
           </h1>
         </div>
       </div>
