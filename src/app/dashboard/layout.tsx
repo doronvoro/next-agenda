@@ -38,24 +38,22 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [protocolNumber, setProtocolNumber] = React.useState<string | undefined>(undefined);
-
+  const [protocolId, setProtocolId] = React.useState<string | null>(null);
+  const [protocolNumberText, setProtocolNumberText] = React.useState<string>(breadcrumbTranslations.protocol);
+  const [isClient, setIsClient] = React.useState(false);
   const pathSegments = pathname.split("/").filter(Boolean);
 
-  // Listen for protocol number updates
   React.useEffect(() => {
-    const checkProtocolNumber = () => {
-      if (typeof window !== "undefined" && (window as any).__protocolNumber) {
-        setProtocolNumber((window as any).__protocolNumber);
+    setIsClient(true);
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      setProtocolId(searchParams.get("protocolId"));
+      if ((window as any).__protocolNumber) {
+        setProtocolNumberText((window as any).__protocolNumber);
+      } else {
+        setProtocolNumberText(breadcrumbTranslations.protocol);
       }
-    };
-
-    // Check immediately
-    checkProtocolNumber();
-
-    // Set up an interval to check for updates
-    const interval = setInterval(checkProtocolNumber, 100);
-
-    return () => clearInterval(interval);
+    }
   }, [pathname]);
 
   // Helper function to translate breadcrumb segments
@@ -71,15 +69,6 @@ export default function DashboardLayout({
     pathSegments[2] === "protocol-task-tracking"
   ) {
     // Protocol task tracking page
-    let protocolId = null;
-    let protocolNumberText = breadcrumbTranslations.protocol;
-    if (typeof window !== "undefined") {
-      const searchParams = new URLSearchParams(window.location.search);
-      protocolId = searchParams.get("protocolId");
-      if ((window as any).__protocolNumber) {
-        protocolNumberText = (window as any).__protocolNumber;
-      }
-    }
     customBreadcrumb = (
       <Breadcrumb className="rtl">
         <BreadcrumbList>
@@ -92,10 +81,14 @@ export default function DashboardLayout({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            {protocolId ? (
-              <BreadcrumbLink href={`/dashboard/protocols/${protocolId}`}>{protocolNumberText}</BreadcrumbLink>
+            {isClient ? (
+              protocolId ? (
+                <BreadcrumbLink href={`/dashboard/protocols/${protocolId}`}>{protocolNumberText}</BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{protocolNumberText}</BreadcrumbPage>
+              )
             ) : (
-              <BreadcrumbPage>{protocolNumberText}</BreadcrumbPage>
+              <BreadcrumbPage>{breadcrumbTranslations.loading}</BreadcrumbPage>
             )}
           </BreadcrumbItem>
           <BreadcrumbSeparator />

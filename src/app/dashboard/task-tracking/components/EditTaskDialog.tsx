@@ -109,9 +109,9 @@ export function EditTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>ערוך משימה</DialogTitle>
+      <DialogContent className="sm:max-w-[500px]" dir="rtl" style={{ textAlign: 'right' }}>
+        <DialogHeader className="text-right">
+          <DialogTitle className="text-right">ערוך משימה</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -192,11 +192,11 @@ export function EditTaskDialog({
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-end text-right font-normal",
                       !formData.due_date && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="ml-2 h-4 w-4" />
                     {formData.due_date ? (
                       format(formData.due_date, "PPP", { locale: he })
                     ) : (
@@ -204,7 +204,7 @@ export function EditTaskDialog({
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0" align="end">
                   <Calendar
                     mode="single"
                     selected={formData.due_date}
@@ -227,7 +227,7 @@ export function EditTaskDialog({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end space-x-reverse space-x-2 pt-4">
             <Button
               type="button"
               variant="outline"
@@ -239,7 +239,7 @@ export function EditTaskDialog({
             <Button type="submit" disabled={loading || !formData.title.trim()}>
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
                   מעדכן...
                 </>
               ) : (
