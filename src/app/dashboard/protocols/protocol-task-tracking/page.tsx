@@ -92,7 +92,7 @@ function ProtocolTaskTrackingContent() {
   const handleTaskUpdate = async (taskId: string, updates: Partial<Task>) => {
     try {
       const success = await updateTask(taskId, updates);
-      if (!success) throw new Error("Failed to update task");
+      if (!success) throw new Error("נכשל עדכון המשימה");
       
       // Update the task locally in state
       setTasks(prev => prev.map(task => 
@@ -100,15 +100,15 @@ function ProtocolTaskTrackingContent() {
       ));
       
       toast({
-        title: "Task Updated",
-        description: "Task has been updated successfully.",
+        title: "משימה עודכנה",
+        description: "המשימה עודכנה בהצלחה.",
       });
     } catch (error) {
       console.error("Error updating task:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update task. Please try again.",
+        title: "שגיאה",
+        description: "נכשל עדכון המשימה. אנא נסה שוב.",
       });
       throw error;
     }
@@ -130,7 +130,7 @@ function ProtocolTaskTrackingContent() {
   }) => {
     try {
       const newTask = await createTask(taskData);
-      if (!newTask) throw new Error("Failed to create task");
+      if (!newTask) throw new Error("נכשל יצירת המשימה");
       
       // Fetch the updated task list to get the proper TaskWithDetails structure
       const allTasks = await fetchAllTasks();
@@ -140,15 +140,15 @@ function ProtocolTaskTrackingContent() {
       setTasks(protocolTasks);
       
       toast({
-        title: "Task Created",
-        description: "Task has been created successfully.",
+        title: "משימה נוצרה",
+        description: "המשימה נוצרה בהצלחה.",
       });
     } catch (error) {
       console.error("Error creating task:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to create task. Please try again.",
+        title: "שגיאה",
+        description: "נכשל יצירת המשימה. אנא נסה שוב.",
       });
       throw error;
     }
@@ -157,7 +157,7 @@ function ProtocolTaskTrackingContent() {
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center">Loading tasks...</div>
+        <div className="text-center">טוען משימות...</div>
       </div>
     );
   }
@@ -201,8 +201,8 @@ function ProtocolTaskTrackingContent() {
         {tasks.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-muted-foreground">
-              <p className="text-lg font-medium mb-2">No tasks found</p>
-              <p>Get started by creating your first task.</p>
+              <p className="text-lg font-medium mb-2">לא נמצאו משימות</p>
+              <p>התחל ביצירת המשימה הראשונה שלך.</p>
             </div>
           </div>
         ) : (
