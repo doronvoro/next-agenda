@@ -27,7 +27,7 @@ interface EditTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task: TaskWithDetails | null;
-  onTaskUpdated: () => void;
+  onTaskUpdated: (taskId: string, updates: any) => void;
 }
 
 export function EditTaskDialog({
@@ -84,7 +84,7 @@ export function EditTaskDialog({
           title: "משימה עודכנה",
           description: "משימה עודכנה בהצלחה.",
         });
-        onTaskUpdated();
+        onTaskUpdated(task.id, updateData);
         onOpenChange(false);
       } else {
         throw new Error("Failed to update task");

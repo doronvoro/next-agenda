@@ -15,6 +15,8 @@ import {
   fetchTasksByAgendaItemIds,
   updateTask,
   createTask,
+  fetchAllTasks,
+  type TaskWithDetails,
 } from "../[id]/supabaseApi";
 import type { AgendaItem } from "../[id]/types";
 
@@ -28,7 +30,7 @@ function ProtocolTaskTrackingContent() {
   const searchParams = useSearchParams();
   const protocolId = searchParams.get('protocolId');
   const returnTo = searchParams.get('returnTo') || 'protocols'; // Default to protocols
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
   const [protocol, setProtocol] = useState<Protocol | null>(null);
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,9 +76,12 @@ function ProtocolTaskTrackingContent() {
         return;
       }
       
-      const agendaItemIds = agendaItemsData.map(item => item.id);
-      const tasksData = await fetchTasksByAgendaItemIds(agendaItemIds);
-      setTasks(tasksData);
+      // Fetch all tasks and filter by protocol
+      const allTasks = await fetchAllTasks();
+      const protocolTasks = allTasks.filter(task => 
+        task.agenda_item.protocol_id === protocolId
+      );
+      setTasks(protocolTasks);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
@@ -88,9 +93,12 @@ function ProtocolTaskTrackingContent() {
     try {
       const success = await updateTask(taskId, updates);
       if (!success) throw new Error("Failed to update task");
+      
+      // Update the task locally in state
       setTasks(prev => prev.map(task => 
-        task.id === taskId ? { ...task, ...updates } : task
+        task.id === taskId ? { ...task, ...updates, updated_at: new Date().toISOString() } : task
       ));
+      
       toast({
         title: "Task Updated",
         description: "Task has been updated successfully.",
@@ -124,7 +132,13 @@ function ProtocolTaskTrackingContent() {
       const newTask = await createTask(taskData);
       if (!newTask) throw new Error("Failed to create task");
       
-      setTasks(prev => [...prev, newTask]);
+      // Fetch the updated task list to get the proper TaskWithDetails structure
+      const allTasks = await fetchAllTasks();
+      const protocolTasks = allTasks.filter(task => 
+        task.agenda_item.protocol_id === protocolId
+      );
+      setTasks(protocolTasks);
+      
       toast({
         title: "Task Created",
         description: "Task has been created successfully.",
@@ -196,6 +210,12 @@ function ProtocolTaskTrackingContent() {
             tasks={tasks}
             onTaskUpdate={handleTaskUpdate}
             onTaskCreate={handleCreateTask}
+            onTaskEdited={(taskId, updates) => {
+              // Update the task locally in state
+              setTasks(prev => prev.map(task => 
+                task.id === taskId ? { ...task, ...updates, updated_at: new Date().toISOString() } : task
+              ));
+            }}
           />
         )}
       </div>
