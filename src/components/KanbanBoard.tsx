@@ -30,6 +30,8 @@ import { Plus, MoreHorizontal, Calendar, User } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { he } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { EditTaskDialog } from "@/app/dashboard/task-tracking/components/EditTaskDialog";
+import { type TaskWithDetails } from "@/app/dashboard/protocols/[id]/supabaseApi";
 
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'overdue';
 
@@ -50,13 +52,14 @@ interface KanbanColumn {
   id: TaskStatus;
   title: string;
   color: string;
-  tasks: Task[];
+  tasks: TaskWithDetails[];
 }
 
 interface KanbanBoardProps {
-  tasks: Task[];
+  tasks: TaskWithDetails[];
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => Promise<void>;
   onTaskCreate?: (defaultStatus: TaskStatus) => void;
+  onTaskEdited?: (taskId: string, updates: any) => void;
 }
 
 const getStatusColor = (status: TaskStatus) => {
@@ -88,14 +91,14 @@ const formatDate = (dateString: string) => {
   return isValid(date) ? format(date, "MMM dd", { locale: he }) : "תאריך שגוי";
 };
 
-const TaskCard = ({ task }: { task: Task }) => {
+const TaskCard = ({ task, onEdit }: { task: TaskWithDetails, onEdit: (task: TaskWithDetails) => void }) => {
   return (
     <Card className="mb-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         <div className="space-y-3">
           <div className="flex items-start justify-between">
             <h4 className="font-medium text-sm line-clamp-2">{task.title}</h4>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => onEdit(task)}>
               <MoreHorizontal className="h-3 w-3" />
             </Button>
           </div>
@@ -134,7 +137,7 @@ const TaskCard = ({ task }: { task: Task }) => {
   );
 };
 
-const SortableTaskCard = ({ task }: { task: Task }) => {
+const SortableTaskCard = ({ task, onEdit }: { task: TaskWithDetails, onEdit: (task: TaskWithDetails) => void }) => {
   const {
     attributes,
     listeners,
@@ -152,17 +155,19 @@ const SortableTaskCard = ({ task }: { task: Task }) => {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TaskCard task={task} />
+      <TaskCard task={task} onEdit={onEdit} />
     </div>
   );
 };
 
 const KanbanColumn = ({ 
   column, 
-  onTaskCreate 
+  onTaskCreate, 
+  onEditTask
 }: { 
   column: KanbanColumn;
   onTaskCreate?: (defaultStatus: TaskStatus) => void;
+  onEditTask: (task: TaskWithDetails) => void;
 }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
@@ -195,7 +200,7 @@ const KanbanColumn = ({
       <CardContent className="flex-1 overflow-y-auto">
         <div className="space-y-2">
           {column.tasks.map((task) => (
-            <SortableTaskCard key={task.id} task={task} />
+            <SortableTaskCard key={task.id} task={task} onEdit={onEditTask} />
           ))}
         </div>
       </CardContent>
@@ -207,8 +212,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   tasks,
   onTaskUpdate,
   onTaskCreate,
+  onTaskEdited,
 }) => {
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeTask, setActiveTask] = useState<TaskWithDetails | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -283,6 +290,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     // Optional: Handle drag over events for visual feedback
   };
 
+  const handleEditTask = (task: TaskWithDetails) => {
+    setActiveTask(task);
+    setEditDialogOpen(true);
+  };
+
   return (
     <div className="h-full overflow-x-auto">
       <DndContext
@@ -302,6 +314,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 <KanbanColumn 
                   column={column} 
                   onTaskCreate={onTaskCreate}
+                  onEditTask={handleEditTask}
                 />
               </SortableContext>
             </Card>
@@ -309,9 +322,21 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         </div>
 
         <DragOverlay>
-          {activeTask ? <TaskCard task={activeTask} /> : null}
+          {activeTask ? <TaskCard task={activeTask} onEdit={handleEditTask} /> : null}
         </DragOverlay>
       </DndContext>
+      <EditTaskDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        task={activeTask}
+        onTaskUpdated={(taskId, updates) => {
+          setEditDialogOpen(false);
+          // Call the parent's update function
+          if (onTaskEdited) {
+            onTaskEdited(taskId, updates);
+          }
+        }}
+      />
     </div>
   );
 }; 

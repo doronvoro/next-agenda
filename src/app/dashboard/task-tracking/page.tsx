@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Database } from "@/types/supabase";
 import { useRouter } from "next/navigation";
+import { fetchAllTasks, type TaskWithDetails } from "../protocols/[id]/supabaseApi";
 
 type Task = Database["public"]["Tables"]["agenda_item_tasks"]["Row"];
 
@@ -57,7 +58,7 @@ type SortField = "title" | "status" | "priority" | "due_date" | "created_at";
 type SortOrder = "asc" | "desc";
 
 export default function TaskTrackingPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,7 +75,7 @@ export default function TaskTrackingPage() {
     due_date: "",
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<TaskWithDetails | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -87,14 +88,8 @@ export default function TaskTrackingPage() {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("agenda_item_tasks")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setTasks(data || []);
+      const tasksData = await fetchAllTasks();
+      setTasks(tasksData);
     } catch (error) {
       console.error("Error fetching tasks:", error);
       setError("שגיאה בטעינת המשימות");

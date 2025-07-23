@@ -5,7 +5,7 @@ import { format, isValid } from "date-fns";
 import { he } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pencil, FileText, X, Printer, CheckSquare, Download, Save, Edit3, Eye, Plus, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -587,7 +587,7 @@ export default function ProtocolPage() {
               <Link href="/dashboard/protocols">
                 <Button variant="ghost" size="sm" className="gap-2">
                   חזרה
-                  <ArrowLeft className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <div className="h-6 w-px bg-border"></div>

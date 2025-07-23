@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/breadcrumb";
 
 import { AppSidebar } from "./sidebar";
+import { fetchProtocol } from "./protocols/[id]/supabaseApi";
 
 // Translation mapping for breadcrumb items
 const breadcrumbTranslations: Record<string, string> = {
@@ -38,24 +39,42 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [protocolNumber, setProtocolNumber] = React.useState<string | undefined>(undefined);
-
+  const [protocolId, setProtocolId] = React.useState<string | null>(null);
+  const [protocolNumberText, setProtocolNumberText] = React.useState<string>(breadcrumbTranslations.protocol);
+  const [isClient, setIsClient] = React.useState(false);
   const pathSegments = pathname.split("/").filter(Boolean);
 
-  // Listen for protocol number updates
+  // Fetch protocol number when on protocol task tracking page
   React.useEffect(() => {
-    const checkProtocolNumber = () => {
-      if (typeof window !== "undefined" && (window as any).__protocolNumber) {
-        setProtocolNumber((window as any).__protocolNumber);
+    const fetchProtocolNumber = async () => {
+      if (protocolId && pathSegments[2] === "protocol-task-tracking") {
+        try {
+          const protocol = await fetchProtocol(protocolId);
+          if (protocol) {
+            setProtocolNumberText(`#${protocol.number}`);
+          }
+        } catch (error) {
+          console.error("Error fetching protocol number:", error);
+        }
       }
     };
 
-    // Check immediately
-    checkProtocolNumber();
+    if (isClient && protocolId) {
+      fetchProtocolNumber();
+    }
+  }, [protocolId, isClient, pathSegments]);
 
-    // Set up an interval to check for updates
-    const interval = setInterval(checkProtocolNumber, 100);
-
-    return () => clearInterval(interval);
+  React.useEffect(() => {
+    setIsClient(true);
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      setProtocolId(searchParams.get("protocolId"));
+      if ((window as any).__protocolNumber) {
+        setProtocolNumberText((window as any).__protocolNumber);
+      } else {
+        setProtocolNumberText(breadcrumbTranslations.protocol);
+      }
+    }
   }, [pathname]);
 
   // Helper function to translate breadcrumb segments
@@ -66,6 +85,41 @@ export default function DashboardLayout({
   // Custom breadcrumb for protocol details page
   let customBreadcrumb: React.ReactNode = null;
   if (
+    pathSegments[0] === "dashboard" &&
+    pathSegments[1] === "protocols" &&
+    pathSegments[2] === "protocol-task-tracking"
+  ) {
+    // Protocol task tracking page
+    customBreadcrumb = (
+      <Breadcrumb className="rtl">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">{breadcrumbTranslations.dashboard}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/protocols">{breadcrumbTranslations.protocols}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            {isClient ? (
+              protocolId ? (
+                <BreadcrumbLink href={`/dashboard/protocols/${protocolId}`}>{protocolNumberText}</BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{protocolNumberText}</BreadcrumbPage>
+              )
+            ) : (
+              <BreadcrumbPage>{breadcrumbTranslations.loading}</BreadcrumbPage>
+            )}
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>לוח משימות</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  } else if (
     pathSegments[0] === "dashboard" &&
     pathSegments[1] === "protocols" &&
     pathSegments.length === 3
