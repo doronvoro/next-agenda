@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/breadcrumb";
 
 import { AppSidebar } from "./sidebar";
+import { fetchProtocol } from "./protocols/[id]/supabaseApi";
 
 // Translation mapping for breadcrumb items
 const breadcrumbTranslations: Record<string, string> = {
@@ -42,6 +43,26 @@ export default function DashboardLayout({
   const [protocolNumberText, setProtocolNumberText] = React.useState<string>(breadcrumbTranslations.protocol);
   const [isClient, setIsClient] = React.useState(false);
   const pathSegments = pathname.split("/").filter(Boolean);
+
+  // Fetch protocol number when on protocol task tracking page
+  React.useEffect(() => {
+    const fetchProtocolNumber = async () => {
+      if (protocolId && pathSegments[2] === "protocol-task-tracking") {
+        try {
+          const protocol = await fetchProtocol(protocolId);
+          if (protocol) {
+            setProtocolNumberText(`#${protocol.number}`);
+          }
+        } catch (error) {
+          console.error("Error fetching protocol number:", error);
+        }
+      }
+    };
+
+    if (isClient && protocolId) {
+      fetchProtocolNumber();
+    }
+  }, [protocolId, isClient, pathSegments]);
 
   React.useEffect(() => {
     setIsClient(true);
